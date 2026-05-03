@@ -10,12 +10,13 @@ from langchain_openai import OpenAIEmbeddings
 
 from dotenv import load_dotenv
 
-MODEL = "gpt-4.1-nano"
+MODEL = "gpt-4.1-mini"
 
 DB_NAME = str(Path(__file__).parent.parent / "vector_db")
 KNOWLEDGE_BASE = str(Path(__file__).parent.parent / "knowledge-base")
 
-# embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+#embeddings = HuggingFaceEmbeddings(model_name="nvidia/llama-nemotron-embed-vl-1b-v2",
+#                                  model_kwargs={"trust_remote_code": True})
 
 load_dotenv(override=True)
 
@@ -38,7 +39,7 @@ def fetch_documents():
 
 
 def create_chunks(documents):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1400, chunk_overlap=340)
     chunks = text_splitter.split_documents(documents)
     return chunks
 
