@@ -49,4 +49,5 @@ dependencies = [
     "langchain-anthropic>=1.0.1",
     "langchain-experimental>=0.0.42",
     "torchvision>=0.24.0",
+    "gensim>=4.4.0",
 ]
