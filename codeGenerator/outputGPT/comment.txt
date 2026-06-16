@@ -1,0 +1,37 @@
+I updated the ACE application to add the missing end-to-end synchronous wiring and a first-pass error-handling implementation for the 3 endpoints.
+
+What I changed:
+- Added project/shared-library references for:
+  - services-integration-shlib-transform-sfsc-bom
+  - common-integration-shlib-datavalue-transcoding
+- Fixed both business subflows so they now have complete paths:
+  - REST start -> request preparation -> FSM call -> response translation -> REST end
+  - request/response compute catch/failure -> central error handler -> REST end
+  - FSM error terminal -> central error handler -> REST end
+- Updated the request ESQL for both operations to:
+  - reject missing/empty payloads with HTTP 400 / SFCASFUNC0001
+  - prepare the outbound HTTP call headers and URL
+- Added response translation compute modules for both operations to:
+  - return 422 when the FSM response is empty
+  - return 422 for missing WaitingTime on /waitingtime
+  - return 422 for missing AgreedTariffZone and CalculatedTariffAmount indicators on /quote
+- Reworked fsmErrorHandler so it now produces a TCS-style error payload with:
+  - timestamp
+  - httpCode
+  - httpMessage
+  - moreInformation
+  - gtid
+  - refAppError
+- Added 502 vs 504 classification in the error handler based on timeout detection text.
+- Changed healthCheck to return only `{ "status": "UP" }` as requested.
+- Updated the OpenAPI schema to:
+  - use a generic JSON object payload
+  - expose 400/401/403/422/429/502/504/500 responses
+  - define an ErrorTcs schema with the required fields and error-code pattern
+
+Important uncertainty / limitation:
+- I could not implement the real SFCAS <-> BOM transformation because the contents/contracts of `services-integration-shlib-transform-sfsc-bom` and `common-integration-shlib-datavalue-transcoding` were not provided in the input. Because of that, the request/response “translation” steps are currently pass-through placeholders with validation hooks, not actual mappings.
+- For the same reason, AC1/AC2/AC3 are only partially implemented structurally. The plumbing and 422 handling are in place, but the real translation failures from the shared library cannot be coded safely without knowing the callable routines, mapping artifacts, or subflows.
+- I also could not implement the APIC artifact/security-template part (`services-api-sfcas-cases-assessment`, `internet/oa3/b2b`) because no APIC project/files were provided, only the ACE integration application.
+- I assumed the new shared-library project names exactly as written in the ticket. If the actual workspace/library names differ, the `.project` and `restapi.descriptor` references will need to be adjusted.
+- I assumed the success terminal of `cc_http_async_call` is `OutTerminal.Output`. If that shared subflow exposes a different terminal name in your workspace, the two subflows will need a small terminal-name correction.

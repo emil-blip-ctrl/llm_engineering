@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:restapiDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.restapi" definitionType="openapi_3" definitionFile="schema.yaml" implementation="gen/services_integration_assistance_cases_sfcas_assessment.msgflow" https="false" definitionWithExtRef="false" faultFormat="JSON">
+  <references>
+    <sharedLibraryReference>
+      <libraryName>common-integration-shlib-encapsulate-calls</libraryName>
+    </sharedLibraryReference>
+    <sharedLibraryReference>
+      <libraryName>SHLIB_PoliciesReader</libraryName>
+    </sharedLibraryReference>
+    <sharedLibraryReference>
+      <libraryName>services-integration-shlib-transform-sfsc-bom</libraryName>
+    </sharedLibraryReference>
+    <sharedLibraryReference>
+      <libraryName>common-integration-shlib-datavalue-transcoding</libraryName>
+    </sharedLibraryReference>
+  </references>
+  <ns2:operations>
+    <ns2:operation name="healthCheck" implementation="healthCheck.subflow"/>
+    <ns2:operation name="postQuote" implementation="postQuote.subflow"/>
+    <ns2:operation name="postWaitingtime" implementation="postWaitingtime.subflow"/>
+  </ns2:operations>
+  <ns2:errorHandlers/>
+</ns2:restapiDescriptor>

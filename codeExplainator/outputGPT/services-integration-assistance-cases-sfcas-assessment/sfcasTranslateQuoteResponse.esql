@@ -1,0 +1,71 @@
+CREATE COMPUTE MODULE sfcasTranslateQuoteResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DELETE FIELD Environment.Variables.Error;
+		
+		IF NOT EXISTS(InputRoot.JSON.Data) THEN
+			CALL RaiseApplicationError(
+				422,
+				'Unprocessable Entity',
+				'FSM response payload is empty and cannot be translated to the SFCAS data model.',
+				'SFCASFUNC0003');
+		END IF;
+		
+		DECLARE responseRef REFERENCE TO InputRoot.JSON.Data;
+		
+		IF NOT (HasFieldNamed(responseRef, 'AgreedTariffZone')
+			OR HasFieldNamed(responseRef, 'CalculatedTariffAmount')) THEN
+			CALL RaiseApplicationError(
+				422,
+				'Unprocessable Entity',
+				'FSM response does not contain AgreedTariffZone or CalculatedTariffAmount required for the SFCAS response.',
+				'SFCASFUNC0011');
+		END IF;
+		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET Environment.Variables.FSM.Response = InputRoot.JSON.Data;
+		
+		DELETE FIELD OutputRoot.*[];
+		SET OutputRoot.Properties = InputRoot.Properties;
+		SET OutputRoot.Properties.MessageDomain = 'JSON';
+		
+		-- TODO: replace this pass-through with the real BOM -> SFCAS transformation
+		-- from services-integration-shlib-transform-sfsc-bom when that library contract is available.
+		SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+		
+		RETURN TRUE;
+	END;
+	
+	CREATE PROCEDURE RaiseApplicationError(
+		IN pHttpStatus INTEGER,
+		IN pHttpMessage CHARACTER,
+		IN pMoreInformation CHARACTER,
+		IN pRefAppError CHARACTER)
+	BEGIN
+		SET Environment.Variables.Error.HttpStatusCode = pHttpStatus;
+		SET Environment.Variables.Error.HttpMessage = pHttpMessage;
+		SET Environment.Variables.Error.MoreInformation = pMoreInformation;
+		SET Environment.Variables.Error.RefAppError = pRefAppError;
+		
+		THROW USER EXCEPTION CATALOG 'SFCAS' MESSAGE 2001 VALUES(pMoreInformation);
+	END;
+	
+	CREATE FUNCTION HasFieldNamed(IN searchRef REFERENCE, IN searchedName CHARACTER) RETURNS BOOLEAN
+	BEGIN
+		DECLARE childRef REFERENCE TO searchRef;
+		
+		IF UPPER(COALESCE(FIELDNAME(searchRef), '')) = UPPER(searchedName) THEN
+			RETURN TRUE;
+		END IF;
+		
+		MOVE childRef FIRSTCHILD;
+		WHILE LASTMOVE(childRef) DO
+			IF HasFieldNamed(childRef, searchedName) THEN
+				RETURN TRUE;
+			END IF;
+			MOVE childRef NEXTSIBLING;
+		END WHILE;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

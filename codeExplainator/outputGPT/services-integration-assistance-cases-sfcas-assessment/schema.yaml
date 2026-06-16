@@ -1,0 +1,179 @@
+openapi: 3.0.3
+info:
+  title: services-api-sfcas-cases-assessment
+  version: 1.0.0
+servers:
+  - url: /services/v1/integration/assistance/sfcas/cases/assessment
+paths:
+  /waitingtime:
+    post:
+      operationId: postWaitingtime
+      tags:
+        - Waitingtime
+      description: Accepts any SFCAS JSON object and returns a translated waiting time response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SfcasPayload'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SfcasPayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /quote:
+    post:
+      operationId: postQuote
+      tags:
+        - Quote
+      description: Accepts any SFCAS JSON object and returns a translated quote response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SfcasPayload'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SfcasPayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /healthCheck:
+    get:
+      tags:
+        - Health
+      operationId: healthCheck
+      summary: Healthcheck endpoint
+      description: Healthcheck endpoint for the SFCAS Cases Assessment API.
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+components:
+  schemas:
+    SfcasPayload:
+      type: object
+      additionalProperties: true
+      description: Placeholder schema until the SFCAS data model is defined.
+    HealthCheckResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: UP
+    ErrorTcs:
+      type: object
+      required:
+        - timestamp
+        - httpCode
+        - httpMessage
+        - moreInformation
+        - gtid
+        - refAppError
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        httpCode:
+          type: integer
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+        gtid:
+          type: string
+        refAppError:
+          type: string
+          pattern: '^SFCAS(FUNC|TECH)[0-9]{4}$'
+      description: TCS standard error payload.
+  responses:
+    BadRequest:
+      description: Missing payload or invalid JSON payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'
+    Unauthorized:
+      description: Missing or invalid x-ibm-client-id header.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'
+    Forbidden:
+      description: The client is not authorised to call this API.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'
+    UnprocessableEntity:
+      description: The payload could not be translated between SFCAS and BOM models.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'
+    TooManyRequests:
+      description: The API rate limit has been exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'
+    BadGateway:
+      description: The upstream FSM API returned an error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'
+    GatewayTimeout:
+      description: The upstream FSM API timed out.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'
+    InternalServerError:
+      description: An unexpected internal error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorTcs'

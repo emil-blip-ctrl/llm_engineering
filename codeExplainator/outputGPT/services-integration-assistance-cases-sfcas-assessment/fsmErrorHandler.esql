@@ -1,0 +1,119 @@
+CREATE COMPUTE MODULE fsmErrorHandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE httpStatus INTEGER 500;
+		DECLARE httpMessage CHARACTER 'Internal Server Error';
+		DECLARE moreInformation CHARACTER 'An unexpected internal error occurred.';
+		DECLARE refAppError CHARACTER 'SFCASTECH0001';
+		DECLARE gtid CHARACTER '';
+		DECLARE exceptionText CHARACTER '';
+		DECLARE upstreamReason CHARACTER '';
+		DECLARE jsonRef REFERENCE TO InputRoot.JSON.Data;
+		DECLARE exceptionRef REFERENCE TO InputExceptionList;
+		
+		IF EXISTS(Environment.Variables.Error.HttpStatusCode) THEN
+			SET httpStatus = CAST(Environment.Variables.Error.HttpStatusCode AS INTEGER);
+			
+			IF EXISTS(Environment.Variables.Error.HttpMessage) THEN
+				SET httpMessage = CAST(Environment.Variables.Error.HttpMessage AS CHARACTER);
+			END IF;
+			
+			IF EXISTS(Environment.Variables.Error.MoreInformation) THEN
+				SET moreInformation = CAST(Environment.Variables.Error.MoreInformation AS CHARACTER);
+			END IF;
+			
+			IF EXISTS(Environment.Variables.Error.RefAppError) THEN
+				SET refAppError = CAST(Environment.Variables.Error.RefAppError AS CHARACTER);
+			END IF;
+		ELSE
+			SET exceptionText = FindFirstFieldValueByName(exceptionRef, 'Text');
+			
+			IF EXISTS(InputRoot.JSON.Data) THEN
+				SET upstreamReason = FindFirstFieldValueByName(jsonRef, 'moreInformation');
+				
+				IF upstreamReason = '' THEN
+					SET upstreamReason = FindFirstFieldValueByName(jsonRef, 'httpMessage');
+				END IF;
+				
+				IF upstreamReason = '' THEN
+					SET upstreamReason = FindFirstFieldValueByName(jsonRef, 'message');
+				END IF;
+			END IF;
+			
+			IF upstreamReason = '' THEN
+				SET upstreamReason = exceptionText;
+			END IF;
+			
+			IF upstreamReason = '' THEN
+				SET upstreamReason = 'Upstream FSM call returned an error.';
+			END IF;
+			
+			IF IsTimeout(upstreamReason) OR IsTimeout(exceptionText) THEN
+				SET httpStatus = 504;
+				SET httpMessage = 'Gateway Timeout';
+				SET moreInformation = 'The upstream FSM call timed out.';
+				SET refAppError = 'SFCASTECH0003';
+			ELSE
+				SET httpStatus = 502;
+				SET httpMessage = 'Bad Gateway';
+				SET moreInformation = upstreamReason;
+				SET refAppError = 'SFCASTECH0002';
+			END IF;
+		END IF;
+		
+		IF EXISTS(Environment.Variables."X-Global-Transaction-Id") THEN
+			SET gtid = CAST(Environment.Variables."X-Global-Transaction-Id" AS CHARACTER);
+		ELSE
+			SET gtid = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'I');
+		END IF;
+		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = httpStatus;
+		
+		DELETE FIELD OutputRoot.*[];
+		SET OutputRoot.Properties = InputRoot.Properties;
+		SET OutputRoot.Properties.MessageDomain = 'JSON';
+		SET OutputRoot.HTTPResponseHeader."Content-Type" = 'application/json; charset=utf-8';
+		
+		SET OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'I');
+		SET OutputRoot.JSON.Data.httpCode = httpStatus;
+		SET OutputRoot.JSON.Data.httpMessage = httpMessage;
+		SET OutputRoot.JSON.Data.moreInformation = moreInformation;
+		SET OutputRoot.JSON.Data.gtid = gtid;
+		SET OutputRoot.JSON.Data.refAppError = refAppError;
+		
+		RETURN TRUE;
+	END;
+	
+	CREATE FUNCTION FindFirstFieldValueByName(IN searchRef REFERENCE, IN searchedName CHARACTER) RETURNS CHARACTER
+	BEGIN
+		DECLARE childRef REFERENCE TO searchRef;
+		DECLARE fieldValue CHARACTER '';
+		
+		IF UPPER(COALESCE(FIELDNAME(searchRef), '')) = UPPER(searchedName)
+		AND CARDINALITY(searchRef.*[]) = 0 THEN
+			RETURN CAST(FIELDVALUE(searchRef) AS CHARACTER);
+		END IF;
+		
+		MOVE childRef FIRSTCHILD;
+		WHILE LASTMOVE(childRef) DO
+			SET fieldValue = FindFirstFieldValueByName(childRef, searchedName);
+			IF fieldValue <> '' THEN
+				RETURN fieldValue;
+			END IF;
+			MOVE childRef NEXTSIBLING;
+		END WHILE;
+		
+		RETURN '';
+	END;
+	
+	CREATE FUNCTION IsTimeout(IN pText CHARACTER) RETURNS BOOLEAN
+	BEGIN
+		DECLARE normalized CHARACTER '';
+		SET normalized = UPPER(COALESCE(pText, ''));
+		
+		RETURN normalized LIKE '%TIMEOUT%'
+			OR normalized LIKE '%TIMED OUT%'
+			OR normalized LIKE '%TIME OUT%';
+	END;
+END MODULE;

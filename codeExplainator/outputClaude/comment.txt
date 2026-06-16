@@ -1,0 +1,15 @@
+**What I changed**
+
+I updated `fsmErrorHandler.esql` so that the error response conforms to the TCS *ErrorTcs* standard using the required `SFCAS(FUNC|TECH)[0-9]{4}` error‑code convention (AC4, AC12, AC14, AC15). Specifically I changed the `refAppError` from the old `FSMTECH0001` value to `SFCASTECH0001` (a technical error code, since an FSM non‑2xx response is a technical/upstream error), kept the populated `gtid` for end‑to‑end tracing, and made the `moreInformation` text clearer that this is an upstream FSM rejection.
+
+**What I could NOT fully implement, and why**
+
+This issue describes a large, multi‑system feature, and several parts cannot be implemented responsibly from the source provided:
+
+1. **SFCAS↔BOM translation (AC1, AC2, AC3, AC10, AC11):** The request explicitly states the SFCAS Salesforce data model is *not yet defined* and the translation shared library `services-integration-shlib-transform-sfsc-bom` is *still under development*. Without the model and the library’s public routine signatures I cannot wire the translation nodes or implement the 422 back‑/forward‑translation failure handling. These need NIPO‑8415/8456/8457 to be completed first.
+
+2. **422 / 504 dedicated error paths (AC2, AC3, AC9, AC10, AC11):** Implementing these requires adding new error-handler Compute nodes wired to the translation nodes’ failure terminals and to the `cc_http_async_call` subflow’s timeout terminal. I do **not** have the source of the `common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow`, so I cannot confirm which terminal signals a timeout vs. a generic failure, and I did not want to guess at terminal names and silently break the wiring. Once the timeout terminal name is confirmed, separate `fsmTimeoutHandler` (504, `SFCASTECH00xx`) and `translationErrorHandler` (422, `SFCASFUNC00xx`) Compute modules should be added and connected.
+
+3. **APIC consumed API artifacts, security template (internet/oa3/b2b), client‑id/secret enforcement and rate limiting (AC5–AC8, AC13):** These are configured in API Connect / the policy projects, not in the ACE source provided here, so they are out of scope of the files I can edit.
+
+I kept the change minimal and safe rather than introducing speculative nodes that depend on not‑yet‑available libraries and unknown subflow terminals. I recommend revisiting the 422/504 handlers and the translation wiring once the data model and translation library are available.
