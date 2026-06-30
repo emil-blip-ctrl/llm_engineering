@@ -20,6 +20,7 @@ dependencies:
   - jupyter-dash
   - pyarrow
   - pip:
+    - playwright
     - beautifulsoup4
     - plotly
     - transformers
