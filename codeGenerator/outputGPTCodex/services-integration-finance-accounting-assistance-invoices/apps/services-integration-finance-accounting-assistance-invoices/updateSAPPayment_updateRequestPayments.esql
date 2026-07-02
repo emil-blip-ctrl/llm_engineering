@@ -1,0 +1,181 @@
+CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		if Environment.Variables.Error then
+			return false;
+		end if;
+		-- prepare context to call CallApiWithToken
+		call SHLIB_StandardUpdates.PrepareContextOauth(Environment);
+		-- stores response from updateRequestPayments
+		CREATE FIELD Environment.Variables.UpdateStatusResponse;
+		-- unprocessable invoices
+		CREATE FIELD Environment.Variables.UnprocessableRecords;
+		-- is update call made
+		SET Environment.Variables.IsUpdateCallMade = FALSE;
+		
+		/* Environment.Variables.PaymentRequestId contains
+			{
+			    "0t7FT00000000MbYAI": "Booked",
+			    "0t7FT00000000ODYAY": "Payé"
+			}
+		*/
+		
+		DECLARE BufferObject CHAR '';
+		DECLARE PaymentRequest_Status_Booked_Template  CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Status_Booked');
+		DECLARE PaymentRequest_Error_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Error');
+		DECLARE PaymentRequest_InvalidStatus_Invoice_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_InvalidStatus_Invoice');
+		DECLARE PaymentRequest_UpdateRecords_MaxObject INT cast(Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_UpdateRecords_MaxObject') as INT);
+
+		SET Environment.Variables.Request.API.Endpoint.Method = 'PATCH';
+		SET Environment.Variables.Request.API.Endpoint.Querypath =  Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'Endpoint_CRUD');
+				
+		-- Change values into json string by in Policy and constructs json object
+		DECLARE tempo REFERENCE TO OutputRoot;
+		set OutputRoot.JSON.Data.allOrNone = true;
+		CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
+		DECLARE Id CHAR '';
+		DECLARE iCount INT 0;
+		DECLARE invoicesPosted ROW;
+		DECLARE invoicesNotPostedNotBooked ROW;
+		DECLARE casIdSapIdMap ROW;
+		FOR  paymentRequestId AS Environment.Variables.PaymentRequestId.*[] DO
+		    IF UPPER(paymentRequestId) = 'POSTED' THEN
+		        CREATE LASTCHILD OF invoicesPosted NAME FIELDNAME(paymentRequestId) VALUE paymentRequestId;
+		    ELSEIF UPPER(paymentRequestId) <> 'BOOKED' THEN
+		        CREATE LASTCHILD OF invoicesNotPostedNotBooked NAME FIELDNAME(paymentRequestId) VALUE paymentRequestId;
+		    END IF;	    
+		END FOR;
+		
+		FOR invoice AS InputRoot.JSON.Data.Item[] do
+			
+			-- gathering information 
+		    DECLARE invoiceNum CHARACTER '';
+		    DECLARE SapDocN CHAR '';
+		    DECLARE sapStatusIsEmpty BOOLEAN TRUE;
+		    DECLARE errorCode CHAR '';
+			DECLARE errorMessage CHAR'';
+		    FOR invoiceNumber AS invoice.invoiceNumber.Item[] DO
+		        IF invoiceNumber.schemeIdentifier = 'SAP_REF_NUMBER' THEN
+		            SET SapDocN = invoiceNumber.content;
+		        ELSEIF invoiceNumber.schemeIdentifier = 'CAS_REF_NUMBER' THEN
+		            SET invoiceNum = invoiceNumber.content;
+		            SET Id = invoiceNum;
+		        END IF;
+		    END FOR;
+		    
+		    CREATE LASTCHILD OF casIdSapIdMap NAME invoiceNum  VALUE SapDocN;
+		    
+		    FOR invoiceNote as invoice.invoiceNote.Item[] do								
+				CASE
+				WHEN UPPER(invoiceNote.invoiceNoteSubjectCode) = 'STATUS' AND invoiceNote.invoiceNoteText <> '' THEN
+					SET sapStatusIsEmpty = FALSE;
+				WHEN UPPER(invoiceNote.invoiceNoteSubjectCode) = 'ERROR_CODE' THEN
+				    SET errorCode = invoiceNote.invoiceNoteText;
+				WHEN UPPER(invoiceNote.invoiceNoteSubjectCode) = 'ERROR_MESSAGE' THEN
+					SET errorMessage = invoiceNote.invoiceNoteText;
+				END CASE;
+			END FOR;
+			
+			-- For all records with ‘SAP status’ = empty AND a Salesforce status = ‘Posted’
+		    IF sapStatusIsEmpty AND EXISTS(invoicesPosted.{invoiceNum}[]) THEN			
+		        SET iCount = iCount + 1;		
+		        CREATE LASTCHILD OF OutputRoot.JSON.Data.(JSON.Array)records AS tempo NAME 'Item';	
+		        SET BufferObject = PaymentRequest_Status_Booked_Template;
+		        SET BufferObject = REPLACE(BufferObject,'@@SapDocN@@', SapDocN);
+		        SET BufferObject = REPLACE(BufferObject,'@@Id@@',Id);		
+		        CALL SHLIB_StandardUpdates.AttachObj(BufferObject, tempo);
+		        				
+			-- For the records with ‘SAP status’ not empty
+			ELSEIF sapStatusIsEmpty = FALSE  THEN		
+				set iCount = iCount + 1;
+				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+				SET BufferObject = PaymentRequest_Error_Template;
+				SET  BufferObject = replace(BufferObject,'@@Id@@',Id);
+				SET  BufferObject = replace(BufferObject,'@@Code@@',errorCode);
+				SET  BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
+				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+
+				-- 3a: SAP status not empty and Salesforce status = 'Posted'
+				IF EXISTS(invoicesPosted.{invoiceNum}[]) THEN
+					SET tempo.Status = 'In progress';
+				END IF;
+				-- 3b: SAP status not empty and Salesforce status <> 'Posted'
+				-- keep template as-is (Id, IntegrationMessage__c, IntegrationCode__c)
+		    END IF;
+		    				
+			-- Salesforce ID unknown check
+			IF NOT EXISTS(Environment.Variables.PaymentRequestId.{Id}[]) THEN
+				CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+				DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+				SET Environment.Variables.UnprocessableRecords.Record[index].casId = Id;
+				SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{Id};
+				SET Environment.Variables.UnprocessableRecords.Record[index].status = 'no information from Salesforce';
+			END IF;	
+			
+			IF iCount = PaymentRequest_UpdateRecords_MaxObject THEN
+			    PROPAGATE TO TERMINAL 1 DELETE NONE;		
+			    DELETE FIELD OutputRoot.JSON.Data.records;
+			    CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;		
+			    SET iCount = 0;
+		    END IF;	
+		        
+		END FOR;
+		
+		-- For the records that are not in status Posted or Booked:
+		FOR inpnb AS invoicesNotPostedNotBooked.*[] DO
+			SET Id = FIELDNAME(inpnb);			
+			set iCount = iCount + 1;
+			CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+			SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
+			SET BufferObject = replace(BufferObject,'@@Id@@',Id);
+			call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+			if iCount = PaymentRequest_UpdateRecords_MaxObject then
+				propagate to TERMINAL 1 delete none;
+				DELETE FIELD OutputRoot.JSON.Data.records;
+				CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
+				SET iCount = 0;
+			end if;			
+			-- invalid status or Salesforce ID	
+			CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+			DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+			SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(inpnb);
+			SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{FIELDNAME(inpnb)};
+			SET Environment.Variables.UnprocessableRecords.Record[index].status = inpnb;		
+		END FOR;
+				
+		IF iCount > 0 THEN
+			propagate to TERMINAL 1 delete none;	
+			DELETE FIELD OutputRoot.JSON.Data;
+		END IF;		
+		
+		-- updateRequestPayments returned success: false
+		IF Environment.Variables.IsUpdateCallMade IS TRUE THEN
+			DECLARE unsuccessfulInvoices ROW casIdSapIdMap;
+			FOR updateStatus AS Environment.Variables.UpdateStatusResponse.Item[] DO
+				IF updateStatus.success IS TRUE THEN
+					DELETE FIELD unsuccessfulInvoices.{updateStatus.id};
+				END IF;
+			END FOR;
+			FOR unsuccessfulInvoice AS unsuccessfulInvoices.*[] DO
+				CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+				DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+				SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(unsuccessfulInvoice);
+				SET Environment.Variables.UnprocessableRecords.Record[index].sapId = FIELDVALUE(unsuccessfulInvoice);
+				SET Environment.Variables.UnprocessableRecords.Record[index].status = 'unsuccessful update';
+			END FOR;
+		END IF;
+		
+		IF EXISTS(Environment.Variables.UnprocessableRecords.Record[]) THEN 
+			PROPAGATE TO TERMINAL 'out2';
+			RETURN FALSE;
+		END IF;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 201;
+		SET OutputRoot.JSON.Data = NULL;
+		SET OutputRoot.JSON.Data.meta.submissionId = Environment.Variables."X-Global-Transaction-Id";
+		SET OutputRoot.JSON.Data.meta.timestamp = CAST(CURRENT_GMTTIMESTAMP AS CHAR FORMAT 'yyyy-MM-dd''T''HH:mm:ss''Z''');
+		SET OutputRoot.JSON.Data.data.status = 'PROCESSED';
+		RETURN TRUE;
+	END;
+
+END MODULE;

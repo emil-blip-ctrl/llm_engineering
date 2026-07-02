@@ -1,4 +1,27 @@
-Analyze this workspace and create a detailed report of how it works. 
-I want the relation of all the files and how they work. 
-I want to know the logic of all files and how they are bing executed? Is this a python workspaces? 
-How this workspace works? What is the purpose of it? Explain the whole workspace with full details. 
+3- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP), update the PaymentRequests with:
+
+PaymentRequest.Id = Salesforce internal document reference
+
+PaymentRequest.IntegrationMessage__c = SAP Error message
+
+PaymentRequest.IntegrationCode__c = SAP Error code
+
+needs to be replaced by :  
+
+3a- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status = ‘Posted’, update the PaymentRequests with:
+
+PaymentRequest.Id = Salesforce internal document reference
+
+PaymentRequest.Status=’In progress'
+
+PaymentRequest.IntegrationMessage__c = SAP Error message 
+
+PaymentRequest.IntegrationCode__c = SAP Error code
+
+3b- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status <> ‘Posted’, update the PaymentRequests with:
+
+PaymentRequest.Id = Salesforce internal document reference
+
+PaymentRequest.IntegrationMessage__c = SAP Error message 
+
+PaymentRequest.IntegrationCode__c = SAP Error code

@@ -1,0 +1,246 @@
+--FN-- services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPPayment_updateRequestPayments.esql --FN--
+--FC--
+
+CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		if Environment.Variables.Error then
+			return false;
+		end if;
+		-- prepare context to call CallApiWithToken
+		call SHLIB_StandardUpdates.PrepareContextOauth(Environment);
+		-- stores response from updateRequestPayments
+		CREATE FIELD Environment.Variables.UpdateStatusResponse;
+		-- unprocessable invoices
+		CREATE FIELD Environment.Variables.UnprocessableRecords;
+		-- is update call made
+		SET Environment.Variables.IsUpdateCallMade = FALSE;
+		
+		/* Environment.Variables.PaymentRequestId contains
+			{
+			    "0t7FT00000000MbYAI": "Booked",
+			    "0t7FT00000000ODYAY": "Payé"
+			}
+		*/
+		
+		DECLARE BufferObject CHAR '';
+		DECLARE PaymentRequest_Status_Booked_Template  CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Status_Booked');
+		DECLARE PaymentRequest_Error_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Error');
+		DECLARE PaymentRequest_Error_InProgress_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Error_InProgress');
+		DECLARE PaymentRequest_InvalidStatus_Invoice_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_InvalidStatus_Invoice');
+		DECLARE PaymentRequest_UpdateRecords_MaxObject INT cast(Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_UpdateRecords_MaxObject') as INT);
+
+		SET Environment.Variables.Request.API.Endpoint.Method = 'PATCH';
+		SET Environment.Variables.Request.API.Endpoint.Querypath =  Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'Endpoint_CRUD');
+				
+		-- Change values into json string by in Policy and constructs json object
+		DECLARE tempo REFERENCE TO OutputRoot;
+		set OutputRoot.JSON.Data.allOrNone = true;
+		CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
+		DECLARE Id CHAR '';
+		DECLARE iCount INT 0;
+		DECLARE invoicesPosted ROW;
+		DECLARE invoicesNotPostedNotBooked ROW;
+		DECLARE invoicesWithSapError ROW;
+		DECLARE casIdSapIdMap ROW;
+		FOR  paymentRequestId AS Environment.Variables.PaymentRequestId.*[] DO
+		    IF UPPER(paymentRequestId) = 'POSTED' THEN
+		        CREATE LASTCHILD OF invoicesPosted NAME FIELDNAME(paymentRequestId) VALUE paymentRequestId;
+		    ELSEIF UPPER(paymentRequestId) <> 'BOOKED' THEN
+		        CREATE LASTCHILD OF invoicesNotPostedNotBooked NAME FIELDNAME(paymentRequestId) VALUE paymentRequestId;
+		    END IF;	    
+		END FOR;
+		
+		FOR invoice AS InputRoot.JSON.Data.Item[] do
+			
+			-- gathering information 
+		    DECLARE invoiceNum CHARACTER '';
+		    DECLARE SapDocN CHAR '';
+		    DECLARE sapStatusIsEmpty BOOLEAN TRUE;
+		    DECLARE errorCode CHAR '';
+			DECLARE errorMessage CHAR'';
+		    FOR invoiceNumber AS invoice.invoiceNumber.Item[] DO
+		        IF invoiceNumber.schemeIdentifier = 'SAP_REF_NUMBER' THEN
+		            SET SapDocN = invoiceNumber.content;
+		        ELSEIF invoiceNumber.schemeIdentifier = 'CAS_REF_NUMBER' THEN
+		            SET invoiceNum = invoiceNumber.content;
+		            SET Id = invoiceNum;
+		        END IF;
+		    END FOR;
+		    
+		    CREATE LASTCHILD OF casIdSapIdMap NAME invoiceNum  VALUE SapDocN;
+		    
+		    FOR invoiceNote as invoice.invoiceNote.Item[] do								
+				CASE
+				WHEN UPPER(invoiceNote.invoiceNoteSubjectCode) = 'STATUS' AND invoiceNote.invoiceNoteText <> '' THEN
+					SET sapStatusIsEmpty = FALSE;
+				WHEN UPPER(invoiceNote.invoiceNoteSubjectCode) = 'ERROR_CODE' THEN
+				    SET errorCode = invoiceNote.invoiceNoteText;
+				WHEN UPPER(invoiceNote.invoiceNoteSubjectCode) = 'ERROR_MESSAGE' THEN
+					SET errorMessage = invoiceNote.invoiceNoteText;
+				END CASE;
+			END FOR;
+			
+			-- For all records with ‘SAP status’ = empty AND a Salesforce status = ‘Posted’
+		    IF sapStatusIsEmpty AND EXISTS(invoicesPosted.{invoiceNum}[]) THEN			
+		        SET iCount = iCount + 1;		
+		        CREATE LASTCHILD OF OutputRoot.JSON.Data.(JSON.Array)records AS tempo NAME 'Item';	
+		        SET BufferObject = PaymentRequest_Status_Booked_Template;
+		        SET BufferObject = REPLACE(BufferObject,'@@SapDocN@@', SapDocN);
+		        SET BufferObject = REPLACE(BufferObject,'@@Id@@',Id);		
+		        CALL SHLIB_StandardUpdates.AttachObj(BufferObject, tempo);
+		        				
+			-- For the records with ‘SAP status’ not empty AND a Salesforce status = ‘Posted’
+			-- update PaymentRequest with status 'In progress' and SAP error details
+			ELSEIF sapStatusIsEmpty = FALSE AND EXISTS(invoicesPosted.{invoiceNum}[]) THEN		
+				set iCount = iCount + 1;
+				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+				SET BufferObject = PaymentRequest_Error_InProgress_Template;
+				SET BufferObject = replace(BufferObject,'@@Id@@',Id);
+				SET BufferObject = replace(BufferObject,'@@Code@@',errorCode);
+				SET BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
+				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+				SET invoicesWithSapError.{Id} = TRUE;
+		        				
+			-- For the records with ‘SAP status’ not empty AND a Salesforce status <> ‘Posted’
+			-- update PaymentRequest only with SAP error details
+			ELSEIF sapStatusIsEmpty = FALSE THEN		
+				set iCount = iCount + 1;
+				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+				SET BufferObject = PaymentRequest_Error_Template;
+				SET  BufferObject = replace(BufferObject,'@@Id@@',Id);
+				SET  BufferObject = replace(BufferObject,'@@Code@@',errorCode);
+				SET  BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
+				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+				SET invoicesWithSapError.{Id} = TRUE;
+		    END IF;
+		    				
+			-- Salesforce ID unknown check
+			IF NOT EXISTS(Environment.Variables.PaymentRequestId.{Id}[]) THEN
+				CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+				DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+				SET Environment.Variables.UnprocessableRecords.Record[index].casId = Id;
+				SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{Id};
+				SET Environment.Variables.UnprocessableRecords.Record[index].status = 'no information from Salesforce';
+			END IF;	
+			
+			IF iCount = PaymentRequest_UpdateRecords_MaxObject THEN
+			    PROPAGATE TO TERMINAL 1 DELETE NONE;		
+			    DELETE FIELD OutputRoot.JSON.Data.records;
+			    CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;		
+			    SET iCount = 0;
+		    END IF;	
+		        
+		END FOR;
+		
+		-- For the records without SAP error that are not in status Posted or Booked:
+		FOR inpnb AS invoicesNotPostedNotBooked.*[] DO
+			SET Id = FIELDNAME(inpnb);
+			IF NOT EXISTS(invoicesWithSapError.{Id}[]) THEN
+				set iCount = iCount + 1;
+				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+				SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
+				SET BufferObject = replace(BufferObject,'@@Id@@',Id);
+				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+				if iCount = PaymentRequest_UpdateRecords_MaxObject then
+					propagate to TERMINAL 1 delete none;
+					DELETE FIELD OutputRoot.JSON.Data.records;
+					CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
+					SET iCount = 0;
+				end if;			
+				-- invalid status or Salesforce ID	
+				CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+				DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+				SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(inpnb);
+				SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{FIELDNAME(inpnb)};
+				SET Environment.Variables.UnprocessableRecords.Record[index].status = inpnb;
+			END IF;
+		END FOR;
+				
+		IF iCount > 0 THEN
+			propagate to TERMINAL 1 delete none;	
+			DELETE FIELD OutputRoot.JSON.Data;
+		END IF;		
+		
+		-- updateRequestPayments returned success: false
+		IF Environment.Variables.IsUpdateCallMade IS TRUE THEN
+			DECLARE unsuccessfulInvoices ROW casIdSapIdMap;
+			FOR updateStatus AS Environment.Variables.UpdateStatusResponse.Item[] DO
+				IF updateStatus.success IS TRUE THEN
+					DELETE FIELD unsuccessfulInvoices.{updateStatus.id};
+				END IF;
+			END FOR;
+			FOR unsuccessfulInvoice AS unsuccessfulInvoices.*[] DO
+				CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+				DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+				SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(unsuccessfulInvoice);
+				SET Environment.Variables.UnprocessableRecords.Record[index].sapId = FIELDVALUE(unsuccessfulInvoice);
+				SET Environment.Variables.UnprocessableRecords.Record[index].status = 'unsuccessful update';
+			END FOR;
+		END IF;
+		
+		IF EXISTS(Environment.Variables.UnprocessableRecords.Record[]) THEN 
+			PROPAGATE TO TERMINAL 'out2';
+			RETURN FALSE;
+		END IF;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 201;
+		SET OutputRoot.JSON.Data = NULL;
+		SET OutputRoot.JSON.Data.meta.submissionId = Environment.Variables."X-Global-Transaction-Id";
+		SET OutputRoot.JSON.Data.meta.timestamp = CAST(CURRENT_GMTTIMESTAMP AS CHAR FORMAT 'yyyy-MM-dd''T''HH:mm:ss''Z''');
+		SET OutputRoot.JSON.Data.data.status = 'PROCESSED';
+		RETURN TRUE;
+	END;
+
+END MODULE;
+--FC--
+
+--FN-- services-integration-policies-properties-sfsc-standard-updates/apps/services-integration-policies-properties-sfsc-standard-updates/Common.policyxml --FN--
+--FC--
+<?xml version="1.0" encoding="UTF-8"?>
+<policies>
+  <policy policyType="UserDefined" policyName="Common" policyTemplate="UserDefined">
+    <DatedConversionRate_Create>{&quot;attributes&quot;:{&quot;type&quot;:&quot;DatedConversionRate&quot;},&quot;IsoCode&quot;:&quot;@@IsoCode@@&quot;,&quot;ConversionRate&quot;:@@ConversionRate@@,&quot;StartDate&quot;:&quot;@@StartDate@@&quot;}</DatedConversionRate_Create>
+    <DatedConversionRate_Update>{&quot;attributes&quot;:{&quot;type&quot;:&quot;DatedConversionRate&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;ConversionRate&quot;:@@ConversionRate@@}</DatedConversionRate_Update>
+    <Endpoint_CRUD>/data/v60.0/composite/sobjects</Endpoint_CRUD>
+    <UpdateDocumentLinks>{&quot;allOrNone&quot;:true,&quot;collateSubrequests&quot;:false,&quot;compositeRequest&quot;:[{&quot;method&quot;:&quot;POST&quot;,&quot;url&quot;:&quot;/services/data/v60.0/sobjects/ContentVersion/&quot;,&quot;referenceId&quot;:&quot;new_version&quot;,&quot;body&quot;:{&quot;Description&quot;:&quot;@@description@@&quot;,&quot;ContentLocation&quot;:&quot;E&quot;,&quot;Title&quot;:&quot;@@title@@&quot;,&quot;ContentUrl&quot;:&quot;@@content_url@@&quot;,&quot;ExternalDataSourceId&quot;:&quot;@@id_external_datasource@@&quot;,&quot;ExternalDocumentInfo1&quot;:&quot;@@parameters_url@@&quot;,&quot;ExternalDocumentInfo2&quot;:&quot;@@onbase_id@@&quot;,&quot;TagCsv&quot;:&quot;@@tag_csv@@&quot;,&quot;Origin&quot;:&quot;H&quot;}},{&quot;method&quot;:&quot;GET&quot;,&quot;url&quot;:&quot;/services/data/v60.0/sobjects/ContentVersion/@{new_version.id}?fields=Id,ContentDocumentId&quot;,&quot;referenceId&quot;:&quot;created_version&quot;},{&quot;method&quot;:&quot;POST&quot;,&quot;url&quot;:&quot;/services/data/v60.0/sobjects/ContentDocumentLink/&quot;,&quot;referenceId&quot;:&quot;new_link&quot;,&quot;body&quot;:{&quot;ContentDocumentId&quot;:&quot;@{created_version.ContentDocumentId}&quot;,&quot;LinkedEntityId&quot;:&quot;@@object_id@@&quot;}}]}</UpdateDocumentLinks>
+    <PaymentRequest_GetIds>{&quot;ids&quot;:[@@Ids@@],&quot;fields&quot;:[&quot;Id&quot;,&quot;Name&quot;,&quot;Status&quot;]}</PaymentRequest_GetIds>
+    <PaymentRequest_Endpoint>/PaymentRequest</PaymentRequest_Endpoint>
+    <PaymentRequest_Error>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;IntegrationMessage__c&quot;:&quot;@@Message@@&quot;,&quot;IntegrationCode__c&quot;:&quot;@@Code@@&quot;}</PaymentRequest_Error>
+    <PaymentRequest_Error_InProgress>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;Status&quot;:&quot;In progress&quot;,&quot;IntegrationMessage__c&quot;:&quot;@@Message@@&quot;,&quot;IntegrationCode__c&quot;:&quot;@@Code@@&quot;}</PaymentRequest_Error_InProgress>
+    <PaymentRequest_Status_Booked>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;SAPDocumentNumber__c&quot;:&quot;@@SapDocN@@&quot;,&quot;Status&quot;:&quot;Booked&quot;}</PaymentRequest_Status_Booked>
+    <PaymentRequest_Status_Paid>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;Status&quot;:&quot;Paid&quot;,&quot;PaymentDate__c&quot;:&quot;@@CurrentDate@@&quot;}</PaymentRequest_Status_Paid>
+    <PaymentRequest_InvalidStatus_Payment>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;IntegrationMessage__c&quot;:&quot;Payment received from SAP - Invalid status&quot;,&quot;IntegrationCode__c&quot;:&quot;Payment&quot;}</PaymentRequest_InvalidStatus_Payment>
+    <PaymentRequest_InvalidStatus_Invoice>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;IntegrationMessage__c&quot;:&quot;Accounting acknowledge received from SAP - Invalid status&quot;,&quot;IntegrationCode__c&quot;:&quot;Accounting&quot;}</PaymentRequest_InvalidStatus_Invoice>
+    <PaymentRequest_GetIds_MaxObject>2000</PaymentRequest_GetIds_MaxObject>
+    <PaymentRequest_UpdateRecords_MaxObject>200</PaymentRequest_UpdateRecords_MaxObject>
+    <composite-endpoint>/data/v60.0/composite</composite-endpoint>
+  </policy>
+</policies>
+--FC--
+
+---COMMENT---
+Updated the invoice acknowledgment update logic to implement the new 3a/3b behavior.
+
+What changed:
+- In `updateSAPPayment_updateRequestPayments.esql`
+  - Added conditional handling for records where SAP status is not empty:
+    - If Salesforce status is `Posted`, the update now sets:
+      - `Id`
+      - `Status = 'In progress'`
+      - `IntegrationMessage__c`
+      - `IntegrationCode__c`
+    - If Salesforce status is not `Posted`, the update now sets:
+      - `Id`
+      - `IntegrationMessage__c`
+      - `IntegrationCode__c`
+  - Added tracking for invoices already handled by SAP-error logic so they are not also processed later by the “invalid status” branch. This avoids contradictory duplicate updates and preserves the requested SAP error message/code.
+- In `Common.policyxml`
+  - Added a new policy template: `PaymentRequest_Error_InProgress`
+
+Assumption made:
+- I assumed records handled by the new 3a/3b SAP-error logic must not also be treated as “invalid status” records later in the same flow, because that later branch would overwrite the requested SAP error mapping and conflict with the new requirement.
+
+Limitations:
+- I did not change other payment-related shared-library flows because the provided request and the existing local application logic clearly point to the invoice acknowledgment flow in this application.
+---COMMENT---
