@@ -1,0 +1,96 @@
+ORIGINAL REQUEST: 3- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP), update the PaymentRequests with:
+
+PaymentRequest.Id = Salesforce internal document reference
+
+PaymentRequest.IntegrationMessage__c = SAP Error message
+
+PaymentRequest.IntegrationCode__c = SAP Error code
+
+needs to be replaced by :  
+
+3a- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status = ‘Posted’, update the PaymentRequests with:
+
+PaymentRequest.Id = Salesforce internal document reference
+
+PaymentRequest.Status=’In progress'
+
+PaymentRequest.IntegrationMessage__c = SAP Error message 
+
+PaymentRequest.IntegrationCode__c = SAP Error code
+
+3b- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status <> ‘Posted’, update the PaymentRequests with:
+
+PaymentRequest.Id = Salesforce internal document reference
+
+PaymentRequest.IntegrationMessage__c = SAP Error message 
+
+PaymentRequest.IntegrationCode__c = SAP Error code
+
+ANALYZED REQUEST BY LLM:
+SUMMARY
+- Replace the existing unconditional update for records with "SAP status" not empty by two conditional updates: one for Salesforce status = 'Posted' (set Status = 'In progress' plus error fields) and one for Salesforce status <> 'Posted' (set only error fields).
+
+TARGET
+- PaymentRequest update logic/mapping/flow that processes records where "SAP status" is not empty (SAP accounting error cases).
+
+REQUIRED_CHANGES
+- Remove/replace the existing rule:
+  - Old: "3- For the records with ‘SAP status’ not empty ... update the PaymentRequests with:
+    PaymentRequest.Id = Salesforce internal document reference
+    PaymentRequest.IntegrationMessage__c = SAP Error message
+    PaymentRequest.IntegrationCode__c = SAP Error code"
+- Add new conditional rules:
+  - 3a (condition): If "SAP status" not empty AND Salesforce status = 'Posted'
+    - Set PaymentRequest.Id = Salesforce internal document reference
+    - Set PaymentRequest.Status = 'In progress'
+    - Set PaymentRequest.IntegrationMessage__c = SAP Error message
+    - Set PaymentRequest.IntegrationCode__c = SAP Error code
+  - 3b (condition): If "SAP status" not empty AND Salesforce status <> 'Posted'
+    - Set PaymentRequest.Id = Salesforce internal document reference
+    - Set PaymentRequest.IntegrationMessage__c = SAP Error message
+    - Set PaymentRequest.IntegrationCode__c = SAP Error code
+- Ensure no other branches reintroduce an unconditional set of PaymentRequest.Status to 'In progress' for SAP-error records (only set Status in 3a).
+- Use exact field names and literal values as provided: PaymentRequest.Id, PaymentRequest.Status, PaymentRequest.IntegrationMessage__c, PaymentRequest.IntegrationCode__c, Salesforce internal document reference, SAP Error message, SAP Error code, 'Posted', 'In progress', operator '<>' for "not equal".
+
+MAPPING_DETAILS
+- Source document/link: not provided
+- Sheets/tabs: not provided
+- Lines/columns/dictionary references: not provided
+- Conditions to implement:
+  - Condition A: "SAP status" not empty
+  - Condition A1: + Salesforce status = 'Posted'
+  - Condition A2: + Salesforce status <> 'Posted'
+- Fields/attributes to add/update:
+  - PaymentRequest.Id -> Salesforce internal document reference
+  - PaymentRequest.Status -> 'In progress' (only for 3a)
+  - PaymentRequest.IntegrationMessage__c -> SAP Error message
+  - PaymentRequest.IntegrationCode__c -> SAP Error code
+
+ASSUMPTIONS_OR_QUESTIONS
+- Missing/ambiguous items that must be confirmed before implementation:
+  - Exact source field names/paths for:
+    - "SAP status"
+    - "SAP Error message"
+    - "SAP Error code"
+    - "Salesforce status"
+    - "Salesforce internal document reference"
+    (Are they message tree nodes, database columns, Salesforce fields, variables in the flow, etc.?)
+  - Exact location in the codebase where rule "3" is implemented (mapping file, ESQL, JavaCompute, message map node, Salesforce connector step). File/flow/component names were not provided.
+  - Clarify whether PaymentRequest.Id refers to a writable integration field (mapping ID value) or the Salesforce record Id (which is read-only in Salesforce APIs).
+  - Confirm whether string comparison for Salesforce status should be case-sensitive and whether whitespace should be trimmed before comparison.
+  - Confirm desired behavior for other fields and for records where "SAP status" is empty (no change to current behavior unless specified).
+  - Confirm any required unit/integration tests or test data to cover both branches 3a and 3b.
+
+EXECUTOR_BRIEF
+- Find the existing implementation that applies rule "3- For the records with ‘SAP status’ not empty" and replace it with two conditional branches:
+  1) If SAP status is not empty AND Salesforce status == 'Posted' then set:
+     - PaymentRequest.Id = Salesforce internal document reference
+     - PaymentRequest.Status = 'In progress'
+     - PaymentRequest.IntegrationMessage__c = SAP Error message
+     - PaymentRequest.IntegrationCode__c = SAP Error code
+  2) Else if SAP status is not empty AND Salesforce status <> 'Posted' then set:
+     - PaymentRequest.Id = Salesforce internal document reference
+     - PaymentRequest.IntegrationMessage__c = SAP Error message
+     - PaymentRequest.IntegrationCode__c = SAP Error code
+- Remove any previous unconditional assignment of PaymentRequest.Status = 'In progress' for SAP-error records.
+- Keep all field names and literal strings exactly as specified and update/extend tests and mapping documentation accordingly.
