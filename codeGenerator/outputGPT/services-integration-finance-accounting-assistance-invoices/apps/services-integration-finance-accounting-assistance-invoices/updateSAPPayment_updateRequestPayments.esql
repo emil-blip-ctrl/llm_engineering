@@ -38,7 +38,6 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		DECLARE iCount INT 0;
 		DECLARE invoicesPosted ROW;
 		DECLARE invoicesNotPostedNotBooked ROW;
-		DECLARE invoicesWithSapError ROW;
 		DECLARE casIdSapIdMap ROW;
 		FOR  paymentRequestId AS Environment.Variables.PaymentRequestId.*[] DO
 		    IF UPPER(paymentRequestId) = 'POSTED' THEN
@@ -87,29 +86,21 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		        SET BufferObject = REPLACE(BufferObject,'@@Id@@',Id);		
 		        CALL SHLIB_StandardUpdates.AttachObj(BufferObject, tempo);
 		        				
-			-- For the records with ‘SAP status’ not empty AND a Salesforce status = ‘Posted’
-			-- update PaymentRequest with status 'In progress' and SAP error details
-			ELSEIF sapStatusIsEmpty = FALSE AND EXISTS(invoicesPosted.{invoiceNum}[]) THEN		
-				set iCount = iCount + 1;
-				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET BufferObject = PaymentRequest_Error_InProgress_Template;
-				SET BufferObject = replace(BufferObject,'@@Id@@',Id);
-				SET BufferObject = replace(BufferObject,'@@Code@@',errorCode);
-				SET BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
-				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				SET invoicesWithSapError.{Id} = TRUE;
-		        				
-			-- For the records with ‘SAP status’ not empty AND a Salesforce status <> ‘Posted’
-			-- update PaymentRequest only with SAP error details
+			-- For the records with ‘SAP status’ not empty:
+			-- 3a - Salesforce status = Posted => set Status = In progress + error fields
+			-- 3b - Salesforce status <> Posted => set only error fields
 			ELSEIF sapStatusIsEmpty = FALSE THEN		
 				set iCount = iCount + 1;
 				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET BufferObject = PaymentRequest_Error_Template;
-				SET  BufferObject = replace(BufferObject,'@@Id@@',Id);
-				SET  BufferObject = replace(BufferObject,'@@Code@@',errorCode);
-				SET  BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
+				IF EXISTS(invoicesPosted.{invoiceNum}[]) THEN
+					SET BufferObject = PaymentRequest_Error_InProgress_Template;
+				ELSE
+					SET BufferObject = PaymentRequest_Error_Template;
+				END IF;
+				SET BufferObject = REPLACE(BufferObject,'@@Id@@',Id);
+				SET BufferObject = REPLACE(BufferObject,'@@Code@@',errorCode);
+				SET BufferObject = REPLACE(BufferObject,'@@Message@@',errorMessage);
 				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				SET invoicesWithSapError.{Id} = TRUE;
 		    END IF;
 		    				
 			-- Salesforce ID unknown check
@@ -130,28 +121,26 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		        
 		END FOR;
 		
-		-- For the records without SAP error that are not in status Posted or Booked:
+		-- For the records that are not in status Posted or Booked:
 		FOR inpnb AS invoicesNotPostedNotBooked.*[] DO
-			SET Id = FIELDNAME(inpnb);
-			IF NOT EXISTS(invoicesWithSapError.{Id}[]) THEN
-				set iCount = iCount + 1;
-				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
-				SET BufferObject = replace(BufferObject,'@@Id@@',Id);
-				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				if iCount = PaymentRequest_UpdateRecords_MaxObject then
-					propagate to TERMINAL 1 delete none;
-					DELETE FIELD OutputRoot.JSON.Data.records;
-					CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
-					SET iCount = 0;
-				end if;			
-				-- invalid status or Salesforce ID	
-				CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
-				DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
-				SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(inpnb);
-				SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{FIELDNAME(inpnb)};
-				SET Environment.Variables.UnprocessableRecords.Record[index].status = inpnb;
-			END IF;
+			SET Id = FIELDNAME(inpnb);			
+			set iCount = iCount + 1;
+			CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+			SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
+			SET BufferObject = replace(BufferObject,'@@Id@@',Id);
+			call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+			if iCount = PaymentRequest_UpdateRecords_MaxObject then
+				propagate to TERMINAL 1 delete none;
+				DELETE FIELD OutputRoot.JSON.Data.records;
+				CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
+				SET iCount = 0;
+			end if;			
+			-- invalid status or Salesforce ID	
+			CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+			DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+			SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(inpnb);
+			SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{FIELDNAME(inpnb)};
+			SET Environment.Variables.UnprocessableRecords.Record[index].status = inpnb;		
 		END FOR;
 				
 		IF iCount > 0 THEN

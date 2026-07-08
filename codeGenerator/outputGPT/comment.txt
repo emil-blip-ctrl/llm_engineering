@@ -1,23 +1,15 @@
-Updated the invoice acknowledgment update logic to implement the new 3a/3b behavior.
+I changed the invoice accounting update logic in `updateSAPPayment_updateRequestPayments.esql` to split the previous unconditional SAP-error handling into the two requested branches:
 
-What changed:
-- In `updateSAPPayment_updateRequestPayments.esql`
-  - Added conditional handling for records where SAP status is not empty:
-    - If Salesforce status is `Posted`, the update now sets:
-      - `Id`
-      - `Status = 'In progress'`
-      - `IntegrationMessage__c`
-      - `IntegrationCode__c`
-    - If Salesforce status is not `Posted`, the update now sets:
-      - `Id`
-      - `IntegrationMessage__c`
-      - `IntegrationCode__c`
-  - Added tracking for invoices already handled by SAP-error logic so they are not also processed later by the “invalid status” branch. This avoids contradictory duplicate updates and preserves the requested SAP error message/code.
-- In `Common.policyxml`
-  - Added a new policy template: `PaymentRequest_Error_InProgress`
+- SAP status not empty + Salesforce status = `Posted`  
+  -> update `Status = 'In progress'` and set `IntegrationMessage__c` / `IntegrationCode__c`
+- SAP status not empty + Salesforce status <> `Posted`  
+  -> update only `IntegrationMessage__c` / `IntegrationCode__c`
+
+To keep the implementation consistent with the existing design, I also added a new policy template `PaymentRequest_Error_InProgress` in `Common.policyxml`, and the ESQL now selects between that new template and the existing `PaymentRequest_Error` template.
 
 Assumption made:
-- I assumed records handled by the new 3a/3b SAP-error logic must not also be treated as “invalid status” records later in the same flow, because that later branch would overwrite the requested SAP error mapping and conflict with the new requirement.
+- The correct place to implement this request is the invoices application module `updateSAPPayment_updateRequestPayments.esql`, because that is where the existing “SAP status not empty” invoice-accounting logic already exists.
+- The comparison for Salesforce status remains case-insensitive via the existing `UPPER(...) = 'POSTED'` logic.
+- The requested target status string is exactly `In progress`.
 
-Limitations:
-- I did not change other payment-related shared-library flows because the provided request and the existing local application logic clearly point to the invoice acknowledgment flow in this application.
+I did not change any flows or descriptors because the existing node wiring already points to the same ESQL module and no additional artifacts were required.

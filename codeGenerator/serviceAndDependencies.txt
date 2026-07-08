@@ -1,4 +1,4 @@
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\.project
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/.project
 
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
@@ -130,7 +130,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\gen\services_integration_finance_accounting_assistance_invoices.msgflow
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/gen/services_integration_finance_accounting_assistance_invoices.msgflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" 
@@ -191,7 +191,7 @@ nsPrefix="gen_services_integration_finance_accounting_assistance_invoices.msgflo
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\health.subflow
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/health.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="health.subflow" nsPrefix="health.subflow">
@@ -221,7 +221,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\healthResponse.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/healthResponse.esql
 
 
 CREATE COMPUTE MODULE healthResponse
@@ -238,7 +238,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\pom.xml
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/pom.xml
 
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -250,7 +250,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ch.tcs.nip.ace</groupId>
 	<artifactId>services-integration-finance-accounting-assistance-invoices</artifactId>
-	<version>1.0.3-SNAPSHOT</version>
+	<version>1.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<properties>
 		<ibm.plugin.version>1.39.0</ibm.plugin.version>
@@ -279,7 +279,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\postPayable_documents.subflow
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/postPayable_documents.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
@@ -322,7 +322,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\postReceivable_documents.subflow
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/postReceivable_documents.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
@@ -365,7 +365,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\restapi.descriptor
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/restapi.descriptor
 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ns2:restapiDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.restapi" definitionType="openapi_3" definitionFile="schema.yaml" implementation="gen/services_integration_finance_accounting_assistance_invoices.msgflow" https="true" definitionWithExtRef="false" faultFormat="JSON">
@@ -388,7 +388,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\schema.yaml
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/schema.yaml
 
 openapi: 3.0.3
 info:
@@ -501,7 +501,7 @@ paths:
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\setBusinessIdentifiers.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/setBusinessIdentifiers.esql
 
 
 
@@ -542,7 +542,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\updateSAPInvoice.subflow
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPInvoice.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFlowOrder.msgnode="ComIbmFlowOrder.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:SHLIB_oAuthApiCall_CallApiWithToken.subflow="SHLIB_oAuthApiCall/CallApiWithToken.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor"
@@ -650,7 +650,7 @@ File directory: services-integration-finance-accounting-assistance-invoices\apps
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\updateSAPInvoice_handleUnprocessableInvoices.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPInvoice_handleUnprocessableInvoices.esql
 
 
 
@@ -683,7 +683,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\updateSAPPayment_getRequestPaymentsInformation.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPPayment_getRequestPaymentsInformation.esql
 
 
 CREATE COMPUTE MODULE updateSAPPayment_getRequestPaymentsInformation
@@ -741,7 +741,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\updateSAPPayment_HandleResponse.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPPayment_HandleResponse.esql
 
 
 
@@ -762,7 +762,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\updateSAPPayment_setError.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPPayment_setError.esql
 
 
 
@@ -843,7 +843,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\updateSAPPayment_updateRequestPayments.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPPayment_updateRequestPayments.esql
 
 
 CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
@@ -871,7 +871,6 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		DECLARE BufferObject CHAR '';
 		DECLARE PaymentRequest_Status_Booked_Template  CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Status_Booked');
 		DECLARE PaymentRequest_Error_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Error');
-		DECLARE PaymentRequest_Error_InProgress_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_Error_InProgress');
 		DECLARE PaymentRequest_InvalidStatus_Invoice_Template CHAR Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_InvalidStatus_Invoice');
 		DECLARE PaymentRequest_UpdateRecords_MaxObject INT cast(Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-properties-sfsc-standard-updates}:Common' , 'PaymentRequest_UpdateRecords_MaxObject') as INT);
 
@@ -886,7 +885,6 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		DECLARE iCount INT 0;
 		DECLARE invoicesPosted ROW;
 		DECLARE invoicesNotPostedNotBooked ROW;
-		DECLARE invoicesWithSapError ROW;
 		DECLARE casIdSapIdMap ROW;
 		FOR  paymentRequestId AS Environment.Variables.PaymentRequestId.*[] DO
 		    IF UPPER(paymentRequestId) = 'POSTED' THEN
@@ -934,28 +932,16 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		        SET BufferObject = REPLACE(BufferObject,'@@SapDocN@@', SapDocN);
 		        SET BufferObject = REPLACE(BufferObject,'@@Id@@',Id);		
 		        CALL SHLIB_StandardUpdates.AttachObj(BufferObject, tempo);
-		    
-		    -- For the records with ‘SAP status’ not empty AND Salesforce status = ‘Posted’
-		    ELSEIF sapStatusIsEmpty = FALSE AND EXISTS(invoicesPosted.{invoiceNum}[])  THEN		
-				set iCount = iCount + 1;
-				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET  BufferObject = PaymentRequest_Error_InProgress_Template;
-				SET  BufferObject = replace(BufferObject,'@@Id@@',Id);
-				SET  BufferObject = replace(BufferObject,'@@Code@@',errorCode);
-				SET  BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
-				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				SET invoicesWithSapError.{Id} = TRUE;
 		        				
-			-- For the records with ‘SAP status’ not empty AND Salesforce status <> ‘Posted’
-		    ELSEIF sapStatusIsEmpty = FALSE AND NOT(EXISTS(invoicesPosted.{invoiceNum}[]))  THEN		
+			-- For the records with ‘SAP status’ not empty
+			ELSEIF sapStatusIsEmpty = FALSE  THEN		
 				set iCount = iCount + 1;
 				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET  BufferObject = PaymentRequest_Error_Template;
+				SET BufferObject = PaymentRequest_Error_Template;
 				SET  BufferObject = replace(BufferObject,'@@Id@@',Id);
 				SET  BufferObject = replace(BufferObject,'@@Code@@',errorCode);
 				SET  BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
 				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				SET invoicesWithSapError.{Id} = TRUE;
 		    END IF;
 		    				
 			-- Salesforce ID unknown check
@@ -976,22 +962,20 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		        
 		END FOR;
 		
-		-- For the records not in SAP error that are not in status Posted or Booked:
+		-- For the records that are not in status Posted or Booked:
 		FOR inpnb AS invoicesNotPostedNotBooked.*[] DO
 			SET Id = FIELDNAME(inpnb);			
-			IF NOT EXISTS(invoicesWithSapError.{Id}[]) THEN -- check if already sent as SAP error 
-				SET iCount = iCount + 1;
-				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
-				SET BufferObject = replace(BufferObject,'@@Id@@',Id);
-				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				if iCount = PaymentRequest_UpdateRecords_MaxObject then
-					propagate to TERMINAL 1 delete none;
-					DELETE FIELD OutputRoot.JSON.Data.records;
-					CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
-					SET iCount = 0;
-				end if;	
-			END IF;		
+			set iCount = iCount + 1;
+			CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+			SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
+			SET BufferObject = replace(BufferObject,'@@Id@@',Id);
+			call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+			if iCount = PaymentRequest_UpdateRecords_MaxObject then
+				propagate to TERMINAL 1 delete none;
+				DELETE FIELD OutputRoot.JSON.Data.records;
+				CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
+				SET iCount = 0;
+			end if;			
 			-- invalid status or Salesforce ID	
 			CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
 			DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
@@ -1040,7 +1024,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-finance-accounting-assistance-invoices\apps\services-integration-finance-accounting-assistance-invoices\updateSAPPayment_updateStatus.esql
+File directory: services-integration-finance-accounting-assistance-invoices/apps/services-integration-finance-accounting-assistance-invoices/updateSAPPayment_updateStatus.esql
 
 
 
@@ -1060,7 +1044,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\.project
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/.project
 
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
@@ -1201,7 +1185,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\callable_call.esql
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/callable_call.esql
 
 BROKER SCHEMA common_integration_shlib_encapsulate_calls
 
@@ -1385,7 +1369,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_app_mq_end.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_app_mq_end.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmMQReply.msgnode="ComIbmMQReply.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:common_integration_shlib_wrap_message_messageRecover.subflow="common_integration_shlib_wrap_message/messageRecover.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
@@ -1562,7 +1546,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_app_mq_start.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_app_mq_start.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:common_integration_shlib_wrap_message_messageExtract.subflow="common_integration_shlib_wrap_message/messageExtract.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor"
@@ -1683,7 +1667,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_callable_async_call.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_callable_async_call.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCallableFlowAsyncInvoke.msgnode="ComIbmCallableFlowAsyncInvoke.msgnode" xmlns:ComIbmCallableFlowAsyncResponse.msgnode="ComIbmCallableFlowAsyncResponse.msgnode" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
@@ -1913,7 +1897,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_callable_end.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_callable_end.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_callable_end.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_callable_end.subflow">
@@ -1955,7 +1939,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_callable_start.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_callable_start.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_callable_start.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_callable_start.subflow">
@@ -2004,7 +1988,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_http_async_call.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmHTTPAsyncRequest.msgnode="ComIbmHTTPAsyncRequest.msgnode" xmlns:ComIbmHTTPAsyncResponse.msgnode="ComIbmHTTPAsyncResponse.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_http_async_call.subflow">
@@ -2284,7 +2268,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_http_sync_call.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_http_sync_call.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_http_sync_call.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_http_sync_call.subflow">
@@ -2449,7 +2433,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_mq_call.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_mq_call.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:common_integration_shlib_wrap_message_messageBuild.subflow="common_integration_shlib_wrap_message/messageBuild.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
@@ -2561,7 +2545,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_mq_get.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_mq_get.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:common_integration_shlib_wrap_message_messageExtract.subflow="common_integration_shlib_wrap_message/messageExtract.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
@@ -2803,7 +2787,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_mq_topic_call.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_mq_topic_call.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmPublication.msgnode="ComIbmPublication.msgnode" xmlns:common_integration_shlib_wrap_message_messageBuild.subflow="common_integration_shlib_wrap_message/messageBuild.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
@@ -2939,7 +2923,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_rest_api_end.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow">
@@ -2971,7 +2955,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\cc_rest_api_start.subflow
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow">
@@ -3022,7 +3006,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\http_call.esql
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/http_call.esql
 
 BROKER SCHEMA common_integration_shlib_encapsulate_calls
 DECLARE "monitoring-api-name" EXTERNAL CHAR '';
@@ -3226,7 +3210,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\mq.esql
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/mq.esql
 
 BROKER SCHEMA common_integration_shlib_encapsulate_calls
 DECLARE MQReply EXTERNAL BOOLEAN FALSE;
@@ -3542,7 +3526,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\rest_api.esql
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/rest_api.esql
 
 BROKER SCHEMA common_integration_shlib_encapsulate_calls
 
@@ -3647,7 +3631,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\common_integration_shlib_encapsulate_calls\Utils.esql
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/common_integration_shlib_encapsulate_calls/Utils.esql
 
 BROKER SCHEMA common_integration_shlib_encapsulate_calls
 
@@ -3690,13 +3674,13 @@ END;
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\library.descriptor
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/library.descriptor
 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:libDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.lib" type="com.ibm.etools.msgbroker.tooling.sharedLibraryNature"><references><sharedLibraryReference><libraryName>common-integration-shlib-wrap-message</libraryName></sharedLibraryReference></references></ns2:libDescriptor>
 
 ================================================================================
 
-File directory: common-integration-shlib-encapsulate-calls\apps\common-integration-shlib-encapsulate-calls\pom.xml
+File directory: common-integration-shlib-encapsulate-calls/apps/common-integration-shlib-encapsulate-calls/pom.xml
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
@@ -3735,7 +3719,7 @@ File directory: common-integration-shlib-encapsulate-calls\apps\common-integrati
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\.project
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/.project
 
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
@@ -3875,7 +3859,7 @@ File directory: common-integration-shlib-wrap-message\apps\common-integration-sh
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\common_integration_shlib_wrap_message\messageBuild.esql
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/common_integration_shlib_wrap_message/messageBuild.esql
 
 BROKER SCHEMA common_integration_shlib_wrap_message
 
@@ -3939,7 +3923,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\common_integration_shlib_wrap_message\messageBuild.subflow
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/common_integration_shlib_wrap_message/messageBuild.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_wrap_message/messageBuild.subflow" nsPrefix="common_integration_shlib_wrap_message_messageBuild.subflow">
@@ -3969,7 +3953,7 @@ File directory: common-integration-shlib-wrap-message\apps\common-integration-sh
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\common_integration_shlib_wrap_message\messageExtract.esql
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/common_integration_shlib_wrap_message/messageExtract.esql
 
 BROKER SCHEMA common_integration_shlib_wrap_message
 DECLARE BUSINESSIDENTIFIERSEPARATOR CHARACTER 'BI';
@@ -4030,7 +4014,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\common_integration_shlib_wrap_message\messageExtract.subflow
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/common_integration_shlib_wrap_message/messageExtract.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_wrap_message/messageExtract.subflow" nsPrefix="common_integration_shlib_wrap_message_messageExtract.subflow">
@@ -4060,7 +4044,7 @@ File directory: common-integration-shlib-wrap-message\apps\common-integration-sh
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\common_integration_shlib_wrap_message\messageRecover.esql
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/common_integration_shlib_wrap_message/messageRecover.esql
 
 BROKER SCHEMA common_integration_shlib_wrap_message
 DECLARE runtimeEnvironment EXTERNAL CHARACTER 'DEV';
@@ -4086,7 +4070,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\common_integration_shlib_wrap_message\messageRecover.subflow
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/common_integration_shlib_wrap_message/messageRecover.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_wrap_message/messageRecover.subflow" nsPrefix="common_integration_shlib_wrap_message_messageRecover.subflow">
@@ -4123,13 +4107,13 @@ File directory: common-integration-shlib-wrap-message\apps\common-integration-sh
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\library.descriptor
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/library.descriptor
 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:libDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.lib" type="com.ibm.etools.msgbroker.tooling.sharedLibraryNature"><references/></ns2:libDescriptor>
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\pom.xml
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/pom.xml
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
@@ -4168,31 +4152,31 @@ File directory: common-integration-shlib-wrap-message\apps\common-integration-sh
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\resources\overrides\ACP.properties
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/resources/overrides/ACP.properties
 
 common_integration_shlib_wrap_message.messageRecover#runtimeEnvironment = ACP
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\resources\overrides\DEV.properties
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/resources/overrides/DEV.properties
 
 common_integration_shlib_wrap_message.messageRecover#runtimeEnvironment = DEV
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\resources\overrides\PRD.properties
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/resources/overrides/PRD.properties
 
 common_integration_shlib_wrap_message.messageRecover#runtimeEnvironment = PROD
 
 ================================================================================
 
-File directory: common-integration-shlib-wrap-message\apps\common-integration-shlib-wrap-message\resources\overrides\QA.properties
+File directory: common-integration-shlib-wrap-message/apps/common-integration-shlib-wrap-message/resources/overrides/QA.properties
 
 common_integration_shlib_wrap_message.messageRecover#runtimeEnvironment = QA
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\.project
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/.project
 
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
@@ -4335,13 +4319,13 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\library.descriptor
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/library.descriptor
 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:libDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.lib" type="com.ibm.etools.msgbroker.tooling.sharedLibraryNature"><references><sharedLibraryReference><libraryName>SHLIB_PoliciesReader</libraryName></sharedLibraryReference><sharedLibraryReference><libraryName>SHLIB_oAuthApiCall</libraryName></sharedLibraryReference><sharedLibraryReference><libraryName>common-integration-shlib-encapsulate-calls</libraryName></sharedLibraryReference></references></ns2:libDescriptor>
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\pom.xml
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/pom.xml
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
@@ -4390,7 +4374,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\b2bReportingAmagCreditNotes.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/b2bReportingAmagCreditNotes.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SHLIB_StandardUpdates/b2bReportingAmagCreditNotes.subflow" nsPrefix="SHLIB_StandardUpdates_b2bReportingAmagCreditNotes.subflow">
@@ -4432,7 +4416,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\b2bReportingAmagCreditNotes_logs.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/b2bReportingAmagCreditNotes_logs.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -4455,7 +4439,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\DatedConversionRate_Create.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/DatedConversionRate_Create.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:SHLIB_oAuthApiCall_CallApiWithToken.subflow="SHLIB_oAuthApiCall/CallApiWithToken.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
@@ -4518,7 +4502,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\DatedConversionRate_Create_ManageTransformation.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/DatedConversionRate_Create_ManageTransformation.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -4552,7 +4536,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\DatedConversionRate_Update.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/DatedConversionRate_Update.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:SHLIB_oAuthApiCall_CallApiWithToken.subflow="SHLIB_oAuthApiCall/CallApiWithToken.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
@@ -4615,7 +4599,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\DatedConversionRate_Update_ManageTransformation.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/DatedConversionRate_Update_ManageTransformation.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -4649,7 +4633,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\ExternalReferenceError_Update.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/ExternalReferenceError_Update.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SHLIB_StandardUpdates/ExternalReferenceError_Update.subflow" nsPrefix="SHLIB_StandardUpdates_ExternalReferenceError_Update.subflow">
@@ -4679,7 +4663,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\ExternalReferenceIdentifier_Create.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/ExternalReferenceIdentifier_Create.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SHLIB_StandardUpdates/ExternalReferenceIdentifier_Create.subflow" nsPrefix="SHLIB_StandardUpdates_ExternalReferenceIdentifier_Create.subflow">
@@ -4721,7 +4705,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\PaymentRequest_updateSAPPayment.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/PaymentRequest_updateSAPPayment.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFlowOrder.msgnode="ComIbmFlowOrder.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:SHLIB_oAuthApiCall_CallApiWithToken.subflow="SHLIB_oAuthApiCall/CallApiWithToken.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor"
@@ -4862,7 +4846,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\PaymentRequest_updateSAPPayment_getRequestPaymentsInformation.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/PaymentRequest_updateSAPPayment_getRequestPaymentsInformation.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -4929,7 +4913,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\PaymentRequest_updateSAPPayment_HandleResponse.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/PaymentRequest_updateSAPPayment_HandleResponse.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -4978,7 +4962,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\PaymentRequest_updateSAPPayment_setError.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/PaymentRequest_updateSAPPayment_setError.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -4997,7 +4981,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\PaymentRequest_updateSAPPayment_updateRequestPayments.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/PaymentRequest_updateSAPPayment_updateRequestPayments.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -5155,7 +5139,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\PaymentRequest_updateSAPPayment_updateStatus.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/PaymentRequest_updateSAPPayment_updateStatus.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -5225,7 +5209,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\SetLogContext.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/SetLogContext.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -5242,7 +5226,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\updateClientContactLocation.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/updateClientContactLocation.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SHLIB_StandardUpdates/updateClientContactLocation.subflow" nsPrefix="SHLIB_StandardUpdates_updateClientContactLocation.subflow">
@@ -5272,7 +5256,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\UpdateDocumentLinks.subflow
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/UpdateDocumentLinks.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:SHLIB_oAuthApiCall_CallApiWithToken.subflow="SHLIB_oAuthApiCall/CallApiWithToken.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SHLIB_StandardUpdates/UpdateDocumentLinks.subflow" nsPrefix="SHLIB_StandardUpdates_UpdateDocumentLinks.subflow">
@@ -5318,7 +5302,7 @@ File directory: services-integration-shlib-sfsc-standard-updates\apps\services-i
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\UpdateDocumentLinks_prepareApisCalls.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/UpdateDocumentLinks_prepareApisCalls.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -5338,7 +5322,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\UpdateDocumentLinks_transformation.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/UpdateDocumentLinks_transformation.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -5384,7 +5368,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: services-integration-shlib-sfsc-standard-updates\apps\services-integration-shlib-sfsc-standard-updates\SHLIB_StandardUpdates\utils.esql
+File directory: services-integration-shlib-sfsc-standard-updates/apps/services-integration-shlib-sfsc-standard-updates/SHLIB_StandardUpdates/utils.esql
 
 BROKER SCHEMA SHLIB_StandardUpdates
 
@@ -5445,7 +5429,7 @@ END;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\.project
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/.project
 
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
@@ -5587,13 +5571,13 @@ File directory: common-integration-shlib-oauth-api-call\apps\common-integration-
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\library.descriptor
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/library.descriptor
 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:libDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.lib" type="com.ibm.etools.msgbroker.tooling.sharedLibraryNature"><references><sharedLibraryReference><libraryName>SHLIB_PoliciesReader</libraryName></sharedLibraryReference><sharedLibraryReference><libraryName>common-integration-shlib-encapsulate-calls</libraryName></sharedLibraryReference></references></ns2:libDescriptor>
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\pom.xml
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/pom.xml
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
@@ -5643,7 +5627,7 @@ File directory: common-integration-shlib-oauth-api-call\apps\common-integration-
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\readme.txt
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/readme.txt
 
 Pré-requis :  API technique pour la récupération du token + 1 API fonctionnelle.
 Les paths de ces APIs doivent être définis dans la policy 'APICEndPointPolicies'.
@@ -5722,7 +5706,7 @@ Structure utilisée en interne:
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\CallApiWithToken.subflow
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/CallApiWithToken.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:SHLIB_oAuthApiCall_CallFinalAPI.subflow="SHLIB_oAuthApiCall/CallFinalAPI.subflow" xmlns:SHLIB_oAuthApiCall_RetrieveToken.subflow="SHLIB_oAuthApiCall/RetrieveToken.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_http_async_call.subflow="common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
@@ -5944,7 +5928,7 @@ File directory: common-integration-shlib-oauth-api-call\apps\common-integration-
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\CallApiWithToken_Error401.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/CallApiWithToken_Error401.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -5981,7 +5965,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\CallFinalAPI.subflow
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/CallFinalAPI.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SHLIB_oAuthApiCall/CallFinalAPI.subflow" nsPrefix="SHLIB_oAuthApiCall_CallFinalAPI.subflow">
@@ -6096,7 +6080,7 @@ File directory: common-integration-shlib-oauth-api-call\apps\common-integration-
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\CallFinalAPI_Prepare_API_Request.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/CallFinalAPI_Prepare_API_Request.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -6151,7 +6135,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\GetToken.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/GetToken.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -6163,7 +6147,7 @@ END;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\RequestHelper.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/RequestHelper.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -6190,7 +6174,7 @@ END;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\RetrieveToken.subflow
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/RetrieveToken.subflow
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor"
@@ -6448,7 +6432,7 @@ File directory: common-integration-shlib-oauth-api-call\apps\common-integration-
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\RetrieveToken_Filter.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/RetrieveToken_Filter.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -6487,7 +6471,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\RetrieveToken_PrepareRequest.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/RetrieveToken_PrepareRequest.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -6572,7 +6556,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\RetrieveToken_saveMessage.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/RetrieveToken_saveMessage.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -6596,7 +6580,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-oauth-api-call\apps\common-integration-shlib-oauth-api-call\SHLIB_oAuthApiCall\RetrieveToken_StoreToken.esql
+File directory: common-integration-shlib-oauth-api-call/apps/common-integration-shlib-oauth-api-call/SHLIB_oAuthApiCall/RetrieveToken_StoreToken.esql
 
 BROKER SCHEMA SHLIB_oAuthApiCall
 
@@ -6636,7 +6620,7 @@ END MODULE;
 
 ================================================================================
 
-File directory: common-integration-shlib-policies-reader\apps\common-integration-shlib-policies-reader\.project
+File directory: common-integration-shlib-policies-reader/apps/common-integration-shlib-policies-reader/.project
 
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
@@ -6776,19 +6760,19 @@ File directory: common-integration-shlib-policies-reader\apps\common-integration
 
 ================================================================================
 
-File directory: common-integration-shlib-policies-reader\apps\common-integration-shlib-policies-reader\GETUDPJAVALIBJava-1.0.2.jar
+File directory: common-integration-shlib-policies-reader/apps/common-integration-shlib-policies-reader/GETUDPJAVALIBJava-1.0.2.jar
 
 --- JAR CONTENT NOT READABLE ---
 
 ================================================================================
 
-File directory: common-integration-shlib-policies-reader\apps\common-integration-shlib-policies-reader\library.descriptor
+File directory: common-integration-shlib-policies-reader/apps/common-integration-shlib-policies-reader/library.descriptor
 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:libDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.lib" type="com.ibm.etools.msgbroker.tooling.sharedLibraryNature"><references/></ns2:libDescriptor>
 
 ================================================================================
 
-File directory: common-integration-shlib-policies-reader\apps\common-integration-shlib-policies-reader\pom.xml
+File directory: common-integration-shlib-policies-reader/apps/common-integration-shlib-policies-reader/pom.xml
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
@@ -6845,7 +6829,7 @@ File directory: common-integration-shlib-policies-reader\apps\common-integration
 
 ================================================================================
 
-File directory: common-integration-shlib-policies-reader\apps\common-integration-shlib-policies-reader\Shlib_PoliciesReader\GetUDPEsqlFunction.esql
+File directory: common-integration-shlib-policies-reader/apps/common-integration-shlib-policies-reader/Shlib_PoliciesReader/GetUDPEsqlFunction.esql
 
 BROKER SCHEMA Shlib_PoliciesReader
 
@@ -6889,7 +6873,7 @@ EXTERNAL NAME "GETUDP_JavaCompute.getAllPolicyProperties";
 ================================================================================
 
 
-File directory: services-integration-policies-properties-sfsc-standard-updates\apps\services-integration-policies-properties-sfsc-standard-updates\.project
+File directory: services-integration-policies-properties-sfsc-standard-updates/apps/services-integration-policies-properties-sfsc-standard-updates/.project
 
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
@@ -6917,7 +6901,7 @@ File directory: services-integration-policies-properties-sfsc-standard-updates\a
 
 ================================================================================
 
-File directory: services-integration-policies-properties-sfsc-standard-updates\apps\services-integration-policies-properties-sfsc-standard-updates\Common.policyxml
+File directory: services-integration-policies-properties-sfsc-standard-updates/apps/services-integration-policies-properties-sfsc-standard-updates/Common.policyxml
 
 <?xml version="1.0" encoding="UTF-8"?>
 <policies>
@@ -6929,7 +6913,6 @@ File directory: services-integration-policies-properties-sfsc-standard-updates\a
     <PaymentRequest_GetIds>{&quot;ids&quot;:[@@Ids@@],&quot;fields&quot;:[&quot;Id&quot;,&quot;Name&quot;,&quot;Status&quot;]}</PaymentRequest_GetIds>
     <PaymentRequest_Endpoint>/PaymentRequest</PaymentRequest_Endpoint>
     <PaymentRequest_Error>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;IntegrationMessage__c&quot;:&quot;@@Message@@&quot;,&quot;IntegrationCode__c&quot;:&quot;@@Code@@&quot;}</PaymentRequest_Error>
-    <PaymentRequest_Error_InProgress>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;Status&quot;:&quot;In progress&quot;,&quot;IntegrationMessage__c&quot;:&quot;@@Message@@&quot;,&quot;IntegrationCode__c&quot;:&quot;@@Code@@&quot;}</PaymentRequest_Error_InProgress>
     <PaymentRequest_Status_Booked>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;SAPDocumentNumber__c&quot;:&quot;@@SapDocN@@&quot;,&quot;Status&quot;:&quot;Booked&quot;}</PaymentRequest_Status_Booked>
     <PaymentRequest_Status_Paid>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;Status&quot;:&quot;Paid&quot;,&quot;PaymentDate__c&quot;:&quot;@@CurrentDate@@&quot;}</PaymentRequest_Status_Paid>
     <PaymentRequest_InvalidStatus_Payment>{&quot;attributes&quot;:{&quot;type&quot;:&quot;PaymentRequest&quot;},&quot;Id&quot;:&quot;@@Id@@&quot;,&quot;IntegrationMessage__c&quot;:&quot;Payment received from SAP - Invalid status&quot;,&quot;IntegrationCode__c&quot;:&quot;Payment&quot;}</PaymentRequest_InvalidStatus_Payment>
@@ -6940,9 +6923,10 @@ File directory: services-integration-policies-properties-sfsc-standard-updates\a
   </policy>
 </policies>
 
+
 ================================================================================
 
-File directory: services-integration-policies-properties-sfsc-standard-updates\apps\services-integration-policies-properties-sfsc-standard-updates\policy.descriptor
+File directory: services-integration-policies-properties-sfsc-standard-updates/apps/services-integration-policies-properties-sfsc-standard-updates/policy.descriptor
 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ns2:policyProjectDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.policyProject">
@@ -6951,7 +6935,7 @@ File directory: services-integration-policies-properties-sfsc-standard-updates\a
 
 ================================================================================
 
-File directory: services-integration-policies-properties-sfsc-standard-updates\apps\services-integration-policies-properties-sfsc-standard-updates\pom.xml
+File directory: services-integration-policies-properties-sfsc-standard-updates/apps/services-integration-policies-properties-sfsc-standard-updates/pom.xml
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>

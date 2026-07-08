@@ -41,7 +41,6 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		DECLARE iCount INT 0;
 		DECLARE invoicesPosted ROW;
 		DECLARE invoicesNotPostedNotBooked ROW;
-		DECLARE invoicesWithSapError ROW;
 		DECLARE casIdSapIdMap ROW;
 		FOR  paymentRequestId AS Environment.Variables.PaymentRequestId.*[] DO
 		    IF UPPER(paymentRequestId) = 'POSTED' THEN
@@ -90,29 +89,21 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		        SET BufferObject = REPLACE(BufferObject,'@@Id@@',Id);		
 		        CALL SHLIB_StandardUpdates.AttachObj(BufferObject, tempo);
 		        				
-			-- For the records with ‘SAP status’ not empty AND a Salesforce status = ‘Posted’
-			-- update PaymentRequest with status 'In progress' and SAP error details
-			ELSEIF sapStatusIsEmpty = FALSE AND EXISTS(invoicesPosted.{invoiceNum}[]) THEN		
-				set iCount = iCount + 1;
-				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET BufferObject = PaymentRequest_Error_InProgress_Template;
-				SET BufferObject = replace(BufferObject,'@@Id@@',Id);
-				SET BufferObject = replace(BufferObject,'@@Code@@',errorCode);
-				SET BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
-				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				SET invoicesWithSapError.{Id} = TRUE;
-		        				
-			-- For the records with ‘SAP status’ not empty AND a Salesforce status <> ‘Posted’
-			-- update PaymentRequest only with SAP error details
+			-- For the records with ‘SAP status’ not empty:
+			-- 3a - Salesforce status = Posted => set Status = In progress + error fields
+			-- 3b - Salesforce status <> Posted => set only error fields
 			ELSEIF sapStatusIsEmpty = FALSE THEN		
 				set iCount = iCount + 1;
 				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET BufferObject = PaymentRequest_Error_Template;
-				SET  BufferObject = replace(BufferObject,'@@Id@@',Id);
-				SET  BufferObject = replace(BufferObject,'@@Code@@',errorCode);
-				SET  BufferObject = replace(BufferObject,'@@Message@@',errorMessage);
+				IF EXISTS(invoicesPosted.{invoiceNum}[]) THEN
+					SET BufferObject = PaymentRequest_Error_InProgress_Template;
+				ELSE
+					SET BufferObject = PaymentRequest_Error_Template;
+				END IF;
+				SET BufferObject = REPLACE(BufferObject,'@@Id@@',Id);
+				SET BufferObject = REPLACE(BufferObject,'@@Code@@',errorCode);
+				SET BufferObject = REPLACE(BufferObject,'@@Message@@',errorMessage);
 				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				SET invoicesWithSapError.{Id} = TRUE;
 		    END IF;
 		    				
 			-- Salesforce ID unknown check
@@ -133,28 +124,26 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 		        
 		END FOR;
 		
-		-- For the records without SAP error that are not in status Posted or Booked:
+		-- For the records that are not in status Posted or Booked:
 		FOR inpnb AS invoicesNotPostedNotBooked.*[] DO
-			SET Id = FIELDNAME(inpnb);
-			IF NOT EXISTS(invoicesWithSapError.{Id}[]) THEN
-				set iCount = iCount + 1;
-				CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
-				SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
-				SET BufferObject = replace(BufferObject,'@@Id@@',Id);
-				call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
-				if iCount = PaymentRequest_UpdateRecords_MaxObject then
-					propagate to TERMINAL 1 delete none;
-					DELETE FIELD OutputRoot.JSON.Data.records;
-					CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
-					SET iCount = 0;
-				end if;			
-				-- invalid status or Salesforce ID	
-				CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
-				DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
-				SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(inpnb);
-				SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{FIELDNAME(inpnb)};
-				SET Environment.Variables.UnprocessableRecords.Record[index].status = inpnb;
-			END IF;
+			SET Id = FIELDNAME(inpnb);			
+			set iCount = iCount + 1;
+			CREATE LASTCHILD OF  OutputRoot.JSON.Data.(JSON.Array)records as tempo name 'Item';
+			SET BufferObject = PaymentRequest_InvalidStatus_Invoice_Template;
+			SET BufferObject = replace(BufferObject,'@@Id@@',Id);
+			call SHLIB_StandardUpdates.AttachObj(BufferObject,tempo);
+			if iCount = PaymentRequest_UpdateRecords_MaxObject then
+				propagate to TERMINAL 1 delete none;
+				DELETE FIELD OutputRoot.JSON.Data.records;
+				CREATE FIELD OutputRoot.JSON.Data.(JSON.Array)records;
+				SET iCount = 0;
+			end if;			
+			-- invalid status or Salesforce ID	
+			CREATE LASTCHILD OF Environment.Variables.UnprocessableRecords NAME 'Record';
+			DECLARE index INTEGER CARDINALITY(Environment.Variables.UnprocessableRecords.Record[]);
+			SET Environment.Variables.UnprocessableRecords.Record[index].casId = FIELDNAME(inpnb);
+			SET Environment.Variables.UnprocessableRecords.Record[index].sapId = casIdSapIdMap.{FIELDNAME(inpnb)};
+			SET Environment.Variables.UnprocessableRecords.Record[index].status = inpnb;		
 		END FOR;
 				
 		IF iCount > 0 THEN
@@ -193,6 +182,7 @@ CREATE COMPUTE MODULE updateSAPPayment_updateRequestPayments
 	END;
 
 END MODULE;
+
 --FC--
 
 --FN-- services-integration-policies-properties-sfsc-standard-updates/apps/services-integration-policies-properties-sfsc-standard-updates/Common.policyxml --FN--
@@ -220,27 +210,19 @@ END MODULE;
 --FC--
 
 ---COMMENT---
-Updated the invoice acknowledgment update logic to implement the new 3a/3b behavior.
+I changed the invoice accounting update logic in `updateSAPPayment_updateRequestPayments.esql` to split the previous unconditional SAP-error handling into the two requested branches:
 
-What changed:
-- In `updateSAPPayment_updateRequestPayments.esql`
-  - Added conditional handling for records where SAP status is not empty:
-    - If Salesforce status is `Posted`, the update now sets:
-      - `Id`
-      - `Status = 'In progress'`
-      - `IntegrationMessage__c`
-      - `IntegrationCode__c`
-    - If Salesforce status is not `Posted`, the update now sets:
-      - `Id`
-      - `IntegrationMessage__c`
-      - `IntegrationCode__c`
-  - Added tracking for invoices already handled by SAP-error logic so they are not also processed later by the “invalid status” branch. This avoids contradictory duplicate updates and preserves the requested SAP error message/code.
-- In `Common.policyxml`
-  - Added a new policy template: `PaymentRequest_Error_InProgress`
+- SAP status not empty + Salesforce status = `Posted`  
+  -> update `Status = 'In progress'` and set `IntegrationMessage__c` / `IntegrationCode__c`
+- SAP status not empty + Salesforce status <> `Posted`  
+  -> update only `IntegrationMessage__c` / `IntegrationCode__c`
+
+To keep the implementation consistent with the existing design, I also added a new policy template `PaymentRequest_Error_InProgress` in `Common.policyxml`, and the ESQL now selects between that new template and the existing `PaymentRequest_Error` template.
 
 Assumption made:
-- I assumed records handled by the new 3a/3b SAP-error logic must not also be treated as “invalid status” records later in the same flow, because that later branch would overwrite the requested SAP error mapping and conflict with the new requirement.
+- The correct place to implement this request is the invoices application module `updateSAPPayment_updateRequestPayments.esql`, because that is where the existing “SAP status not empty” invoice-accounting logic already exists.
+- The comparison for Salesforce status remains case-insensitive via the existing `UPPER(...) = 'POSTED'` logic.
+- The requested target status string is exactly `In progress`.
 
-Limitations:
-- I did not change other payment-related shared-library flows because the provided request and the existing local application logic clearly point to the invoice acknowledgment flow in this application.
+I did not change any flows or descriptors because the existing node wiring already points to the same ESQL module and no additional artifacts were required.
 ---COMMENT---

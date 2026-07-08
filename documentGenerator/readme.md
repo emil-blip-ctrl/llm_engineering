@@ -1,31 +1,32 @@
 ## Summary
 
-`exchange-client-integration-online-service-access-requests-v2` is an IBM App Connect Enterprise 12 REST service that accepts online assistance SMS link requests and orchestrates a multi-step backend process to send the requester an SMS containing an access link.
+`servicesIntegrationAssistanceCasesEventsMlogConsume` is an IBM App Connect Enterprise 12 application that consumes assistance case/service event messages from MQ, filters for FSM-relevant MLOGISTICS events, translates them into FSM request payloads, invokes an external FSM assistance-cases API, and publishes either a success/reference outcome or an error outcome to MQ topics.
 
-The service exposes:
+The service exposes or uses these interfaces:
 
-- `GET /exchange-clients/v2/online-service-access-requests/health`
-- `POST /exchange-clients/v2/online-service-access-requests/sms-online-assistance-request`
+- **Inbound MQ consumption** from queue alias `A.SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2`
+- **Outbound HTTP calls** to the FSM assistance-cases API
+- **Outbound MQ topic publications** for:
+  - success/reference outcomes
+  - error outcomes
 
-At a high level, the POST operation:
+At a high level, the service:
 
-1. Logs the inbound request and technical context.
-2. Validates required caller metadata and request fields.
-3. Loads policy-driven configuration based on the request `contact-reason`.
-4. Calls a JWT generation API to obtain an access token.
-5. Builds a redirect URL and attempts to shorten it.
-6. Calls a forge-text API to generate the final SMS text.
-7. Calls an SMS API to send the message.
-8. Returns a synthetic acknowledgment payload to the caller, or a standardized JSON error if the orchestration fails.
+1. Consumes JSON event messages from an MQ queue populated by a topic subscription.
+2. Filters out events that are not relevant for FSM processing.
+3. Determines whether the event represents a **CASE** or **SERVICE** operation and whether it should be sent as **POST** or **PUT**.
+4. Translates the incoming business object into the FSM payload format using shared-library translators.
+5. Sends the translated request to the external FSM API.
+6. Publishes either a success/reference message or an error message to a configured MQ topic.
 
-The implementation relies heavily on:
+The implementation relies on shared libraries for:
 
-- external policy projects
-- the shared library `SHLIB_PoliciesReader`
-- reusable HTTP helper compute modules in `utils.esql`
-- a centralized HTTP error builder subflow
+- policy lookup
+- HTTP/MQ encapsulation
+- BOM-to-FSM translation
+- common error handling
 
-> The request/response examples below describe what ACE itself appears to consume and produce. In real deployments, APIC or another gateway may sit in front of ACE, so the end-user-visible contract can differ from the raw ACE flow behavior.
+> **Payload note:** Input and output JSON shapes below are inferred from the visible ESQL and shared-subflow usage. No explicit schema/OpenAPI contract is included in the provided source, so treat examples as implementation-oriented rather than authoritative producer/consumer contracts.
 
 ---
 
@@ -36,49 +37,47 @@ The implementation relies heavily on:
 Project name:
 
 ```text
-exchange-client-integration-online-service-access-requests-v2
+servicesIntegrationAssistanceCasesEventsMlogConsume
 ```
 
-Maven artifact / packaging / version:
+Maven artifact / version, if visible:
 
 ```text
 groupId:    ch.tcs.nip.ace
-artifactId: exchange-client-integration-online-service-access-requests-v2
-version:    2.0.1-SNAPSHOT
-packaging:  pom
-parent:     ch.tcs.nip.pom:tcs-pom-ace:1.0.9
+artifactId: services-integration-assistance-cases-events-mlog-consume
+version:    1.0.0-SNAPSHOT
+parent:     ch.tcs.nip.pom:tcs-pom-ace:1.0.10
 ```
+
+Packaging is not explicitly declared in the provided `pom.xml`; ACE build is handled through the IBM Maven plugin.
 
 ### Main Components
 
 | Component | Type | Purpose |
 |---|---|---|
-| `restapi.descriptor` | REST API descriptor | Maps REST operations to implementation subflows |
-| `swagger.json` | OpenAPI/Swagger 2.0 | Active API contract used by the REST descriptor |
-| `gen/OnlineServiceAccessRequestsV2.msgflow` | Generated message flow | Main HTTP entry flow routing REST operations to implementation subflows |
-| `health.subflow` | Subflow | Simple health-check response |
-| `postSmsOnlineAssistanceRequest.subflow` | Subflow | Main orchestration for SMS online assistance requests |
-| `callJwtGenService.subflow` | Subflow | Calls JWT generation API |
-| `callUrlShortenerService.subflow` | Subflow | Calls URL shortener API; failure is tolerated |
-| `callForgeTextService.subflow` | Subflow | Calls forge-text API to generate SMS content |
-| `callSendSmsService.subflow` | Subflow | Calls SMS API to send the SMS |
-| `build_http_error.subflow` | Subflow | Builds standardized HTTP JSON error response |
-| `utils.esql` | Shared ESQL utilities | HTTP response/error helper compute modules |
-| `globalFunctions.esql` | Shared ESQL functions | Exception parsing, policy access helpers, string normalization |
+| `processEventFromQueueMlog.msgflow` | Message flow | Main orchestration flow: consume MQ message, filter, translate, call FSM, publish result/error |
+| `IsMessageForMlog.esql` | Compute module | Business/event filter deciding whether the message should continue to FSM processing |
+| `FindMethodAndData_Compute.esql` | Compute module | Determines request method (`POST`/`PUT`) and dataset (`CASE`/`SERVICE`) |
+| `TranslateMessageForMlog.subflow` | Subflow | Routes to case vs service translation shared subflow |
+| `SendMessageToMlog.subflow` | Subflow | Prepares outbound HTTP request and invokes shared HTTP call subflow |
+| `SendMessageToMlog_Compute.esql` | Compute module | Builds HTTP headers, URL, and method |
+| `processEventFromQueueMlog_ExtratBusinessIdentifiers.esql` | Compute module | Populates business identifiers into logging context |
+| `processEventFromQueueMlog_ExtractIdentifiers.esql` | Compute module | Builds success/reference outcome publication payload |
+| `processEventFromQueueMlog_ErrorHander.esql` | Compute module | Normalizes exception/backend errors into a JSON error structure |
+| `processEventFromQueueMlog_PrepareError.esql` | Compute module | Builds error outcome publication payload |
+| `resources/mq/install/01-install.mqs` | MQ script | Creates local queue, backout queue, alias queues, and topic subscription |
 
 ### Dependencies
 
 | Dependency | Type | Usage |
 |---|---|---|
-| `exchange-integration-policies-credentials` | Policy project | Credentials for URL shortener and forge-text; visible through policy names used in ESQL |
-| `exchange-integration-policies-endpoints` | Policy project | Endpoint path configuration for downstream APIs |
-| `exchange-integration-policies-properties-digitalintake` | Policy project | Brand / contact-reason specific configuration |
-| `SHLIB_PoliciesReader` | Shared library | Reads single or all properties from policy projects |
+| `SHLIB_PoliciesReader` | Shared library | Reads runtime policy values for endpoints, credentials, and topic names |
+| `common-integration-shlib-encapsulate-calls` | Shared library | Provides MQ start, HTTP call, and MQ topic publication subflows |
+| `SHLIB_TranslatorFsmBom` | Shared library | Provides BOM-to-FSM translation subflows for case and service payloads |
+| `SHLIB_CommonErrorFunctions` | Shared library | Provides shared error-handling subflow(s) |
+| `CommonHelper.*` | External/shared ESQL helper | Used to split semicolon-separated metadata into JSON arrays; source not visible in provided files |
 
-### Visible vs Inferred Dependencies
-
-- **Directly visible in code**: policy reads via `Shlib_PoliciesReader.getPolicyPropertyWithOutError(...)` and `Shlib_PoliciesReader.getAllPolicyProperties(...)`.
-- **Not visible in provided source**: internal implementation of `SHLIB_PoliciesReader`, actual deployed policy values, APIC-side mediation, and downstream API schemas beyond fields inferred from usage.
+Where shared-library internals are not provided, behavior below is based only on how those components are invoked.
 
 ---
 
@@ -87,914 +86,899 @@ parent:     ch.tcs.nip.pom:tcs-pom-ace:1.0.9
 Defined in:
 
 ```text
-restapi.descriptor
-swagger.json
-gen/OnlineServiceAccessRequestsV2.msgflow
+processEventFromQueueMlog.msgflow
+resources/mq/install/01-install.mqs
 ```
 
-Base path / entry mechanism:
+Base entry mechanism:
 
 ```text
-HTTPS REST input on /exchange-clients/v2/online-service-access-requests*
+MQ topic subscription -> alias queue A.SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2
 ```
-
-The generated flow uses an HTTP Input node with:
-
-- `useHTTPS=true`
-- message domain `JSON`
 
 ### Operations / Entry Points
 
-| Method | Path | Implementation | Notes |
+| Method / Trigger | Path / Input | Implementation | Notes |
 |---|---|---|---|
-| `GET` | `/health` | `health.subflow` | Simple liveness response |
-| `POST` | `/sms-online-assistance-request` | `postSmsOnlineAssistanceRequest.subflow` | Main SMS online assistance orchestration |
+| MQ message | Queue alias `A.SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2` | `processEventFromQueueMlog.msgflow` | Queue is fed by subscription `SUB_SERVICES_MQ_MLOG_CASES_EVENTS_2` |
+| Topic subscription | Topic object `SERVICES_MQ_ASSISTANCE_V2_CASES_EVENTS_TOPIC`, selector `FTserviceCharacteristics LIKE '%371001%'` | MQ infrastructure | Pre-filters inbound events before they reach ACE |
 
-### Active vs Legacy API Definition
+### MQ Infrastructure Visible in Source
 
-- **Active contract**: `swagger.json`
-- **Legacy file present**: `swagger-v1.json`
-
-`restapi.descriptor` points to `swagger.json`, so `swagger-v1.json` appears historical and is not the active contract in the provided source.
+| Resource | Definition | Notes |
+|---|---|---|
+| `SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2` | Local queue | Main inbound queue |
+| `A.SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2` | Alias queue | Queue used by the flow |
+| `SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2.BO` | Local backout queue | Backout storage |
+| `A.SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2.BO` | Alias backout queue | Alias for backout queue |
+| `SUB_SERVICES_MQ_MLOG_CASES_EVENTS_2` | Subscription | Delivers selected topic messages to the inbound queue |
+| `BOTHRESH(3)` | Queue property | Matches the flow’s visible backout threshold setting |
 
 ### Expected Input Shape
 
-From `swagger.json` and confirmed by ESQL usage, the POST request is expected to contain at least:
+The flow expects `InputRoot.JSON.Data` and also relies heavily on metadata copied into `Environment.Variables.MessageIn.MQRFH2.usr`.
+
+An inferred payload shape is:
 
 ```json
 {
-  "service-access-info": {
-    "number-initiating": "+41800316900",
-    "number-contacted": "+41765459694",
-    "language": "fr",
-    "contact-type": "outbound",
-    "contact-reason": "ONLINEASSY",
-    "physical-person": {
-      "firstname": "John",
-      "lastname": "Doe"
+  "Data": {
+    "Id": "...",
+    "InternalId": "...",
+    "Active": true,
+    "CaseReferenceList": {
+      "Item": [
+        {
+          "Source": "MLOGISTICS",
+          "Reference": "...",
+          "Id": "..."
+        }
+      ]
+    },
+    "ServiceReferenceList": {
+      "Item": [
+        {
+          "Source": "MLOGISTICS",
+          "Reference": "...",
+          "Id": "..."
+        }
+      ]
+    },
+    "ServiceCharacteristicList": {
+      "Item": ["371001"]
+    },
+    "ServiceDeliveryList": {
+      "Item": [
+        {
+          "Active": true,
+          "InternalId": "...",
+          "ServiceCharacteristicList": {
+            "Item": ["371001"]
+          },
+          "ServiceReferenceList": {
+            "Item": [
+              {
+                "Source": "MLOGISTICS",
+                "Reference": "..."
+              }
+            ]
+          }
+        }
+      ]
     }
-  },
-  "request-type": "OA_LINK_REQUEST"
+  }
 }
 ```
 
-Important headers used by the flow:
-
-| Header | Usage |
-|---|---|
-| `X-Caller-Code` | Required by custom validation |
-| `X-Global-Transaction-Id` | Stored and propagated to downstream services and error responses |
-| `X-Origin-Caller-Code` | Optional; propagated downstream when present |
-
-Important request fields used by the orchestration:
+Important metadata fields expected in `Environment.Variables.MessageIn.MQRFH2.usr`:
 
 | Field | Meaning / Usage |
 |---|---|
-| `service-access-info.number-contacted` | Used for JWT generation and SMS dispatch |
-| `service-access-info.language` | Used in redirect URL construction and forge-text request |
-| `service-access-info.contact-reason` | Drives policy selection and SMS sender code |
-| `service-access-info.physical-person.firstname` | Determines which forge-text template is used |
-| `service-access-info.physical-person.lastname` | Used in personalized forge-text template |
+| `UDeventInitiator` | Used to suppress self/loop processing for `FSM` and `MLOGISTICS` |
+| `UDeventForwarder` | Used similarly to `UDeventInitiator` |
+| `UDcontextsOfEvent` | Used to exclude unwanted contexts |
+| `UDnaturesOfChanges` | Used to whitelist supported change types |
+| `callerCode` | Copied into outcome `execution-context` |
+| `originCallerCode` | Copied into outcome `execution-context` |
 
-### Input Validation Notes
-
-Custom ESQL explicitly validates only:
-
-- `X-Caller-Code` header
-- `service-access-info.contact-reason`
-
-Other fields are required by Swagger, but additional custom validation is **not visible** in the provided ESQL. Some validation may be performed by the generated REST framework or by API gateway layers, but that is **not visible in provided source**.
+This MQRFH2-derived metadata is not built in this application; it is likely populated by the shared MQ start subflow.
 
 ---
 
 ## High-Level Architecture / Runtime Flow
 
 ```text
-HTTP Input
+MQ Topic Subscription
   |
   v
-Route To Label
+A.SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2
   |
-  +--> health
-  |      |
-  |      v
-  |    health.subflow
-  |      |
-  |      v
-  |    HTTP Reply
+  v
+cc_app_mq_start
   |
-  +--> postSmsOnlineAssistanceRequest
-         |
-         v
-       log-entry
-         |
-         v
-       TryCatch
-         |
-         +--> try
-         |     |
-         |     v
-         |   FlowOrder FO1
-         |     |
-         |     +--> checkCallerCode
-         |     |
-         |     +--> FlowOrder FO2
-         |            |
-         |            +--> getUserPolicyValues
-         |            |
-         |            +--> FlowOrder FO3
-         |                   |
-         |                   +--> setEnv
-         |                   |     |
-         |                   |     v
-         |                   |   callJwtGenService
-         |                   |     |
-         |                   |     v
-         |                   |   callUrlShortenerService
-         |                   |     |
-         |                   |     +--> success short URL
-         |                   |     |
-         |                   |     +--> error/failure fallback URL
-         |                   |             |
-         |                   |             v
-         |                   |          callForgeTextService
-         |                   |             |
-         |                   |             v
-         |                   |          callSendSmsService
-         |                   |
-         |                   +--> setResponse
-         |
-         +--> catch
-               |
-               v
-             build_http_error
-               |
-               v
-             HTTP Reply
+  +--> Catch ----------------------> ThrowCatchToRetry
+  |
+  +--> Output ---------------------> retrieveTechnicalError
+  |                                   |
+  |                                   v
+  |                                ErrorHandler
+  |                                   |
+  |                                   v
+  |                                PrepareError
+  |                                   |
+  |                                   v
+  |                              cc_mq_topic_call
+  |
+  v
+JSON
+  |
+  v
+FilterFSM
+  |
+  +--> out1 -----------------------> NotForFSM
+  |
+  v
+Find method_data
+  |
+  v
+TranslateMessageForMlog
+  |
+  +--> Output1 --------------------> NotForFSM
+  |
+  +--> Output2 --------------------> ErrorHandler
+  |
+  v
+ExtratBusinessIdentifiers
+  |
+  v
+SendMessageToMlog
+  |
+  +--> Output ---------------------> BuildMessage
+  |                                   |
+  |                                   v
+  |                              cc_mq_topic_call
+  |
+  +--> Output Error --------------> ErrorHandler
+  |
+  +--> ConnectionError -----------> ErrorHandler
 ```
 
 ### Runtime Overview
 
-The service is a REST-generated ACE application. The generated entry flow receives HTTPS requests and routes them by REST operation name to either the health subflow or the main POST subflow.
+This application is an **asynchronous MQ consumer**, not a synchronous API flow. Messages are received from an MQ queue populated by a topic subscription. The first part of the flow normalizes the message into the JSON domain and decides whether the event is relevant for FSM processing.
 
-The POST implementation is structured as a controlled orchestration:
+If relevant, the flow classifies the message into one of two functional datasets:
 
-1. **Request logging and context capture** happen immediately.
-2. A **TryCatch** protects the business flow.
-3. **FlowOrder** nodes are used to sequence validation, policy loading, service orchestration, and final client response construction.
-4. The main business chain makes four downstream HTTP calls:
-   - JWT generation
-   - URL shortening
-   - forge-text generation
-   - SMS sending
-5. Any fatal exception is caught and converted into a standard JSON error by `build_http_error.subflow`.
+- **CASE**
+- **SERVICE**
 
-A key design choice is that the **URL shortener is optional** from a business continuity perspective: visible code shows that URL shortener success and URL shortener failure both continue to forge-text generation. This means the flow can still send an SMS even if URL shortening fails.
+It also determines whether the outbound FSM call should be a **POST** or **PUT**. The translated request is then sent to an external FSM API using a shared HTTP-calling subflow. The target URL and credentials are policy-driven.
 
-Another important design choice is that the client response is **not built from the SMS provider response**. The service returns a synthesized business acknowledgment in `postSmsOnlineAssistanceRequest_setResponse`.
+The flow has three practical end states:
+
+1. **Ignored / not for FSM**  
+   The message is dropped into a terminal sink after monitoring.
+
+2. **Processed successfully**  
+   A success/reference outcome message is built and published to an MQ topic.
+
+3. **Handled as error**  
+   A normalized error structure is created, enriched with execution context, and published to an MQ error topic.
+
+A separate catch/rethrow path is also wired from the shared MQ-start subflow, which is the part most clearly associated with retry/backout behavior.
 
 ---
 
-## Operation-by-Operation Documentation
+## Operation Documentation
 
-## `GET /health`
+### Relevant Case Event Processing
 
 **Purpose**
 
-Returns a simple health payload for service liveness.
+Send a qualifying case-related MLOGISTICS event to the FSM assistance-cases API and publish an outcome message.
 
 **Flow**
 
 ```text
-HTTP Input -> Route To Label -> health.subflow -> HTTP Reply
+MQ -> JSON -> FilterFSM -> Find method_data -> TranslateBomToFsmCase
+   -> SendMessageToMlog -> BuildMessage -> MQ topic publish
 ```
 
 **Main behavior**
 
-- Builds a JSON object with:
-  - `status = "pass"`
-  - `api = ApplicationLabel`
-  - current timestamp in ISO-like character format
-- No external calls
-- No custom error handling is visible in this subflow
+- Accepts the event only if:
+  - it is not initiated/forwarded by `FSM` or `MLOGISTICS`
+  - the context does not indicate `FIELD_SERVICE_NOT_CONCERNED` or `FIELD_SERVICE_UNAVAILABLE`
+  - the change nature is one of the supported case/service change types
+  - at least one active service delivery contains characteristic `371001`
+- Determines `CASE` dataset and `POST` or `PUT`
+- Translates the message with the shared `TranslateBomToFsmCase` subflow
+- Sends the HTTP request to the FSM API
+- On success, publishes a reference/outcome message
+- On failure, publishes an error outcome message
 
 **Pseudo-code**
 
 ```pseudo
-on GET /health:
-    output.status = "pass"
-    output.api = ApplicationLabel
-    output.timestamp = current timestamp
-    return 200
+on inbound event:
+    if event is not eligible for FSM:
+        stop
+
+    if event represents case processing:
+        determine method POST or PUT
+        translate to FSM case payload
+        call FSM API
+        if call succeeds:
+            publish success/reference outcome
+        else:
+            publish error outcome
 ```
 
----
-
-## `POST /sms-online-assistance-request`
+### Relevant Service Event Processing
 
 **Purpose**
 
-Generates an online assistance access link, turns it into SMS text, sends the SMS, and returns an acknowledgment payload.
+Send a qualifying service-related MLOGISTICS event to the FSM assistance-cases API and publish an outcome message.
 
 **Flow**
 
 ```text
-Input
- -> log-entry
- -> TryCatch
-    -> validate caller code and contact reason
-    -> load policies for requested contact reason
-    -> extract request fields into Environment
-    -> call JWT service
-    -> call URL shortener service
-    -> call forge-text service
-    -> call SMS service
-    -> build acknowledgment response
- catch
-    -> build standardized HTTP error JSON
+MQ -> JSON -> FilterFSM -> Find method_data -> TranslateBomToFsmCaseService
+   -> SendMessageToMlog -> BuildMessage -> MQ topic publish
 ```
 
-**Main behavior**
+**Distinct behavior compared with case processing**
 
-- Logs inbound context and emits a monitoring event for request reception.
-- Requires inbound `X-Caller-Code`.
-- Requires `service-access-info.contact-reason`.
-- Loads brand-specific and global policy configuration.
-- Chooses one of two forge-text templates:
-  - personalized template if `firstname` is present
-  - generic template otherwise
-- Retrieves an access token from a JWT service.
-- Builds a redirect URL from configured policy values and the JWT access token.
-- Attempts to shorten the URL, but continues even if shortening fails.
-- Calls forge-text API to create SMS content using functional context, language, and template items.
-- Calls SMS API with the final message text and sender code.
-- Returns a response body largely based on the original request, augmented with:
-  - current timestamp
-  - empty `content`
-  - selected `template-id`
-  - `source-name` set from inbound `X-Caller-Code`
-  - `channel-association = "HTTP"`
+- `FilterFSM` evaluates the **top-level** service delivery payload:
+  - `InputRoot.JSON.Data.Active` must be true
+  - `InputRoot.JSON.Data.ServiceCharacteristicList.Item[]` must contain `371001`
+- Translator selection is driven by:
 
-**Inferred downstream response dependencies**
+```text
+$LocalEnvironment/Variables/Fsm/Request/Dataset = 'SERVICE'
+```
 
-These fields are not defined by schemas in the provided source, but are clearly required by downstream steps:
-
-| Downstream call | Field expected from response | Why |
-|---|---|---|
-| JWT service | `access_token` | Used to build redirect URL |
-| URL shortener | `url.keyword` | Used to construct final short URL |
-| forge-text | `content` | Used as SMS message text |
-| SMS service | none visible | Response body is not used by parent flow |
+- The outbound URL uses `/case/{referenceNumber}` rather than plain `/case`
+- Success publication uses object type `QuoteLineItem`
 
 **Pseudo-code**
 
 ```pseudo
-on POST /sms-online-assistance-request:
-    log request and save headers/context
+on inbound event:
+    if event is not eligible for FSM:
+        stop
 
-    if X-Caller-Code missing:
-        fail with 400 ACEFONC0001
-
-    if contact-reason missing:
-        fail with 400 ACEFONC0001
-
-    load global hosts, credentials, endpoints, and contact-reason policy values
-    extract language, phone numbers, first/last name, sender code
-
-    if firstname exists:
-        template-id = 1
-        functionalContext = personalized forge-text template
-    else:
-        template-id = 2
-        functionalContext = generic forge-text template
-
-    call JWT API using contacted phone number
-    get access_token
-
-    build long redirect URL from configured template + access_token
-    call URL shortener
-    if shortener succeeds:
-        url-client = short-url-in-sms + "/" + keyword
-    else:
-        keep previously built long redirect URL
-
-    call forge-text API with:
-        functionalContext
-        language
-        template items:
-            - short-link
-            - optionally first_name and last_name
-
-    if forge-text response has no content:
-        fail with 502 ACETECH0004
-
-    call SMS API with:
-        phone-number = number-contacted
-        message-text = forge-text content
-        sender-code = contact-reason
-
-    build business acknowledgment response from original request
-    return success
+    if event represents service processing:
+        determine method POST or PUT
+        translate to FSM service payload
+        call FSM API
+        if call succeeds:
+            publish success/reference outcome
+        else:
+            publish error outcome
 ```
+
+### Non-Relevant / Alternate Path
+
+**Purpose**
+
+Terminate messages that should not be sent to FSM.
+
+**Flow**
+
+```text
+FilterFSM out1 -> NotForFSM
+TranslateMessageForMlog Output1 -> NotForFSM
+```
+
+**Main behavior**
+
+- `FilterFSM` explicitly propagates non-eligible messages to terminal `out1`
+- Shared translation subflows can also return an alternate path (`OutputAltern`), which is mapped to the same `NotForFSM` sink
+- No downstream HTTP call or outcome publication occurs on this path
+
+### Error Publication Path
+
+**Purpose**
+
+Convert technical, translation, or backend-call errors into a normalized JSON outcome and publish that outcome to the error topic.
+
+**Flow**
+
+```text
+retrieveTechnicalError / Translate error / HTTP error
+    -> ErrorHandler
+    -> PrepareError
+    -> cc_mq_topic_call
+```
+
+**Main behavior**
+
+- Normalizes exceptions or backend HTTP errors into:
+
+```text
+JSON.Data.timestamp
+JSON.Data.httpCode
+JSON.Data.httpMessage
+JSON.Data.moreInformation
+```
+
+- Repackages that normalized error into the final error-topic publication format
+- Publishes to the topic name resolved from policy key `cases-outcomes-error`
 
 ---
 
 ## Core Components / Subflows
 
-## `postSmsOnlineAssistanceRequest.subflow`
+### `processEventFromQueueMlog`
 
 File:
 
 ```text
-postSmsOnlineAssistanceRequest.subflow
+processEventFromQueueMlog.msgflow
 ```
 
 **Purpose**
 
-Main orchestration for the SMS online assistance request.
+Main orchestration flow for consuming MQ case/service events, calling FSM, and publishing outcome/error messages.
 
 **Node-level flow**
 
 ```text
-Input
- -> log-entry
- -> TryCatch
-    -> try:
-         FO1
-           first  -> checkCallerCode
-           second -> FO2
-                       first  -> getUserPolicyValues
-                       second -> FO3
-                                   first  -> setEnv -> callJwtGenService -> callUrlShortenerService -> callForgeTextService -> callSendSmsService
-                                   second -> setResponse
-    -> catch:
-         build_http_error
- -> Output
+cc_app_mq_start
+  -> ResetContentDescriptor(JSON)
+  -> FilterFSM
+     -> out1 -> NotForFSM
+     -> out  -> Find method_data
+               -> TranslateMessageForMlog
+                  -> Output1 -> NotForFSM
+                  -> Output2 -> ErrorHandler -> PrepareError -> cc_mq_topic_call
+                  -> Output  -> ExtratBusinessIdentifiers
+                              -> SendMessageToMlog
+                                 -> Output         -> BuildMessage -> cc_mq_topic_call
+                                 -> Output Error   -> ErrorHandler -> PrepareError -> cc_mq_topic_call
+                                 -> ConnectionError-> ErrorHandler -> PrepareError -> cc_mq_topic_call
+
+cc_app_mq_start Catch  -> ThrowCatchToRetry
+cc_app_mq_start Output -> retrieveTechnicalError -> ErrorHandler -> PrepareError -> cc_mq_topic_call
 ```
 
 **Detailed behavior**
 
-- `log-entry`
-  - Copies input to output.
-  - Stores request, correlation data, and TCS/SUP log context into `Environment`.
-  - Saves inbound headers such as `X-Caller-Code` and `X-Global-Transaction-Id`.
-  - Uses `PROPAGATE TO TERMINAL 1 DELETE NONE` to emit an extra copy to a dead-end `Pass through` branch. This appears to exist mainly to trigger the monitor event `"SUP: RECEIVE request from IVR"` without affecting main processing.
-
-- `Try Catch`
-  - Encapsulates the orchestration.
-  - Any thrown user exception is routed to `build_http_error`.
-
-- `FO1`
-  - First branch validates mandatory caller metadata.
-  - Second branch continues the flow only after validation branch execution.
-
-- `FO2`
-  - First branch loads policies and credentials.
-  - Second branch continues into runtime business processing.
-
-- `FO3`
-  - First branch performs the downstream service orchestration.
-  - Second branch builds the final business response using values accumulated in `Environment`.
+- Starts from a shared MQ-start subflow configured with:
+  - `queueName="A.SERVICES_MQ_INCOMING_MLOG_CASES_EVENTS_2"`
+  - `BackoutThreshold="3"`
+- Resets message domain to JSON before business logic starts
+- Uses `FilterFSM` to eliminate events that should not reach FSM
+- Uses `Find method_data` to determine request method and dataset and to seed environment/local-environment context
+- Delegates payload conversion to shared translators via `TranslateMessageForMlog`
+- Logs business identifiers before making the outbound call
+- Sends the translated payload to the external FSM API
+- Publishes either:
+  - a success/reference outcome
+  - or an error outcome
 
 **Important runtime data**
 
 | Variable / Tree | Usage |
 |---|---|
-| `Environment.Variables."X-Caller-Code"` | Inbound caller code; later echoed in response |
-| `Environment.Variables."X-Global-Transaction-Id"` | Correlation ID propagated downstream and returned in errors |
-| `Environment.Variables.XCorrelationID` | Secondary correlation header for downstream calls |
-| `Environment.Variables.policy.*` | Loaded endpoint, credential, and template configuration |
-| `Environment.Variables.FunctionalContext` | Forge-text functional context / template key |
-| `Environment.Variables."template-id"` | Response template ID, `1` or `2` |
-| `Environment.Variables."url-client"` | Long or short URL used in SMS text generation |
-| `Environment.Variables.TCSLog.*` | Logging/monitoring context |
-| `Environment.Request` | Copy of inbound request; not otherwise used in visible source |
+| `Environment.Variables.MessageIn.MQRFH2.usr.*` | Source event metadata used for filtering and outcome publication |
+| `OutputLocalEnvironment.Variables.Fsm.Request.Id` | Request identifier copied from input; likely used downstream or by shared components |
+| `OutputLocalEnvironment.Variables.Fsm.Request.Method` | Controls outbound HTTP verb |
+| `OutputLocalEnvironment.Variables.Fsm.Request.Dataset` | Controls translator selection and URL construction |
+| `Environment.Variables.FSMRequest.InternalId` | Used in success/error outcome payloads |
+| `Environment.Variables.FSMRequest.CaseId` | Used for case-origin references |
+| `Environment.Variables.FSMRequest.ServiceId` | Used for service-origin references |
+| `Environment.Variables.FSMCall.ObjectType` | `CASE` or `SERVICE`; reused in publication builders |
+| `Environment.Variables.FSMCall.RequestMethod` | Reused in publication builders |
+| `Environment.Variables.FSMCall.RequestURL` | Captured outbound URL; reused in publication builders |
+| `OutputLocalEnvironment.Variables.Topic` | Topic destination for MQ publication subflow |
+| `Environment.Variables.TCSLog.context.business-identifiers` | Monitoring/logging context |
+| `Environment.Variables.Error.Info` | Normalized error payload for monitoring |
 
----
-
-## `callJwtGenService.subflow`
+### `TranslateMessageForMlog`
 
 File:
 
 ```text
-callJwtGenService.subflow
+TranslateMessageForMlog.subflow
 ```
 
 **Purpose**
 
-Calls the JWT generation API and returns its response to the parent flow.
+Selects the appropriate BOM-to-FSM translator based on whether the event is a case or a service.
 
 **Node-level flow**
 
 ```text
 Input
- -> set_jwt_gen_parameters
- -> WSRequest common-api-technical-security-jwt-internal
-    +--> out     -> HandleResponse -> Output
-    +--> error   -> HandleHttpError -> buildError -> exception
-    +--> failure -> HandleHttpFailure -> buildError -> exception
+  -> ResetContentDescriptor(BLOB)
+  -> Route(SendOnlyService)
+       -> Match   -> TranslateBomToFsmCaseService -> Output / OutputAltern / OutputError
+       -> default -> TranslateBomToFsmCase        -> toJson -> Output / OutputAltern / OutputError
 ```
 
 **Detailed behavior**
 
-- Prepares outbound headers:
-  - `x-ibm-client-id`
-  - `X-Global-Transaction-Id`
-  - `aud-claim`
-  - `X-Caller-Code = ApplicationLabel`
-  - `X-Origin-Caller-Code`
-  - `X-Correlation-ID`
-- Builds request URL as:
-  - `JwtTokenServicePoliciesEndPoint || '/gen'`
-- Builds request JSON body with:
-  - `phoneNumber = service-access-info.number-contacted`
-- Normalizes only the JWT request phone number:
-  - if it starts with `00`, it is converted to `+...`
-- On success, passes provider response through unchanged via `PrepareHTTPResponse`.
-- On HTTP error or failure, converts downstream/provider problems into a thrown user exception.
+- Resets the message domain to `BLOB` before translation
+- Uses a Route node with filter:
 
-**HTTP error mapping**
+```text
+$LocalEnvironment/Variables/Fsm/Request/Dataset = 'SERVICE'
+```
 
-Fatal JWT errors use `callJwtGenService_buildError`:
+- `SERVICE` goes to `TranslateBomToFsmCaseService`
+- All other values go to `TranslateBomToFsmCase`
+- Both translators are external shared-library subflows; internal transformation logic is **not visible in the provided source**
+- `OutputAltern` from either translator is treated as “not for FSM”
+- `OutputError` from either translator is treated as an error and routed to centralized error handling
 
-- If the original HTTP code is in `400,401,403,404,429,501,502,503`, that code is reused.
-- Otherwise ACE returns `502`.
-- Error provider is set to `APIC`.
-- Error reference is `ACETECH0004`.
+**Visible fact vs inference**
 
----
+- **Fact:** Translator selection is dataset-driven.
+- **Inference:** The translators likely construct the final JSON/BLOB payload required by the FSM API and may also populate environment data needed later.
 
-## `callUrlShortenerService.subflow`
+### `SendMessageToMlog`
 
 File:
 
 ```text
-callUrlShortenerService.subflow
+SendMessageToMlog.subflow
 ```
 
 **Purpose**
 
-Attempts to shorten the redirect URL. This step is visibly non-fatal.
+Prepare the HTTP request, invoke the shared HTTP call subflow, and normalize success/error branches.
 
 **Node-level flow**
 
 ```text
 Input
- -> set-url-shortener-parameters
- -> WSRequest support-it-api-url-shortener
-    +--> out     -> HandleResponse -> getShortUrl -> Output
-    +--> error   -> HandleHttpError -> Output
-    +--> failure -> HandleHttpFailure -> Error
+  -> Prepare Request
+  -> cc_http_async_call
+       -> Response_Out -> toJson  -> Output
+       -> Output1      -> toJson1 -> Output Error
+       -> Output2      -> toJson1 -> Output Error
+       -> Output       -> ConnectionError
+       -> Output3      -> ConnectionError
 ```
 
 **Detailed behavior**
 
-- Builds outbound APIC credentials and correlation headers.
-- Replaces `${language}` placeholders in policy-based redirect URLs.
-- Builds a long redirect URL using:
-  - configured webapp redirect base
-  - JWT `access_token`
-- Builds the URL shortener endpoint using:
-  - URL shortener base endpoint
-  - configured query string template
-  - URL-encoded success and error redirect URLs
-  - signature from policy
-- On success:
-  - `getShortUrl` sets `Environment.Variables."url-client"` to a final SMS URL derived as:
-    - `policy."short-url-in-sms" + '/' + InputRoot.JSON.Data.url.keyword`
-  - Although `InputRoot.JSON.Data.shorturl` is first copied into `url-client`, it is immediately overwritten. The actual final SMS link therefore comes from the policy prefix plus the returned keyword.
-- On HTTP error/failure:
-  - the subflow does **not** throw an exception
-  - it only records error details and returns
-  - the parent flow still continues to forge-text generation
+- `Prepare Request` builds headers, URL, and HTTP method
+- The outbound call is delegated to shared subflow `cc_http_async_call`
+- Successful responses go through a JSON reset and return via `OutTerminal.Output`
+- Error responses that still carry a body go through a JSON reset and return via `OutTerminal.Output Error`
+- Connection/technical failures are routed via `OutTerminal.ConnectionError`
 
-**Important behavior**
+**Visible fact vs inference**
 
-This is a deliberate resilience point:
-
-- **Visible fact**: URL shortener failure does not stop the main orchestration.
-- **Visible implication**: the previously built long redirect URL remains in `Environment.Variables."url-client"` and can still be used in the SMS text.
-
----
-
-## `callForgeTextService.subflow`
-
-File:
-
-```text
-callForgeTextService.subflow
-```
-
-**Purpose**
-
-Calls the forge-text API to create the final SMS content from templates and configuration items.
-
-**Node-level flow**
-
-```text
-Input
- -> set-forge-text-parameters
- -> WSRequest support-content-mgt-api-forge-text
-    +--> out     -> HandleResponse -> Output
-    +--> error   -> HandleHttpError -> buildError -> exception
-    +--> failure -> HandleHttpFailure -> buildError -> exception
-```
-
-**Detailed behavior**
-
-- Sets APIC headers using `ace_app_esb.client_id` and `client_secret`.
-- Sets Basic Authorization for forge-text credentials from policy.
-- Propagates `X-Global-Transaction-Id`.
-- Sets `Content-Type = application/json; charset=utf-8`.
-- Sets `X-Caller-Code = ApplicationLabel`.
-- Builds request body:
-  - `functionalContext`
-  - `language` in lowercase
-  - `configurationItems[]`
-
-Configuration item logic:
-
-- If using the personalized template:
-  - `first_name`
-  - `last_name`
-  - `short-link`
-- If using the generic template:
-  - `short-link` only
-
-Names are normalized using `translateSpecialCharForNames(...)` before being sent.
-
-On HTTP error/failure:
-
-- provider name is set to `FORGETEXT`
-- error reference is `ACETECH0004`
-- HTTP status is either preserved from approved provider codes or mapped to `502`
-- the module throws a user exception including template context information
-
----
-
-## `callSendSmsService.subflow`
-
-File:
-
-```text
-callSendSmsService.subflow
-```
-
-**Purpose**
-
-Calls the SMS service to send the generated message text.
-
-**Node-level flow**
-
-```text
-Input
- -> set-send-sms-parameters
- -> WSRequest support-it-api-sms
-    +--> out     -> HandleResponse -> Pass through
-    +--> error   -> HandleHttpError -> buildError -> exception
-    +--> failure -> HandleHttpFailure -> buildError -> exception
-```
-
-**Detailed behavior**
-
-- Before calling the SMS provider, it checks that forge-text actually returned `InputRoot.JSON.Data.content`.
-- If `content` is empty:
-  - sets `HttpReturnCode = 502`
-  - sets `ErrorRefApp = ACETECH0004`
-  - throws `No content returned by the forge-text service !`
-  - no SMS call is attempted
-- Builds outbound request body:
-  - `phone-number = Environment.Variables."number-contacted"`
-  - `message-text = InputRoot.JSON.Data.content`
-  - `sender-code = Environment.Variables."sender-code"`
-- Propagates:
-  - `X-Global-Transaction-Id`
-  - `X-Caller-Code = ApplicationLabel`
-  - `X-Origin-Caller-Code`
-  - `X-Correlation-ID`
-- On success, the downstream SMS response is not used by the parent flow.
-- The subflow has no exposed success output terminal back to the caller flow; success is effectively side-effect only.
-
-**Fatal error mapping**
-
-- provider name: `NETOXYGEN`
-- reference: `ACETECH0004`
-- provider codes in the approved list are preserved; others are mapped to `502`
-
----
-
-## `build_http_error.subflow`
-
-File:
-
-```text
-build_http_error.subflow
-```
-
-**Purpose**
-
-Builds the final standardized JSON HTTP error returned to the client.
-
-**Node-level flow**
-
-```text
-Input -> create_body -> Output
-```
-
-**Detailed behavior**
-
-`build_http_error_create_body` does the following:
-
-1. Copies message headers from input to output.
-2. If an `InputExceptionList` exists and `Environment.Variables.ExceptionStackTrace` is still empty:
-   - parses exception number/message/stacktrace using `parseExceptionList(...)`
-   - also serializes the full exception tree into JSON text and stores it in `Environment.Variables.ExceptionStackTrace`
-3. Defaults provider name to `ACE` if not already set.
-4. Defaults HTTP status to `500` and `ErrorRefApp = ACETECH0001` if not already set.
-5. Sets:
-   - `OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode`
-   - `OutputRoot.JSON.Data.timestamp`
-   - `OutputRoot.JSON.Data.httpCode`
-   - `OutputRoot.JSON.Data.httpMessage`
-   - `OutputRoot.JSON.Data.refAppError`
-   - `OutputRoot.JSON.Data.gtid`
-   - `OutputRoot.JSON.Data.moreInformation`
-6. Updates TCS/SUP log error fields from the final response.
-
-**Resulting error payload shape**
-
-```json
-{
-  "timestamp": "2026-06-26T10:11:12.123456",
-  "httpCode": "FORGETEXT : 502",
-  "httpMessage": "FORGETEXT : The API call to forge the final text from the template [1:...] failed !",
-  "refAppError": "ACETECH0004",
-  "gtid": "....",
-  "moreInformation": "...."
-}
-```
+- **Fact:** The shared HTTP subflow is configured with:
+  - `monitoring-api-name="external-api-fsm-assistance-cases"`
+  - `monitoring-api-operation="case"`
+  - `provider-name="FSM"`
+- **Inference:** The terminal meanings (`Response_Out`, `Output1`, `Output2`, `Output`, `Output3`) are defined by the shared subflow and are not internally visible here.
 
 ---
 
 ## Key ESQL / Logic Analysis
 
-## `postSmsOnlineAssistanceRequest_logEntry`
+### `IsMessageForMlog`
 
 File:
 
 ```text
-postSmsOnlineAssistanceRequest_logEntry.esql
+IsMessageForMlog.esql
 ```
 
 **Purpose**
 
-Initializes runtime context, logging metadata, and correlation data.
+Business-level event filter that decides whether the message should continue to FSM processing.
 
 **What it does**
 
-- Copies the full input message to output.
-- Stores a business identifier:
-  - phone number from `service-access-info.number-contacted`
-- Saves inbound headers into `Environment.Variables`
-  - `X-Caller-Code`
-  - `X-Global-Transaction-Id`
-- Saves the entire request in `Environment.Request`.
-- Generates a `trackID` with `UUIDASCHAR`.
-- Sets `XCorrelationID` from global transaction ID.
-- Captures inbound URI from `InputLocalEnvironment.REST.Input.URI`.
-- Initializes `TCSLog.context` fields such as severity, origin-caller, caller-code, target-url, source-system, and target-system.
-- Emits an additional propagated copy to terminal 1, apparently to support the request-received monitor event.
+- Reads event metadata from `Environment.Variables.MessageIn.MQRFH2.usr`
+- Rejects events when:
+  - `eventInitiator` is `FSM` or `MLOGISTICS`
+  - `eventForwarder` is `FSM` or `MLOGISTICS`
+  - `contextsOfEvent` contains `FIELD_SERVICE_NOT_CONCERNED`
+  - `contextsOfEvent` contains `FIELD_SERVICE_UNAVAILABLE`
+- Accepts only whitelisted change types, such as:
+  - `MANUAL_TRIGGER_FSM`
+  - `MANUAL_SEND_TRANSPORT`
+  - `CASE_CREATED`
+  - `CASE_*_CHANGED`
+  - `CASE_CANCELLATION`
+  - `SERVICE_CREATED`
+  - `SERVICE_UPDATED`
+  - `SERVICE_ACKNOWLEDGED`
+  - `SERVICE_STATUS_CHANGED`
+- Distinguishes between:
+  - case-style payloads using `CaseReferenceList`
+  - service-style payloads using `ServiceReferenceList`
+- Requires characteristic `371001` in:
+  - an active service delivery for case payloads
+  - the active top-level service payload for service events
 
 **Pseudo-code**
 
 ```pseudo
-copy input to output
+read eventInitiator, eventForwarder, contextsOfEvent, naturesOfChanges
 
-Environment.TCSLog.business-identifiers.phone-number = request.number-contacted
-Environment.X-Caller-Code = header.X-Caller-Code
-Environment.X-Global-Transaction-Id = header.X-Global-Transaction-Id
-Environment.Request = full input request
-Environment.trackID = UUID
-Environment.XCorrelationID = X-Global-Transaction-Id
-Environment.In.targeturl = REST URI
-Environment.In.XCallerCode = header.X-Caller-Code
+if initiator is FSM or MLOGISTICS:
+    reject
+if forwarder is FSM or MLOGISTICS:
+    reject
+if contexts include FIELD_SERVICE_NOT_CONCERNED or FIELD_SERVICE_UNAVAILABLE:
+    reject
 
-Environment.TCSLog.context.severity = "INFO"
-Environment.TCSLog.context.origin-caller = header.X-Origin-Caller-Code or header.X-Caller-Code
-Environment.TCSLog.context.caller-code = header.X-Caller-Code
-Environment.TCSLog.context.target-url = REST URI
-Environment.TCSLog.context.source-system = "CMP05737"
-Environment.TCSLog.context.target-system = "CMP05541"
+if naturesOfChanges contains one of the supported values:
+    if payload looks like case:
+        for each active service delivery:
+            if any service characteristic contains 371001:
+                return true
+    else if payload looks like service and payload is active:
+        if any top-level service characteristic contains 371001:
+            return true
 
-PROPAGATE copy to out1 for monitoring
-return true
+propagate to out1
+return false
 ```
-
----
-
-## `postSmsOnlineAssistanceRequest_getUserPolicyValues`
-
-File:
-
-```text
-postSmsOnlineAssistanceRequest_getUserPolicyValues.esql
-```
-
-**Purpose**
-
-Loads all policy-driven configuration required by the orchestration.
-
-**What it does**
-
-- Reads global host values:
-  - `apic-host`
-  - `apic-host-old`
-  - `ace-host`
-- Loads all properties for a policy whose name is derived from:
-  - `UPPER(InputRoot.JSON.Data."service-access-info"."contact-reason")`
-- Stores loaded policy tree in:
-  - `Environment.Variables.policy.exchange-integration-policies-properties-digitalintake`
-- Reads and builds:
-  - client IDs / secret
-  - JWT endpoint
-  - JWT audience claim
-  - URL shortener parameters
-  - redirect URLs
-  - public short URL prefix
-  - forge-text template identifiers
-  - SMS endpoint
-  - URL shortener endpoint and signature
-  - forge-text endpoint and credentials
-
-**Important design**
-
-Policy retrieval failures are explicitly turned into business errors:
-
-- missing policy deployment -> `422`, `ACETECH0002`
-- missing property -> `422`, `ACEFONC0012`
-
-These are visible runtime behaviors, and `422` is a real possible response even though it is not declared in the active Swagger.
-
-**Pseudo-code**
-
-```pseudo
-copy input to output
-
-hostApicNewTopo = policy(GlobalEndpointsPolicy.apic-host)
-hostApicOldTopo = policy(GlobalEndpointsPolicy.apic-host-old)
-hostAce         = policy(GlobalEndpointsPolicy.ace-host)
-
-load all properties for policy named UPPER(contact-reason)
-into Environment.Variables.policy.exchange-integration-policies-properties-digitalintake
-
-Environment.policy.ACE_ClientID = policy(AceAppEsbCredentialsPolicy.client_id_old_topo)
-Environment.ace_app_esb.client_id = policy(AceAppEsbCredentialsPolicy.client_id)
-Environment.ace_app_esb.client_secret = policy(AceAppEsbCredentialsPolicy.client_secret)
-
-Environment.policy.JwtTokenServicePoliciesEndPoint = hostApicOldTopo + path-common-api-technical-security-jwt-internal
-Environment.policy.claimsDigitalIntake = loaded property claims-digital-intake
-
-Environment.policy.UrlShortenerEndPointParameters = loaded property url-shortener-parameters
-Environment.policy.UrlRedirectWebApp = loaded property url-redirect-webapp
-Environment.policy.UrlRedirectError = loaded property url-redirect-webapp-error
-Environment.policy.short-url-in-sms = loaded property short-url-in-sms
-
-Environment.policy.forgetext_link_request_template = loaded property forgetext-link-request-templates
-Environment.policy.forgetext_link_request_without_person_template = loaded property forgetext-link-request-without-person-templates
-
-Environment.policy.sendSmsApiEndPoint = hostAce + path-support-it-integration-sms
-Environment.policy.urlshortener.urlshortener-endpoint-url = hostApicNewTopo + path-support-it-api-url-shortener
-Environment.policy.urlshortener.signature = policy(UrlshortenerCredentials.signature)
-
-Environment.policy.forgetext.forge-text-endpoint-url = hostApicNewTopo + path-support-content-mgt-api-forge-text
-Environment.policy.forgetext.user = policy(ForgeTextCredentials.User-api)
-Environment.policy.forgetext.password = policy(ForgeTextCredentials.Password-api)
-```
-
----
-
-## `postSmsOnlineAssistanceRequest_setEnv`
-
-File:
-
-```text
-postSmsOnlineAssistanceRequest_setEnv.esql
-```
-
-**Purpose**
-
-Extracts request data into `Environment.Variables` and selects the forge-text template strategy.
-
-**What it does**
-
-- Copies input to output.
-- Stores:
-  - `language`
-  - `number-initiating`
-  - `number-contacted`
-  - `lastname`
-  - `firstname`
-- Selects template logic:
-  - if `firstname` length > 0:
-    - `template-id = 1`
-    - `FunctionalContext = personalized template`
-  - else:
-    - `template-id = 2`
-    - `FunctionalContext = generic template`
-- Sets SMS `sender-code` from `contact-reason`
 
 **Notes**
 
-- The code comment explicitly says `number-initiating` does not seem to be used today.
-- Template selection depends only on `firstname`, not on `lastname`.
+- `isCase()` sets `Environment.Variables.case.ref`, but that value is not read again in the provided source.
+- Non-relevant messages are not thrown as errors; they are explicitly diverted to terminal `out1`.
+- The MQ subscription already filters on `FTserviceCharacteristics LIKE '%371001%'`; this ESQL adds a second, payload-based eligibility check.
 
----
-
-## `callUrlShortenerService_set_url_shortener_parameters`
+### `processEventFromQueueMlog_FindMethodAndData`
 
 File:
 
 ```text
-callUrlShortenerService_set_url_shortener_parameters.esql
+FindMethodAndData_Compute.esql
 ```
 
 **Purpose**
 
-Builds the redirect URL and the URL shortener request URL.
+Determine the outbound HTTP method and dataset, and seed shared runtime context used by later nodes.
 
 **What it does**
 
-- Sets APIC credentials and tracing headers.
-- Replaces `${language}` placeholders in policy URLs.
-- Builds initial long client URL:
-  - `UrlRedirectWebApp + access_token`
-- Replaces placeholders inside URL shortener query parameter template:
-  - `${url-redirect-webapp-error}`
-  - `${url-redirect-webapp}`
-- URL-encodes redirect URLs.
-- Builds final request URL including `signature`.
+- Copies message and local environment
+- Scans `CaseReferenceList.Item[]` and `ServiceReferenceList.Item[]`
+- Sets:
+  - `Method` = `POST` or `PUT`
+  - `Dataset` = `CASE` or `SERVICE`
+- Persists request context into:
+  - `OutputLocalEnvironment.Variables.Fsm.Request.*`
+  - `Environment.Variables.FSMRequest.*`
+  - `Environment.Variables.FSMCall.*`
 
-**Important behavior**
+**Pseudo-code**
 
-If the shortener call later fails, this already-computed long URL remains available in `Environment.Variables."url-client"` and is the natural fallback used by later steps.
+```pseudo
+method  = ''
+dataset = ''
 
----
+for each case reference:
+    if source is MLOGISTICS and no reference exists:
+        method  = POST
+        dataset = CASE
+        FSMRequest.CaseId = case reference Id
+    else if source is MLOGISTICS and reference exists:
+        method  = PUT
+        dataset = CASE
 
-## `callForgeTextService_set_forge_text_parameters`
+for each service reference:
+    if source is MLOGISTICS and no reference exists:
+        method  = POST
+        dataset = SERVICE
+        FSMRequest.ServiceId = service reference Id
+    else if source is MLOGISTICS and reference exists:
+        method  = PUT
+        dataset = SERVICE
+
+LocalEnvironment.Fsm.Request.Id      = InputRoot.JSON.Data.Id
+LocalEnvironment.Fsm.Request.Method  = method
+LocalEnvironment.Fsm.Request.Dataset = dataset
+
+FSMRequest.InternalId   = InputRoot.JSON.Data.InternalId
+FSMCall.ObjectType      = dataset
+FSMCall.RequestMethod   = method
+```
+
+**Notes**
+
+- If both case and service references are present, the later service loop can overwrite the earlier case decision.
+- There is a visible inconsistency in the code:
+  - it checks `CaseReferenceList.Source.Reference`
+  - and `ServiceReferenceList.Source.Reference`
+  - while the rest of the project generally uses `CaseReferenceList.Reference` / `ServiceReferenceList.Reference`
+- Because of that inconsistency, the POST/PUT decision should be reviewed carefully against the real payload shape.
+
+### `SendMessageToMlog_Compute`
 
 File:
 
 ```text
-callForgeTextService_set_forge_text_parameters.esql
+SendMessageToMlog_Compute.esql
 ```
 
 **Purpose**
 
-Builds the forge-text request payload.
+Prepare outbound HTTP headers, determine the request URL, and set the HTTP method.
 
 **What it does**
 
-- Copies `InputRoot.Properties`.
-- Sets APIC and Basic Auth headers.
-- Builds JSON payload with:
-  - `functionalContext`
-  - `language`
-  - `configurationItems[]`
-- For personalized template, adds normalized `first_name` and `last_name`.
-- Always adds the URL under key `short-link`.
+- Copies message headers and local environment
+- Sets outbound headers:
+  - `Content-Type: application/json; charset=utf-8`
+  - `X-IBM-Client-id`
+  - `X-IBM-Client-secret`
+  - `X-Global-Transaction-Id`
+  - `X-Caller-Code`
+  - `Fsm-Client-Id`
+- Copies `InputRoot.JSON.Data` into `OutputRoot.JSON.Data`
+- Builds endpoint URL from policy values
+- Stores final request URL into local environment and environment
 
-**Relevant helper logic**
+**Pseudo-code**
 
-`translateSpecialCharForNames(...)` in `globalFunctions.esql` removes/normalizes accented letters and punctuation before sending names to forge-text.
+```pseudo
+copy headers
+copy local environment
 
----
+set Content-Type
+set X-IBM-Client-id from AceAppEsbCredentialsPolicy.client_id
+set X-IBM-Client-secret from AceAppEsbCredentialsPolicy.client_secret
+set X-Global-Transaction-Id from Environment
+set X-Caller-Code = ApplicationLabel
 
-## `globalFunctions.esql`
+copy JSON.Data from input to output
+
+endpointUrl = GlobalEndpointsPolicy.apic-host
+endpointUrl += ApicEndPoints.path-external-api-fsm-assistance-cases
+
+if dataset == CASE:
+    endpointUrl += '/case'
+else:
+    endpointUrl += '/case/' + Environment.ESB.ESBEnvelope.userDefined.request.event.referenceNumber
+
+set Fsm-Client-Id from FsmCredentialsPolicy.fsm-client-id
+set LocalEnvironment.Destination.HTTP.RequestURL = endpointUrl
+set LocalEnvironment.Destination.HTTP.RequestLine.Method = Fsm.Request.Method
+
+Environment.FSMCall.RequestURL = endpointUrl
+```
+
+**Notes**
+
+- The service URL for `SERVICE` depends on `Environment.ESB.ESBEnvelope.userDefined.request.event.referenceNumber`.
+- That field is **not set anywhere in the provided project source**, so it is likely supplied by a shared translator or other shared component.
+- The HTTP call is visibly directed toward an FSM API, even though many artifact names include `Mlog`.
+
+### `processEventFromQueueMlog_ExtractIdentifiers`
 
 File:
 
 ```text
-globalFunctions.esql
+processEventFromQueueMlog_ExtractIdentifiers.esql
 ```
 
 **Purpose**
 
-Provides cross-flow helper functions.
+Build the success/reference publication payload sent to the MQ outcome topic.
 
-**Most important visible functions**
+**What it does**
 
-| Function / Procedure | Purpose |
-|---|---|
-| `parseExceptionList(...)` | Extracts exception number, message, and stack trace |
-| `translateSpecialCharForNames(...)` | Normalizes names sent to forge-text |
-| `getSinglePropertyFromPolicyProject(...)` | Reads one policy property and throws `422` on missing policy/property |
-| `getAllPropertiesFromPolicyProject(...)` | Loads all properties of a policy into a specified `Environment` tree |
-| `getPropertyFromAllPolicies(...)` | Reads a property from the previously loaded tree and throws `422` if missing |
+- Sets topic destination from policy key `cases-outcomes-references`
+- Builds `event-received` with:
+  - `naturesOfChanges[]`
+  - `contextsOfEvent[]`
+  - `eventInitiator`
+  - `eventForwarder`
+- Builds `execution-context` with:
+  - transaction/correlation ids
+  - current timestamp
+  - HTTP status code if available
+  - caller/origin caller code
+  - request method
+  - `target_system = 'MLOGISTICS'`
+  - `target_url`
+- Builds `external-references` entries for success cases
 
-**Fact vs inference**
+**Pseudo-code**
 
-- The control flow around these helpers is fully visible.
-- The actual backing policy retrieval implementation is not visible because it comes from `SHLIB_PoliciesReader`.
+```pseudo
+set Topic = policy('cases-outcomes-references')
+
+build event-received arrays from MQRFH2 usr fields
+build execution-context from environment and HTTP status data
+
+find caseRef from CaseReferenceList where Source = MLOGISTICS
+find serviceRef from ServiceReferenceList where Source = MLOGISTICS
+
+if method == POST and objectType == CASE:
+    external-references[1].target_object_type = CASE
+    external-references[1].target_object_id   = caseRef
+    external-references[1].error_code         = ''
+    external-references[1].error_message      = ''
+    if FSMRequest.CaseId exists:
+        external-references[1].origin_record_id = FSMRequest.CaseId
+    else:
+        external-references[1].origin_object_type = CASE
+        external-references[1].origin_object_id   = FSMRequest.InternalId
+
+else if method == POST and objectType == SERVICE:
+    external-references[1].target_object_type = QuoteLineItem
+    external-references[1].target_object_id   = serviceRef
+    external-references[1].error_code         = ''
+    external-references[1].error_message      = ''
+    if FSMRequest.ServiceId exists:
+        external-references[1].origin_record_id = FSMRequest.ServiceId
+    else:
+        external-references[1].origin_object_type = QuoteLineItem
+        external-references[1].origin_object_id   = FSMRequest.InternalId
+```
+
+**Notes**
+
+- Only **POST** success paths have explicit external-reference construction in visible code.
+- There is **no explicit PUT success branch** here.
+- Visible code observation: in the service-reference loop, the assignment is:
+
+```text
+SET caseRef = ServiceReferenceList.Reference;
+```
+
+  rather than setting `serviceRef`. As written, `serviceRef` may remain empty.
+- The code sets `target_system = 'MLOGISTICS'` while the actual outbound HTTP target is the FSM API. That is a visible naming/data-model choice in this implementation.
+
+### `processEventFromQueueMlog_PrepareError`
+
+File:
+
+```text
+processEventFromQueueMlog_PrepareError.esql
+```
+
+**Purpose**
+
+Build the final error publication payload sent to the MQ error topic.
+
+**What it does**
+
+- Sets topic destination from policy key `cases-outcomes-error`
+- Rebuilds the same `event-received` and `execution-context` sections used in success outcomes
+- Composes an `errorDescription` from normalized error fields:
+  - `httpMessage`
+  - `moreInformation`
+- Populates `external-references[1]` differently depending on method/object type
+
+**Pseudo-code**
+
+```pseudo
+set Topic = policy('cases-outcomes-error')
+
+errorDescription = 'Message: ' + httpMessage + '-Details: ' + moreInformation
+
+build event-received
+build execution-context
+
+if POST CASE:
+    origin_object_type = CASE
+    origin_object_id   = FSMRequest.InternalId
+    error_code         = WrittenDestination.HTTP.StatusCode
+    error_message      = errorDescription
+
+if POST SERVICE:
+    origin_object_type = QuoteLineItem
+    origin_object_id   = FSMRequest.InternalId
+    error_code         = WrittenDestination.HTTP.StatusCode
+    error_message      = errorDescription
+
+if PUT CASE:
+    origin_record_id   = FSMRequest.CaseId
+    error_code         = WrittenDestination.HTTP.StatusCode
+    error_message      = errorDescription
+
+if PUT SERVICE:
+    origin_record_id   = FSMRequest.ServiceId
+    error_code         = WrittenDestination.HTTP.StatusCode
+    error_message      = errorDescription
+```
+
+**Notes**
+
+- Error codes come from `InputLocalEnvironment.WrittenDestination.HTTP.StatusCode`.
+- That value is expected to be set by the shared HTTP subflow; its exact population is not visible in the provided source.
+- Error publication is more complete than success publication for PUT paths.
+
+### `processEventFromQueueMlog_ErrorHander`
+
+File:
+
+```text
+processEventFromQueueMlog_ErrorHander.esql
+```
+
+**Purpose**
+
+Normalize exceptions or backend HTTP errors into a common JSON error payload.
+
+**What it does**
+
+- Sets response content type to JSON
+- Handles three situations:
+  1. exception list present
+  2. backend HTTP response header present
+  3. fallback unknown error
+- Produces:
+
+```text
+OutputRoot.JSON.Data.timestamp
+OutputRoot.JSON.Data.httpCode
+OutputRoot.JSON.Data.httpMessage
+OutputRoot.JSON.Data.moreInformation
+```
+
+- Stores the final structure in `Environment.Variables.Error.Info`
+
+**Pseudo-code**
+
+```pseudo
+if InputExceptionList is present:
+    code = 500
+    extract deepest exception numbers/text/inserts
+    message = 'ACETECHERR001: <number> - <text>' or fallback
+    details = stacktrace or 'Internal Server Error.'
+
+else if HTTPResponseHeader is present:
+    if BLOB body exists:
+        body = BLOB
+    else if JSON.Data exists:
+        body = asBitstream(JSON.Data)
+    code    = X-Original-HTTP-Status-Code
+    message = 'Error when requesting backend API ' + X-Original-HTTP-Status-Line
+    details = body as character
+
+else:
+    code = 500
+    message = 'unknown error'
+    details = 'unknown error'
+
+write normalized JSON error payload
+store payload in Environment.Variables.Error.Info
+```
+
+**Notes**
+
+- `GetException()` walks down the nested exception tree via repeated `LASTCHILD`, so it captures the visible deepest exception chain rather than traversing every sibling branch.
+- This module is the central normalization point before `PrepareError` converts the error into the final outcome-topic structure.
+
+### `processEventFromQueueMlog_ExtratBusinessIdentifiers`
+
+File:
+
+```text
+processEventFromQueueMlog_ExtratBusinessIdentifiers.esql
+```
+
+**Purpose**
+
+Populate business identifiers into `Environment.Variables.TCSLog.context` for monitoring/logging.
+
+**What it does**
+
+- Writes:
+  - `CaseId = InputRoot.JSON.Data.InternalId`
+- Appends:
+  - `CaseReference = <Source>=<Reference>`
+  - `ServiceId = <InternalId>`
+  - `ServiceReference = <Reference>=<Source>`
+
+This module does not visibly affect business payload routing; it enriches logging context.
 
 ---
 
@@ -1002,384 +986,365 @@ Provides cross-flow helper functions.
 
 ### Branching behavior
 
-The service uses several branching constructs intentionally:
-
-#### 1. `TryCatch`
-Used in `postSmsOnlineAssistanceRequest.subflow` to ensure thrown user exceptions are converted into a standard HTTP error payload.
-
-#### 2. `FlowOrder`
-Used three times to impose ordered side branches:
-
-- `FO1`
-  - branch 1: validate caller/request
-  - branch 2: continue only after validation step
-
-- `FO2`
-  - branch 1: load policies
-  - branch 2: continue only after configuration step
-
-- `FO3`
-  - branch 1: perform external orchestration
-  - branch 2: build final response
-
-This pattern makes the main response construction independent of downstream provider response bodies.
-
-#### 3. URL shortener dual-output continuation
-`callUrlShortenerService` exposes both success and error-style outputs, but the parent flow connects both to `callForgeTextService`. Visible effect:
-
-- shortener success -> use short URL
-- shortener failure/error -> continue with fallback URL
+- `FilterFSM` uses explicit `PROPAGATE TO TERMINAL 'out1'` for non-relevant events.
+- `TranslateMessageForMlog` uses a Route node:
+  - `SERVICE` -> service translator
+  - default -> case translator
+- `SendMessageToMlog` branches shared HTTP outcomes into:
+  - success
+  - output error
+  - connection error
 
 ### Propagation behavior
 
-`postSmsOnlineAssistanceRequest_logEntry` explicitly uses:
-
-```pseudo
-PROPAGATE TO TERMINAL 1 DELETE NONE;
-```
-
-Visible purpose:
-
-- emit a duplicate copy of the inbound request on a secondary branch
-- preserve the main message flow
-- likely support monitoring event emission without impacting business logic
-
-No other multi-message or batching propagation is visible.
+- The only explicit ESQL `PROPAGATE` in the provided source is in `IsMessageForMlog`.
+- That propagation is used to terminate non-relevant messages cleanly without throwing an error.
+- No visible `PROPAGATE`-based fan-out or multi-message generation is implemented.
 
 ### Batch handling
 
-No batch processing is present in the provided source.
+No batching logic is visible in the provided source.
 
 ---
 
 ## Error Handling and Monitoring
 
-## Error Handling
+### Error Handling
 
-### Fatal errors returned to the client
+Visible error paths include:
 
-The following visible situations are fatal and end in `build_http_error`:
+1. **MQ start / technical startup path**
+   - Shared `cc_app_mq_start` additional `Output` terminal goes to `retrieveTechnicalError` and then to error publication.
+   - Exact semantics of this terminal are not visible; it is clearly treated as an error path.
 
-| Scenario | HTTP code | Ref code | Provider name in response |
-|---|---:|---|---|
-| Missing `X-Caller-Code` | `400` | `ACEFONC0001` | defaults to `ACE` |
-| Missing `contact-reason` | `400` | `ACEFONC0001` | defaults to `ACE` |
-| Missing policy deployment | `422` | `ACETECH0002` | `ACE` |
-| Missing policy property | `422` | `ACEFONC0012` | `ACE` |
-| JWT API error/failure | provider code or `502` | `ACETECH0004` | `APIC` |
-| Forge-text API error/failure | provider code or `502` | `ACETECH0004` | `FORGETEXT` |
-| SMS API error/failure | provider code or `502` | `ACETECH0004` | `NETOXYGEN` |
-| Forge-text returned no `content` | `502` | `ACETECH0004` | defaults to `ACE` unless set elsewhere |
-| Unclassified internal error | `500` | `ACETECH0001` | `ACE` |
+2. **Catch / retry path**
+   - Shared `cc_app_mq_start` `Catch` terminal is wired to a Throw node (`ThrowCatchToRetry`).
+   - This is the clearest retry/backout-related path in the flow.
 
-### Non-fatal errors
+3. **Translation errors**
+   - `TranslateMessageForMlog` `Output2` routes directly to `ErrorHandler`.
 
-Visible non-fatal case:
+4. **HTTP/business/backend errors**
+   - `SendMessageToMlog` `Output Error` routes to `ErrorHandler`.
 
-- URL shortener HTTP error/failure  
-  The flow logs the issue and continues. This is a deliberate fallback design.
+5. **Connection/technical call failures**
+   - `SendMessageToMlog` `ConnectionError` routes to `ErrorHandler`.
 
-### Error payload format
+6. **Handled non-relevant events**
+   - Routed to `NotForFSM`
+   - Not treated as errors
 
-Errors are normalized to:
+### Runtime consequence of handled vs retried failures
 
-```json
-{
-  "timestamp": "2026-06-26T10:11:12.123456",
-  "httpCode": "ACE : 400",
-  "httpMessage": "ACE : The caller code header is required to continue the treatment !",
-  "refAppError": "ACEFONC0001",
-  "gtid": "....",
-  "moreInformation": "...."
-}
-```
+A key visible behavior is:
 
-### Important discrepancy with Swagger
+- **Catch path** -> rethrow -> likely retry/backout behavior
+- **Translation/HTTP/connection errors** -> normalized and published to error topic -> flow ends normally
 
-`swagger.json` declares `400/401/403/404/429/500/501/502/503`, but the provided ESQL can also explicitly return:
+So not all failures are retried. Many are treated as business/technical outcomes and consumed after publication.
 
-```text
-422
-```
+### Monitoring
 
-for configuration/policy-related failures.
-
-## Monitoring
-
-The flow is instrumented with multiple monitor events. Key visible events include:
+Key visible monitoring events:
 
 | Node / Component | Event | Notes |
 |---|---|---|
-| `postSmsOnlineAssistanceRequest_logEntry` | `SUP: RECEIVE request from IVR` | Request ingress |
-| JWT request node | `INFO/END/FAIL/ERROR` events | Outbound JWT API call lifecycle |
-| JWT response handler | `SUP: RECEIVE response from common-api-technical-security-jwt-internal` | Successful JWT response |
-| URL shortener request node | `INFO/END/FAIL/ERROR` events | Outbound shortener call lifecycle |
-| forge-text request node | `INFO/END/FAIL/ERROR` events | Outbound forge-text call lifecycle |
-| SMS request node | `INFO/END/FAIL/ERROR` events | Outbound SMS call lifecycle |
-| `build_http_error.create_body` | `SUP: SEND Error response to IVR` | Final client error response |
-
-The monitoring model consistently captures:
-
-- request send
-- request end
-- HTTP error terminal
-- HTTP failure terminal
-- received downstream response
-- emitted error response
+| `ThrowCatchToRetry` | `CATCH: ThrowCatch.terminal.in` | Captures exception list on catch/rethrow path |
+| `NotForFSM` | `Message NotForFSM` | Indicates message was intentionally ignored |
+| `Find method_data` | `Find method_data.InTerminal` / `OutTerminal` / `FAIL` | Includes selected method and dataset on success |
+| `ExtratBusinessIdentifiers` | `SUP: LOG invoice identifiers` | Logs business identifiers; label appears reused |
+| `BuildMessage` | `SUP: END Process event to FSM` | End of success processing before publish |
+| `ErrorHandler` | `START: Build exception` / `INFO: END: Build exception` / `FAIL` | Centralized error normalization monitoring |
+| `Prepare Request` | `START/END/FAIL` | Outbound HTTP request preparation |
+| `SendOnlyService` route | `SendOnlyService is TRUE/FALSE` | Shows translator selection branch |
 
 ---
 
 ## Configuration, Policies, and External Dependencies
 
-## Policies / Config
+### Policies / Config
 
-### Global host and endpoint configuration
-
-| Policy / Property | Used By | Purpose |
+| Key / Config | Used By | Purpose |
 |---|---|---|
-| `{GlobalEndpointsPolicies}:GlobalEndpointsPolicy / apic-host` | `getUserPolicyValues` | New APIC host |
-| `{GlobalEndpointsPolicies}:GlobalEndpointsPolicy / apic-host-old` | `getUserPolicyValues` | Old APIC host |
-| `{GlobalEndpointsPolicies}:GlobalEndpointsPolicy / ace-host` | `getUserPolicyValues` | ACE host |
+| `{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy / client_id` | `SendMessageToMlog_Compute` | APIC/client header |
+| `{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy / client_secret` | `SendMessageToMlog_Compute` | APIC/client header |
+| `{services-integration-policies-credentials}:FsmCredentialsPolicy / fsm-client-id` | `SendMessageToMlog_Compute` | FSM-specific header |
+| `{GlobalEndpointsPolicies}:GlobalEndpointsPolicy / apic-host` | `SendMessageToMlog_Compute` | Base API host |
+| `{services-integration-policies-endpoints}:ApicEndPoints / path-external-api-fsm-assistance-cases` | `SendMessageToMlog_Compute` | FSM assistance API base path |
+| `{services-integration-policies-endpoints}:TopicMqEndPoints / cases-outcomes-references` | `processEventFromQueueMlog_ExtractIdentifiers` | Success/reference topic |
+| `{services-integration-policies-endpoints}:TopicMqEndPoints / cases-outcomes-error` | `processEventFromQueueMlog_PrepareError` | Error topic |
 
-### Credentials and technical security
-
-| Policy / Property | Used By | Purpose |
-|---|---|---|
-| `{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy / client_id_old_topo` | JWT call | APIC client ID for JWT generation |
-| `{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy / client_id` | URL shortener / forge-text | APIC client ID |
-| `{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy / client_secret` | URL shortener / forge-text | APIC client secret |
-| `{exchange-integration-policies-credentials}:UrlshortenerCredentials / signature` | URL shortener | Request signing |
-| `{exchange-integration-policies-credentials}:ForgeTextCredentials / User-api` | forge-text | Basic auth username |
-| `{exchange-integration-policies-credentials}:ForgeTextCredentials / Password-api` | forge-text | Basic auth password |
-
-### Per-contact-reason digital intake properties
-
-Loaded from policy project:
-
-```text
-exchange-integration-policies-properties-digitalintake
-```
-
-using policy name:
-
-```text
-UPPER(service-access-info.contact-reason)
-```
-
-Visible properties consumed:
-
-| Property | Purpose |
-|---|---|
-| `claims-digital-intake` | JWT audience claim |
-| `url-shortener-parameters` | Shortener query string template |
-| `url-redirect-webapp` | Success redirect base URL |
-| `url-redirect-webapp-error` | Error redirect base URL |
-| `short-url-in-sms` | Public URL prefix used in final SMS |
-| `forgetext-link-request-templates` | Personalized forge-text context |
-| `forgetext-link-request-without-person-templates` | Generic forge-text context |
-
-### Endpoint paths
-
-| Policy / Property | Purpose |
-|---|---|
-| `{exchange-integration-policies-endpoints}:ApicEndPoints / path-common-api-technical-security-jwt-internal` | JWT endpoint path |
-| `{exchange-integration-policies-endpoints}:ApicEndPoints / path-support-it-api-url-shortener` | URL shortener path |
-| `{exchange-integration-policies-endpoints}:ApicEndPoints / path-support-content-mgt-api-forge-text` | forge-text path |
-| `{exchange-integration-policies-endpoints}:AceEndPoints / path-support-it-integration-sms` | SMS endpoint path |
-
-## Shared Libraries / External Components
+### Shared Libraries / External Components
 
 | Component | Source | Visible Usage | Notes |
 |---|---|---|---|
-| `Shlib_PoliciesReader.getPolicyPropertyWithOutError` | `SHLIB_PoliciesReader` | Reads one policy property | Internal logic not visible |
-| `Shlib_PoliciesReader.getAllPolicyProperties` | `SHLIB_PoliciesReader` | Loads all properties of a policy into an Environment tree | Internal logic not visible |
-| JWT API | external HTTP service | Generates access token | Response schema not visible; `access_token` inferred |
-| URL shortener API | external HTTP service | Shortens generated redirect URL | `url.keyword` inferred from code |
-| forge-text API | external HTTP service | Generates final SMS text from templates | `content` inferred from code |
-| SMS API | external HTTP service | Sends SMS | Success payload not used in visible code |
+| `cc_app_mq_start.subflow` | `common-integration-shlib-encapsulate-calls` | MQ consumption entry point | Internal behavior not visible |
+| `cc_http_async_call.subflow` | `common-integration-shlib-encapsulate-calls` | Outbound HTTP invocation | Terminal semantics inferred from wiring only |
+| `cc_mq_topic_call.subflow` | `common-integration-shlib-encapsulate-calls` | MQ topic publication | Likely publishes to `LocalEnvironment.Variables.Topic`; internals not visible |
+| `TranslateBomToFsmCase.subflow` | `SHLIB_TranslatorFsmBom` | Case payload translation | Internal mapping not visible |
+| `TranslateBomToFsmCaseService.subflow` | `SHLIB_TranslatorFsmBom` | Service payload translation | Internal mapping not visible |
+| `CommonError/manageOtherError.subflow` | `SHLIB_CommonErrorFunctions` | Technical error extraction before centralized error builder | Internal behavior not visible |
+| `Shlib_PoliciesReader.gestionPolicy` | `SHLIB_PoliciesReader` | Policy lookup | Core configuration dependency |
+| `CommonHelper.transformStringToListDefinedSeparator` | External/shared helper | Converts `;`-separated metadata strings to JSON arrays | Implementation not visible |
+
+### Environment Overrides
+
+Files exist for:
+
+```text
+resources/overrides/ACP.properties
+resources/overrides/DEV.properties
+resources/overrides/PRD.properties
+resources/overrides/QA.properties
+```
+
+They are empty in the provided source.
+
+### MQ Scripts
+
+- Install script is populated and defines queues/subscription.
+- Uninstall script is empty in the provided source.
 
 ---
 
-## Outputs / Responses
+## HTTP or Message Outputs
 
-## Success Response
+### Outbound HTTP Request
 
-Status / output:
+**Target**
+
+Policy-driven FSM assistance-cases API.
+
+**Method**
+
+From:
 
 ```text
-Default HTTP success status appears to be 200.
+LocalEnvironment.Variables.Fsm.Request.Method
 ```
 
-Visible success body built by ACE:
+Expected values from visible code:
+
+```text
+POST or PUT
+```
+
+**URL construction**
+
+```text
+<apic-host><path-external-api-fsm-assistance-cases>/case
+```
+
+or
+
+```text
+<apic-host><path-external-api-fsm-assistance-cases>/case/<referenceNumber>
+```
+
+**Headers**
+
+| Header | Source |
+|---|---|
+| `Content-Type` | Hardcoded |
+| `X-IBM-Client-id` | Policy |
+| `X-IBM-Client-secret` | Policy |
+| `X-Global-Transaction-Id` | Environment |
+| `X-Caller-Code` | `ApplicationLabel` |
+| `Fsm-Client-Id` | Policy |
+
+### Success Output
+
+Because this is an MQ consumer, there is **no synchronous reply** to a caller. The “success output” is an MQ topic publication.
+
+**Destination**
+
+Policy key:
+
+```text
+cases-outcomes-references
+```
+
+**Inferred shape**
 
 ```json
 {
-  "service-access-info": {
-    "number-initiating": "...",
-    "number-contacted": "...",
-    "create-date-time": "2026-06-26T10:11:12.123456",
-    "content": "",
-    "language": "fr",
-    "contact-type": "outbound",
-    "contact-reason": "ONLINEASSY",
-    "physical-person": {
-      "firstname": "John",
-      "lastname": "Doe"
+  "Data": {
+    "event-received": {
+      "naturesOfChanges": ["..."],
+      "contextsOfEvent": ["..."],
+      "eventInitiator": "...",
+      "eventForwarder": "..."
     },
-    "template": {
-      "template-id": 1
+    "execution-context": {
+      "global_transaction_id": "...",
+      "x_correlation_id": "...",
+      "datetime": "2024-01-01T12:00:00",
+      "http_status_code": 200,
+      "x_caller_code": "...",
+      "x_origin_caller_code": "...",
+      "request_method": "POST",
+      "target_system": "MLOGISTICS",
+      "target_url": "..."
     },
-    "source": {
-      "source-name": "GenesysOrCallerCode",
-      "channel-association": "HTTP"
-    }
-  },
-  "request-type": "OA_LINK_REQUEST"
+    "external-references": [
+      {
+        "target_object_type": "CASE",
+        "target_object_id": "...",
+        "origin_record_id": "...",
+        "error_code": "",
+        "error_message": ""
+      }
+    ]
+  }
 }
 ```
 
-### Success response notes
+**Important notes**
 
-- The response is synthesized by `postSmsOnlineAssistanceRequest_setResponse`.
-- It is largely based on the original request body.
-- It does **not** include the SMS provider response.
-- `content` is explicitly blanked out.
-- `template-id` is derived from whether `firstname` was present.
-- `source.source-name` is set from inbound `X-Caller-Code`.
-- `source.channel-association` is set to `"HTTP"`.
+- Success reference-building is only explicit for visible `POST` branches.
+- `SERVICE` success messages use `target_object_type = "QuoteLineItem"`.
+- For `SERVICE` success, the visible code contains an apparent inconsistency that may leave `target_object_id` empty unless another component supplies it.
 
-There is a visible mismatch risk between this response and the Swagger schema, especially around `source` semantics.
+### Error Output
 
-## Error Response
+Again, this is an MQ topic publication, not an HTTP response to an inbound caller.
 
-Status / output:
+**Destination**
+
+Policy key:
 
 ```text
-HTTP status is explicitly set from Environment.Variables.HttpReturnCode, defaulting to 500.
+cases-outcomes-error
 ```
 
-Example shape:
+**Intermediate normalized error shape produced by `ErrorHandler`**
 
 ```json
 {
-  "timestamp": "2026-06-26T10:11:12.123456",
-  "httpCode": "APIC : 502",
-  "httpMessage": "APIC : The API call for generating the JWT token from APIC failed !",
-  "refAppError": "ACETECH0004",
-  "gtid": "abc-123",
-  "moreInformation": "serialized exception details"
+  "Data": {
+    "timestamp": "2024-01-01T12:00:00",
+    "httpCode": "500",
+    "httpMessage": "ACETECHERR001: ...",
+    "moreInformation": "..."
+  }
 }
 ```
 
-### Error response notes
+**Final published error-outcome shape**
 
-- `httpCode` and `httpMessage` are prefixed with the visible provider name.
-- `moreInformation` may contain serialized exception details.
-- `gtid` is copied from `X-Global-Transaction-Id`.
+```json
+{
+  "Data": {
+    "event-received": {
+      "naturesOfChanges": ["..."],
+      "contextsOfEvent": ["..."],
+      "eventInitiator": "...",
+      "eventForwarder": "..."
+    },
+    "execution-context": {
+      "global_transaction_id": "...",
+      "x_correlation_id": "...",
+      "datetime": "2024-01-01T12:00:00",
+      "http_status_code": 500,
+      "x_caller_code": "...",
+      "x_origin_caller_code": "...",
+      "request_method": "PUT",
+      "target_system": "MLOGISTICS",
+      "target_url": "..."
+    },
+    "external-references": [
+      {
+        "origin_record_id": "...",
+        "error_code": "500",
+        "error_message": "Message: ...-Details: ..."
+      }
+    ]
+  }
+}
+```
 
 ---
 
 ## End-to-End Pseudo-code
 
 ```pseudo
-on incoming HTTPS REST request:
-    route by REST operation
+on incoming MQ event:
+    start shared MQ consumption
+    if catch/retry condition occurs in MQ-start shared logic:
+        throw to preserve retry/backout behavior
 
-    if operation == health:
-        return {
-            status: "pass",
-            api: ApplicationLabel,
-            timestamp: now()
-        }
+    parse payload as JSON
 
-    if operation == postSmsOnlineAssistanceRequest:
-        try:
-            copy request to output/environment
-            capture X-Caller-Code, X-Global-Transaction-Id, origin caller
-            initialize logging and monitoring context
+    if event initiator or forwarder is FSM or MLOGISTICS:
+        stop as NotForFSM
 
-            if X-Caller-Code is empty:
-                set 400 / ACEFONC0001
-                throw
+    if contexts contain FIELD_SERVICE_NOT_CONCERNED or FIELD_SERVICE_UNAVAILABLE:
+        stop as NotForFSM
 
-            if service-access-info.contact-reason is empty:
-                set 400 / ACEFONC0001
-                throw
+    if naturesOfChanges does not contain a supported change type:
+        stop as NotForFSM
 
-            load policy set for UPPER(contact-reason)
-            load hosts, endpoints, credentials, claims, redirect URL templates,
-            short-url prefix, forge-text template names, SMS endpoint
+    if payload is case:
+        require at least one active service delivery with characteristic 371001
+    else if payload is service:
+        require active top-level service with characteristic 371001
+    else:
+        stop as NotForFSM
 
-            set environment values from request:
-                language
-                number-contacted
-                firstname
-                lastname
-                sender-code = contact-reason
+    determine outbound method and dataset:
+        CASE or SERVICE
+        POST or PUT
 
-            if firstname exists:
-                template-id = 1
-                functionalContext = personalized template
-            else:
-                template-id = 2
-                functionalContext = generic template
+    route to translator:
+        SERVICE -> shared service translator
+        otherwise -> shared case translator
 
-            call JWT service with phone number
-            expect access_token
+    if translator returns alternate/not-applicable:
+        stop as NotForFSM
 
-            build long redirect URL from policy + access_token
-            call URL shortener
+    if translator returns error:
+        normalize error
+        build error outcome
+        publish to error topic
+        stop
 
-            if shortener succeeded:
-                url-client = short-url-in-sms + "/" + keyword
-            else:
-                keep long redirect URL and continue
+    enrich monitoring business identifiers
 
-            call forge-text with:
-                functionalContext
-                language
-                short-link = url-client
-                optionally first_name and last_name
+    prepare outbound HTTP request:
+        set headers from policies and environment
+        build URL from policy + dataset
+        set HTTP verb from earlier classification
 
-            if forge-text content missing:
-                set 502 / ACETECH0004
-                throw
+    call shared FSM HTTP subflow
 
-            call SMS service with:
-                phone-number = number-contacted
-                message-text = forge-text content
-                sender-code = contact-reason
+    if HTTP call succeeds:
+        build success/reference outcome
+        publish to references topic
+        stop
 
-            build synthetic success response from original request:
-                create-date-time = now
-                content = ""
-                template-id = selected value
-                source-name = inbound X-Caller-Code
-                channel-association = "HTTP"
-
-            return success
-
-        catch any exception:
-            if provider/status/refApp not already set:
-                default to ACE / 500 / ACETECH0001
-
-            parse or serialize exception details
-            build JSON error with:
-                timestamp
-                provider-prefixed httpCode
-                provider-prefixed httpMessage
-                refAppError
-                gtid
-                moreInformation
-
-            return error
+    if HTTP call returns backend error or connection error:
+        normalize error
+        build error outcome
+        publish to error topic
+        stop
 ```
 
---- 
+### Notable Code Observations for Developers
 
-## Additional Implementation Notes
+These are direct observations from the provided source and are worth reviewing during maintenance:
 
-- Inbound authentication/authorization logic is **not visible in the provided source**. It is likely handled upstream or by deployment configuration.
-- URL shortener failure tolerance is one of the most important runtime characteristics of this service.
-- The policy model is central: the request `contact-reason` determines templates, redirect behavior, sender branding, and JWT claims.
-- A visible design intent is to provide stable client-facing acknowledgments while hiding downstream provider-specific payloads behind a standardized orchestration and error contract.
+1. **POST/PUT decision logic appears inconsistent**
+   - `FindMethodAndData_Compute.esql` checks `Source.Reference`
+   - most other code reads `Reference` directly from the reference item
+
+2. **Service success reference extraction appears inconsistent**
+   - `processEventFromQueueMlog_ExtractIdentifiers.esql` assigns service reference into `caseRef`, not `serviceRef`
+
+3. **Success publication is explicitly modeled only for POST paths**
+   - No visible explicit success external-reference mapping for PUT
+
+4. **Service URL depends on a value not set in this application**
+   - `Environment.ESB.ESBEnvelope.userDefined.request.event.referenceNumber`
+   - likely supplied by shared translation or another shared component
+
+These may all be intentional in the wider solution, but they are not fully explained by the provided project source alone.
