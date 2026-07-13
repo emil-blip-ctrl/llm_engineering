@@ -1,0 +1,1205 @@
+--FN-- insurance-claims-api-claims-internet.postman_collection.json --FN--
+--FC--
+{
+  "info": {
+    "name": "insurance-claims-api-claims-internet - Non-Regression Tests",
+    "description": "Non-regression test collection for the internet-facing API `insurance-claims-api-claims-internet` (v2.0.5, CMDB CMP22296), exposed on the TCS external APIC gateway under `/insurance-claims/v2/claims`.\n\n## Architecture (derived from ACE source)\nAPIC (internet catalogue, OAuth2 b2b template) -> ACE REST API `insurance-claims-integration-claims` (`/insurance-claims/v2/routing`) which:\n- GET /claim  -> synchronous call to `insurance-claims-integration-technical-idit` (GetClaimByClaimId)\n- POST /find  -> synchronous call to `insurance-claims-integration-technical-idit` (GetClaimsByPersonalId)\n- POST /claim -> validates payload (`Routing_ValidatePayloadAndDetermineDestination`), routes to MQ queue `A.CLAIMSTECHNICALIDIT.PROCESS` (IDIT) or `A.CLAIMSTECHNICALALIS.PROCESS` (ALIS) and replies **202 Accepted** with `{\"isAccepted\": true}`. Actual claim creation is ASYNCHRONOUS (MQ + retry + email + EDM archiving) and cannot be asserted over HTTP in the same call.\n- GET /health -> proxied health check towards IDIT.\n\n## Routing rules (from ACE ESQL)\n- `X-Origin-Caller-Code` in (LEXFORYOU, ASSISTACH) -> ALIS\n- Otherwise (TCSCH): product code derived from `attributes[type=product-code]` or from `policy-number` (chars 13-15 of `PO...`):\n  - 102, 105 -> IDIT; 103/115 -> IDIT unless damage code is in the ALIS exclusion lists; 103,107,108,109,110,114,115 (fallback) -> ALIS; anything else -> 400.\n\n## Consumers (values.yaml subscriptions)\nASSISTACH (CMP05883), LEXFORYOU (CMP05651), TCSCH (CMP05717) - all on Silver plan, OAuth2 client credentials + `x-tcs-client-id` header.\n\n## Before running\n- Set an environment (env-tcs-global-qa / acp / prod)\n- Collection variables `QA-Personal-ID`, `QA-Claim-ID` and the `QA-Policy-Number-*` values must reference EXISTING data in IDIT (contact + active policies of products 103/105/107). Adjust them for your test data set.\n\n## Runtime payload notes (ACE-derived, differ slightly from the OpenAPI)\n- ACE validates `event.primary-cause-of-loss-extcode` (lowercase `extcode`), not `extCode` as in the swagger.\n- ACE validates `travel-infos` under `claimed-damages[].damaged-objects-details` (product 103) but maps `travel-infos` from claim level to IDIT `travelDates` (v2.0.5). Both locations are populated in the OK payloads.\n- `bike` is read by ACE as an object under `damaged-objects-details`, `reimbursement` as an array.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      { "key": "scope", "value": "{{client_id-x-tcsch}}/.default", "type": "string" },
+      { "key": "clientSecret", "value": "{{client_secret-x-tcsch}}", "type": "string" },
+      { "key": "clientId", "value": "{{client_id-x-tcsch}}", "type": "string" },
+      { "key": "accessTokenUrl", "value": "{{url-oauth2-access-token}}", "type": "string" },
+      { "key": "grant_type", "value": "client_credentials", "type": "string" },
+      { "key": "addTokenTo", "value": "header", "type": "string" },
+      { "key": "client_authentication", "value": "body", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "QA-Claim-ID", "value": "23103-0000306", "type": "string" },
+    { "key": "QA-Personal-ID", "value": "106943075", "type": "string" },
+    { "key": "QA-Policy-Number-103", "value": "PO106962210-10300/00", "type": "string" },
+    { "key": "QA-Policy-Number-105", "value": "PO106962210-10500/00", "type": "string" },
+    { "key": "QA-Policy-Number-107", "value": "PO106962210-10700/00", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "description": "GET /health is proxied by ACE (`health_PrepareCallForIDIT`) towards the IDIT app-details endpoint. Returns `application/health+json` with status pass, or 500/warn when IDIT is unreachable.",
+      "item": [
+        {
+          "name": "OK - Health check returns pass",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/health",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "health" ]
+            },
+            "description": "Health check of the API and the IDIT backend. ACE `health_Compute` returns status='pass' and api='insurance-claims-api-claims' when IDIT answers 200; otherwise 500 with status='warn'. If this request fails with 500, the IDIT backend is down and all IDIT-routed tests will be impacted."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(20000);",
+                  "});",
+                  "",
+                  "pm.test(\"Health status is pass\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\");",
+                  "    pm.expect(j.status).to.eql(\"pass\");",
+                  "    pm.expect(j.api).to.eql(\"insurance-claims-api-claims\");",
+                  "    pm.expect(j).to.have.property(\"checks\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TCSCH - Get Claim",
+      "description": "GET /claim?claim-id=... Synchronous read via ACE -> insurance-claims-integration-technical-idit -> IDIT loss-event. Requires an existing claim id (collection variable QA-Claim-ID).",
+      "item": [
+        {
+          "name": "OK - Get claim by claim-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim?claim-id={{QA-Claim-ID}}",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ],
+              "query": [
+                { "key": "claim-id", "value": "{{QA-Claim-ID}}", "description": "PREREQUISITE: existing IDIT claim id (e.g. 23103-0000306)" }
+              ]
+            },
+            "description": "Returns all claim information (claimed covers, damages, contacts, group claims, reserves, reimbursements). Response fields asserted below come from ACE `mappingResponseIditGetClaimByClaimId`. Accept-Language drives the language of translated descriptions (NIPO-6178)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(20000);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim payload is backwards compatible\", function () {",
+                  "    const j = pm.response.json();",
+                  "    [\"claim-number\", \"policy-number\", \"status\", \"event\"].forEach(f => pm.expect(j, 'missing field ' + f).to.have.property(f));",
+                  "});",
+                  "",
+                  "pm.test(\"Returned claim matches requested claim-id\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j[\"claim-number\"]).to.eql(pm.collectionVariables.get(\"QA-Claim-ID\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Get claim without claim-id query parameter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "description": "ACE `Routing_Prepare_call_GET_claim` throws a 400 user exception 'Target getClaim claim-id is missing' when the claim-id query parameter is absent or empty."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TCSCH - Find Claims",
+      "description": "POST /find - search claims by policy holder personal-id, optionally limited to N years via operational-statuses complementaries (ACE reads `number-of-years` from the body, not from the query string).",
+      "item": [
+        {
+          "name": "OK - Find claims by policy holder personal-id",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "find" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"operational-statuses\": [\n    {\n      \"status\": [\n        {\n          \"operational-status-code\": \"SEARCH\",\n          \"complementaries\": [\n            { \"operational-status-compl-code\": \"number-of-years\", \"operational-status-compl-info\": \"5\" }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "PREREQUISITE: contact {{QA-Personal-ID}} must exist in IDIT. ACE `mappingResponseIditGetClaimsByPersonalId` wraps the result in a `claims` array (note: differs from the swagger which declares a top-level array)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(20000);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is valid JSON with claims list when present\", function () {",
+                  "    const j = pm.response.json();",
+                  "    if (j.claims) {",
+                  "        pm.expect(j.claims).to.be.an(\"array\");",
+                  "        j.claims.forEach(c => {",
+                  "            pm.expect(c).to.have.property(\"claim-number\");",
+                  "            pm.expect(c).to.have.property(\"policy-number\");",
+                  "        });",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Find claims without personal-id",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "find" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    { \"role\": \"polHold\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ACE `Routing_Prepare_call_POST_FIND_claims` throws 400 'The input parametre claim personal-id/policyHolder is missing.' when claim-contacts contains no personal-id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Find claims with non-numeric number-of-years",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "find" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"operational-statuses\": [\n    {\n      \"status\": [\n        {\n          \"operational-status-code\": \"SEARCH\",\n          \"complementaries\": [\n            { \"operational-status-compl-code\": \"number-of-years\", \"operational-status-compl-info\": \"abc\" }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ACE casts number-of-years with `CAST(... AS INTEGER DEFAULT 0)`; a non-numeric value resolves to 0 and triggers 400 'The input parametre number-of-years is not a number.'"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TCSCH - Create Claim (IDIT routing)",
+      "description": "POST /claim with TCSCH caller and products 102/103/105/115 routed to IDIT (MQ queue A.CLAIMSTECHNICALIDIT.PROCESS). ASYNC: the API only acknowledges with 202 {isAccepted:true}; the claim number is produced later by the MQ consumer (verify functional completion separately, e.g. via GET /find or the notification e-mail).",
+      "item": [
+        {
+          "name": "OK - Create ETI travel claim (product 103, no documents)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"channel-extCode\": \"TCSCH\",\n  \"event\": {\n    \"date\": \"2024-02-02\",\n    \"description\": \"Trip cancellation due to sudden illness before departure\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"role-desc\": \"Policy Holder\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"role-desc\": \"Informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    {\n      \"id\": \"1000033\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000005\",\n          \"damaged-objects-details\": {\n            \"travel-infos\": {\n              \"travel-booking-date\": \"2024-01-05\",\n              \"planned-travel-departure-date\": \"2024-03-01\",\n              \"planned-travel-return-date\": \"2024-03-15\",\n              \"impediment-date\": \"2024-02-20\"\n            }\n          },\n          \"reimbursement\": [ { \"estimated-amount\": 150.00, \"currency\": \"CHF\" } ]\n        }\n      ]\n    }\n  ],\n  \"travel-infos\": {\n    \"travel-booking-date\": \"2024-01-05\",\n    \"planned-travel-departure-date\": \"2024-03-01\",\n    \"planned-travel-return-date\": \"2024-03-15\",\n    \"impediment-date\": \"2024-02-20\"\n  },\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"FR\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"number-of-documents\", \"value-type\": \"free\", \"value-id-format\": \"integer\", \"value-code\": \"0\" },\n    { \"type\": \"X-CONSUMER-NAME\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"TCSCH\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Product 103 (ETI) with damage code 1000005 (not in ALIS exclusion list) -> IDIT routing. Damage codes 1000005/6/7 require travel-infos planned-travel-departure-date + impediment-date under damaged-objects-details (ACE validation); travel-infos is also duplicated at claim level for the IDIT mapping (v2.0.5). PREREQUISITE: contact and active 103 policy must exist. This request triggers an async MQ process - verify functional completion separately."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 202\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim is accepted for async processing\", function () {",
+                  "    pm.expect(pm.response.json().isAccepted).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"X-Global-Transaction-ID header is present\", function () {",
+                  "    pm.expect(pm.response.headers.has(\"X-Global-Transaction-ID\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Create ETI travel claim with uploaded documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"event\": {\n    \"date\": \"2024-02-02\",\n    \"description\": \"Trip cancellation with supporting documents\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"role-desc\": \"Policy Holder\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"role-desc\": \"Informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    {\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000005\",\n          \"damaged-objects-details\": {\n            \"travel-infos\": {\n              \"planned-travel-departure-date\": \"2024-03-01\",\n              \"impediment-date\": \"2024-02-20\"\n            }\n          },\n          \"reimbursement\": [ { \"estimated-amount\": 300.00, \"currency\": \"CHF\" } ]\n        }\n      ]\n    }\n  ],\n  \"travel-infos\": {\n    \"planned-travel-departure-date\": \"2024-03-01\",\n    \"impediment-date\": \"2024-02-20\"\n  },\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"DE\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"number-of-documents\", \"value-type\": \"free\", \"value-id-format\": \"integer\", \"value-code\": \"2\" },\n    {\n      \"type\": \"document-list-guuid\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"9c2f6a1e-1111-4d2b-9e6a-aaaaaaaaaaaa\",\n      \"sub-attributes\": [\n        [\n          { \"type\": \"document-uuid\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"doc-uuid-0001\" },\n          { \"type\": \"document-type\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"INVOICE\" },\n          { \"type\": \"file-name\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"invoice1.pdf\" }\n        ],\n        [\n          { \"type\": \"document-uuid\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"doc-uuid-0002\" },\n          { \"type\": \"document-type\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"MEDICAL_CERTIFICATE\" },\n          { \"type\": \"file-name\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"certificate.pdf\" }\n        ]\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "number-of-documents (2) must equal the count of document-list-guuid sub-attributes, and each document needs document-uuid, document-type and file-name (ACE rules). Documents are archived async via A.CLAIMSEDM.PROCESS. NOTE: document-uuid values should reference documents actually uploaded to EDM for full end-to-end validation."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 202\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim is accepted for async processing\", function () {",
+                  "    pm.expect(pm.response.json().isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Create Bike claim (product 105)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-105}}\",\n  \"event\": {\n    \"date\": \"2024-05-10\",\n    \"description\": \"Bike stolen at the train station\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"role-desc\": \"Policy Holder\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"role-desc\": \"Informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    {\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000060\",\n          \"damaged-objects-details\": {\n            \"bike\": {\n              \"type\": \"Road Bike\",\n              \"brand\": \"Canyon\",\n              \"color\": \"RED\",\n              \"frame\": \"FR123456\",\n              \"25km-more\": false,\n              \"purchase-date\": \"2022-06-01\",\n              \"first-reg-date\": \"2022-06-15\",\n              \"purchase-value\": 2500.00\n            }\n          },\n          \"reimbursement\": [ { \"estimated-amount\": 2500.00, \"currency\": \"CHF\" } ]\n        }\n      ]\n    }\n  ],\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"IT\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"number-of-documents\", \"value-type\": \"free\", \"value-id-format\": \"integer\", \"value-code\": \"0\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Product 105 always routes to IDIT. ACE requires bike type, brand, color; plate is only mandatory when 25km-more is true. `bike` is sent as an OBJECT (ACE reads it as a single ROW, unlike the swagger array). PREREQUISITE: active 105 policy for the contact."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 202\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim is accepted for async processing\", function () {",
+                  "    pm.expect(pm.response.json().isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject when event date is missing",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"event\": {\n    \"description\": \"Missing event date\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ACE mandatory check: 'The input parameter event/date is missing or null.' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject when policy holder contact is missing",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"event\": {\n    \"date\": \"2024-02-02\",\n    \"description\": \"No policy holder in contacts\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ACE mandatory check: 'The input parameter claim-contacts/role polHold is missing or null.' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject invalid policy-number without product-code attribute",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"123456789\",\n  \"event\": { \"date\": \"2024-02-02\" },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "policy-number must start with 'PO' when no product-code attribute is provided: 'The input parameter policy-number is missing or null.' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject unprocessable product code (999)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"PO106962210-99900/00\",\n  \"event\": { \"date\": \"2024-02-02\" },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Product code 999 matches none of the ACE routing rules: 'The product code 999 indicated in the payload cannot be processed.' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error mentions the product code\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "    pm.expect(String(j.moreInformation || \"\") + String(j.httpMessage || \"\")).to.match(/product code|Bad Request/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject when language attribute is missing (IDIT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"event\": {\n    \"date\": \"2024-02-02\",\n    \"description\": \"Missing language attribute\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    { \"claimed-damages\": [ { \"functional-id\": \"1000001\" } ] }\n  ],\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"number-of-documents\", \"value-type\": \"free\", \"value-id-format\": \"integer\", \"value-code\": \"0\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "IDIT-routed claims require the 'language' attribute with value in (FR, DE, IT): 'The language attribute in the Claim object is missing or is not one of the accepted values (FR, DE, IT).' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject when informant contact is missing (IDIT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"event\": {\n    \"date\": \"2024-02-02\",\n    \"description\": \"Missing informant\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    { \"claimed-damages\": [ { \"functional-id\": \"1000001\" } ] }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "IDIT-routed claims require a claim-contact with role='informant' and personal-id: 'The input parameter claim-contacts/role or claim-contacts/personal-id of the informant is missing or null.' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject when number-of-documents does not match document list",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"event\": {\n    \"date\": \"2024-02-02\",\n    \"description\": \"Document count mismatch\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    { \"claimed-damages\": [ { \"functional-id\": \"1000001\" } ] }\n  ],\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"FR\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"number-of-documents\", \"value-type\": \"free\", \"value-id-format\": \"integer\", \"value-code\": \"2\" },\n    {\n      \"type\": \"document-list-guuid\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"9c2f6a1e-2222-4d2b-9e6a-bbbbbbbbbbbb\",\n      \"sub-attributes\": [\n        [\n          { \"type\": \"document-uuid\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"doc-uuid-0001\" },\n          { \"type\": \"document-type\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"INVOICE\" },\n          { \"type\": \"file-name\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"invoice1.pdf\" }\n        ]\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "number-of-documents=2 but only 1 document sub-attribute: 'There is a difference between the value-code of the number-of-documents attribute and the number of document sub-attributes.' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject Bike claim missing brand (product 105)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-105}}\",\n  \"event\": {\n    \"date\": \"2024-05-10\",\n    \"description\": \"Bike stolen - missing brand\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    {\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000060\",\n          \"damaged-objects-details\": {\n            \"bike\": { \"type\": \"Road Bike\", \"color\": \"RED\", \"frame\": \"FR123456\" }\n          }\n        }\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Product 105 (Bike) requires bike/type, bike/brand and bike/color: 'The input parameter Bike/brand is missing or null...' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject estimated amount without currency code",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"total-estimated-damaged-currency-amount\": 500.00,\n  \"event\": {\n    \"date\": \"2024-02-02\",\n    \"description\": \"Estimated amount without currency\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": { \"country-code\": \"CH\", \"type-desc\": \"country\" }\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" },\n    { \"role\": \"informant\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"claimed-cover\": [\n    { \"claimed-damages\": [ { \"functional-id\": \"1000001\" } ] }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ACE rule (IDIT route): 'total-estimated-damaged-currency-amount and total-estimated-damaged-currency-code must be present together' -> 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject when X-Origin-Caller-Code header is missing",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-103}}\",\n  \"event\": { \"date\": \"2024-02-02\" },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ACE check: 'The header X-Origin-Caller-Code is missing or is empty' -> 400. NOTE: if the internet APIC gateway injects this header from the consumer application, this test may return 202 instead - in that case the assertion documents a behaviour change to investigate."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error response structure\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(String(j.httpCode)).to.include(\"400\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TCSCH - Create Claim (ALIS routing)",
+      "description": "TCSCH claims for products 107/108/109/110/114 (and 103/115 with excluded damage codes) route to ALIS via A.CLAIMSTECHNICALALIS.PROCESS. The IDIT-only mandatory checks (informant, e-mail, language, personal-reference, documents) do NOT apply on this branch.",
+      "item": [
+        {
+          "name": "OK - Create claim routed to ALIS (product 107)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-tcsch}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "TCSCH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-107}}\",\n  \"event\": {\n    \"date\": \"2024-04-01\",\n    \"description\": \"Legal dispute with landlord\"\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"role-desc\": \"Policy Holder\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"FR\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"number-of-documents\", \"value-type\": \"free\", \"value-id-format\": \"integer\", \"value-code\": \"0\" },\n    { \"type\": \"X-CONSUMER-NAME\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"TCSCH\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Product 107 -> ALIS routing (async, sends confirmation e-mails per InsuranceClaimsSendMailPolicy). PREREQUISITE: active 107 policy for the contact. This request triggers an async MQ process - verify functional completion (ALIS case creation + e-mails) separately."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 202\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim is accepted for async processing\", function () {",
+                  "    pm.expect(pm.response.json().isAccepted).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"X-Global-Transaction-ID header is present\", function () {",
+                  "    pm.expect(pm.response.headers.has(\"X-Global-Transaction-ID\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LEXFORYOU - Create Claim",
+      "description": "X-Origin-Caller-Code=LEXFORYOU (CMP05651) always routes to ALIS, regardless of product. Only the base mandatory checks apply (caller code header, product-code/policy-number, event date, polHold role).",
+      "auth": {
+        "type": "oauth2",
+        "oauth2": [
+          { "key": "scope", "value": "{{client_id-x-lexforyou}}/.default", "type": "string" },
+          { "key": "clientSecret", "value": "{{client_secret-x-lexforyou}}", "type": "string" },
+          { "key": "clientId", "value": "{{client_id-x-lexforyou}}", "type": "string" },
+          { "key": "accessTokenUrl", "value": "{{url-oauth2-access-token}}", "type": "string" },
+          { "key": "grant_type", "value": "client_credentials", "type": "string" },
+          { "key": "addTokenTo", "value": "header", "type": "string" },
+          { "key": "client_authentication", "value": "body", "type": "string" }
+        ]
+      },
+      "item": [
+        {
+          "name": "OK - Create claim routed to ALIS",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-lexforyou}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "LEXFORYOU", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-107}}\",\n  \"event\": {\n    \"date\": \"2024-04-01\",\n    \"description\": \"Legal notice submitted via lexforyou\"\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"role-desc\": \"Policy Holder\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"FR\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"X-CONSUMER-NAME\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"LEXFORYOU\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "LEXFORYOU caller -> ALIS routing (CMDB source CMP05651 in ACE logging). Business e-mail notification behaviour is driven by CLAIM_ALIS_LIST_SEND_MAIL_BUSINESS policy (includes LEXFORYOU). Async - 202 acknowledgement only."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 202\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim is accepted for async processing\", function () {",
+                  "    pm.expect(pm.response.json().isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Create LP claim without policyholder personal-id (LP_CLAIM)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "de", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-lexforyou}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "LEXFORYOU", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-107}}\",\n  \"event\": {\n    \"date\": \"2024-04-01\",\n    \"description\": \"Legal protection claim without identified policyholder\"\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"role-desc\": \"Policy Holder\" }\n  ],\n  \"attributes\": [\n    { \"type\": \"X-CONSUMER-PROCESS\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"LP_CLAIM\" },\n    { \"type\": \"X-CONSUMER-NAME\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"LEXFORYOU\" },\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"DE\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ACE rule: when attribute X-CONSUMER-PROCESS = 'LP_CLAIM', the policyholder personal-id is NOT mandatory (only the polHold role is). Validates the legal-protection intake flow."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 202\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim is accepted for async processing\", function () {",
+                  "    pm.expect(pm.response.json().isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ASSISTACH - Create Claim",
+      "description": "X-Origin-Caller-Code=ASSISTACH (CMP05883) always routes to ALIS, regardless of product.",
+      "auth": {
+        "type": "oauth2",
+        "oauth2": [
+          { "key": "scope", "value": "{{client_id-x-assistach}}/.default", "type": "string" },
+          { "key": "clientSecret", "value": "{{client_secret-x-assistach}}", "type": "string" },
+          { "key": "clientId", "value": "{{client_id-x-assistach}}", "type": "string" },
+          { "key": "accessTokenUrl", "value": "{{url-oauth2-access-token}}", "type": "string" },
+          { "key": "grant_type", "value": "client_credentials", "type": "string" },
+          { "key": "addTokenTo", "value": "header", "type": "string" },
+          { "key": "client_authentication", "value": "body", "type": "string" }
+        ]
+      },
+      "item": [
+        {
+          "name": "OK - Create claim routed to ALIS",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Accept-Language", "value": "fr", "type": "text" },
+              { "key": "x-tcs-client-id", "value": "{{client_id-x-assistach}}", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" },
+              { "key": "X-Origin-Caller-Code", "value": "ASSISTACH", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{QA-Policy-Number-107}}\",\n  \"event\": {\n    \"date\": \"2024-04-01\",\n    \"description\": \"Assistance-originated legal claim\"\n  },\n  \"claim-contacts\": [\n    { \"role\": \"polHold\", \"role-desc\": \"Policy Holder\", \"personal-id\": \"{{QA-Personal-ID}}\" }\n  ],\n  \"attributes\": [\n    { \"type\": \"e-mail\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"nonreg.claims@tcs.ch\" },\n    { \"type\": \"language\", \"value-type\": \"enum\", \"value-id-format\": \"string\", \"value-code\": \"FR\" },\n    { \"type\": \"personal-reference\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"{{QA-Personal-ID}}\" },\n    { \"type\": \"X-CONSUMER-NAME\", \"value-type\": \"free\", \"value-id-format\": \"string\", \"value-code\": \"ASSISTACH\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "ASSISTACH caller -> ALIS routing (CMDB source CMP05883 in ACE logging). Async - 202 acknowledgement only."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 202\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "",
+                  "pm.test(\"Claim is accepted for async processing\", function () {",
+                  "    pm.expect(pm.response.json().isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Security",
+      "description": "Gateway-level security checks for the internet catalogue (OAuth2 client credentials, b2b template).",
+      "item": [
+        {
+          "name": "KO - Reject request without OAuth token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "X-Correlation-Id", "value": "{{$guid}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim?claim-id={{QA-Claim-ID}}",
+              "host": [ "{{url-apic-external}}" ],
+              "path": [ "insurance-claims", "v2", "claims", "claim" ],
+              "query": [
+                { "key": "claim-id", "value": "{{QA-Claim-ID}}" }
+              ]
+            },
+            "description": "Calls the API without any bearer token nor x-tcs-client-id header. The APIC internet gateway must reject the call with 401 (never reach ACE)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+--FC--
+
+--FN-- env-tcs-global-qa.postman_environment.json --FN--
+--FC--
+{
+  "name": "env-tcs-global-qa",
+  "_postman_variable_scope": "environment",
+  "values": [
+    { "key": "url-apic-external", "value": "https://eapi-qa.tcsgroup.ch/tcs/qa", "type": "default", "enabled": true, "description": "External (internet) APIC gateway - QA" },
+    { "key": "url-oauth2-access-token", "value": "https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token", "type": "default", "enabled": true, "description": "Azure AD token endpoint - replace {tenant-id}" },
+    { "key": "client_id-x-tcsch", "value": "{{vault:client_id-q-tcsch}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-tcsch", "value": "{{vault:client_secret-q-tcsch}}", "type": "secret", "enabled": true },
+    { "key": "client_id-x-lexforyou", "value": "{{vault:client_id-q-lexforyou}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-lexforyou", "value": "{{vault:client_secret-q-lexforyou}}", "type": "secret", "enabled": true },
+    { "key": "client_id-x-assistach", "value": "{{vault:client_id-q-assistach}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-assistach", "value": "{{vault:client_secret-q-assistach}}", "type": "secret", "enabled": true }
+  ]
+}
+--FC--
+
+--FN-- env-tcs-global-acp.postman_environment.json --FN--
+--FC--
+{
+  "name": "env-tcs-global-acp",
+  "_postman_variable_scope": "environment",
+  "values": [
+    { "key": "url-apic-external", "value": "https://eapi-acp.tcsgroup.ch/tcs/acp", "type": "default", "enabled": true, "description": "External (internet) APIC gateway - ACP" },
+    { "key": "url-oauth2-access-token", "value": "https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token", "type": "default", "enabled": true, "description": "Azure AD token endpoint - replace {tenant-id}" },
+    { "key": "client_id-x-tcsch", "value": "{{vault:client_id-a-tcsch}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-tcsch", "value": "{{vault:client_secret-a-tcsch}}", "type": "secret", "enabled": true },
+    { "key": "client_id-x-lexforyou", "value": "{{vault:client_id-a-lexforyou}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-lexforyou", "value": "{{vault:client_secret-a-lexforyou}}", "type": "secret", "enabled": true },
+    { "key": "client_id-x-assistach", "value": "{{vault:client_id-a-assistach}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-assistach", "value": "{{vault:client_secret-a-assistach}}", "type": "secret", "enabled": true }
+  ]
+}
+--FC--
+
+--FN-- env-tcs-global-prod.postman_environment.json --FN--
+--FC--
+{
+  "name": "env-tcs-global-prod",
+  "_postman_variable_scope": "environment",
+  "values": [
+    { "key": "url-apic-external", "value": "https://eapi.tcsgroup.ch/tcs/prod", "type": "default", "enabled": true, "description": "External (internet) APIC gateway - PROD. WARNING: POST /claim creates real claims - use read-only requests only unless explicitly approved." },
+    { "key": "url-oauth2-access-token", "value": "https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token", "type": "default", "enabled": true, "description": "Azure AD token endpoint - replace {tenant-id}" },
+    { "key": "client_id-x-tcsch", "value": "{{vault:client_id-p-tcsch}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-tcsch", "value": "{{vault:client_secret-p-tcsch}}", "type": "secret", "enabled": true },
+    { "key": "client_id-x-lexforyou", "value": "{{vault:client_id-p-lexforyou}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-lexforyou", "value": "{{vault:client_secret-p-lexforyou}}", "type": "secret", "enabled": true },
+    { "key": "client_id-x-assistach", "value": "{{vault:client_id-p-assistach}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-assistach", "value": "{{vault:client_secret-p-assistach}}", "type": "secret", "enabled": true }
+  ]
+}
+--FC--
+
+---COMMENT---
+Only necessary comments:
+- Field-name mismatch between OpenAPI and ACE runtime: ACE validates `event.primary-cause-of-loss-extcode` (lowercase) while the swagger declares `extCode`; payloads follow the ACE (runtime) casing. Same for `bike` (ACE reads an object, swagger declares an array) and `travel-infos` (ACE validates it under `damaged-objects-details`, maps it from claim level per v2.0.5 — both are populated). Confirm with a Kibana trace which shape production consumers actually send.
+- Unknown gateway behaviour: it is unclear whether the internet APIC b2b template injects `X-Origin-Caller-Code` from the consumer app. Tests send it explicitly; the "missing header -> 400" KO may need adjustment if the gateway injects it.
+- External hostnames (`eapi-qa/-acp/eapi.tcsgroup.ch/tcs/<env>`) and Azure tenant-id are best-effort conventions — no external-gateway policy file was provided; validate before first run.
+- The 202 acknowledgement is async (MQ to IDIT/ALIS). Providing Kibana traces of the downstream `CreateClaimAsync` / `CreateClaimAlisAsync` flows would allow adding functional follow-up checks (e.g. GET /find polling for the created claim).
+---COMMENT---

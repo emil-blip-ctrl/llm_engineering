@@ -1,0 +1,2106 @@
+{
+  "info": {
+    "name": "insurance-claims-api-claims-internet - Non-Regression Tests",
+    "description": "Generated non-regression collection for the internet-facing claims API.\n\nDerived from:\n- OpenAPI 3.0.3 specification: insurance-claims-api-claims-internet\n- ACE 12 implementation evidence from insurance-claims-integration-claims and downstream technical flows\n\nObserved runtime relation chain:\n- insurance-claims-api-claims-internet (APIC internet API)\n- -> insurance-claims-integration-claims (/insurance-claims/v2/routing)\n- -> GET /claim, POST /find, GET /health route to insurance-claims-integration-technical-idit\n- -> POST /claim validates and routes asynchronously to MQ, then to insurance-claims-integration-technical-idit or insurance-claims-integration-technical-alis\n- -> downstream side effects include EDM metadata update and claim email notification\n\nImportant execution notes:\n- Set url-apic-external, url-oauth2-access-token and client credentials before running\n- POST /claim is asynchronous and 202 only confirms acceptance/queueing, not business completion\n- For executable tests, set collection variables starting with mustProvide_*",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "url-apic-external",
+      "value": "",
+      "type": "string",
+      "description": "Internet APIC base URL"
+    },
+    {
+      "key": "url-oauth2-access-token",
+      "value": "",
+      "type": "string",
+      "description": "OAuth2 token endpoint"
+    },
+    {
+      "key": "client_id-x-assistach",
+      "value": "",
+      "type": "string",
+      "description": "OAuth2 client id / x-tcs-client-id for ASSISTACH"
+    },
+    {
+      "key": "client_secret-x-assistach",
+      "value": "",
+      "type": "string",
+      "description": "OAuth2 client secret for ASSISTACH"
+    },
+    {
+      "key": "client_id-x-lexforyou",
+      "value": "",
+      "type": "string",
+      "description": "OAuth2 client id / x-tcs-client-id for LEXFORYOU"
+    },
+    {
+      "key": "client_secret-x-lexforyou",
+      "value": "",
+      "type": "string",
+      "description": "OAuth2 client secret for LEXFORYOU"
+    },
+    {
+      "key": "client_id-x-tcsch",
+      "value": "",
+      "type": "string",
+      "description": "OAuth2 client id / x-tcs-client-id for TCSCH"
+    },
+    {
+      "key": "client_secret-x-tcsch",
+      "value": "",
+      "type": "string",
+      "description": "OAuth2 client secret for TCSCH"
+    },
+    {
+      "key": "mustProvide_existingClaimId",
+      "value": "SET_ME_EXISTING_CLAIM_ID",
+      "type": "string",
+      "description": "Existing claim id for GET /claim"
+    },
+    {
+      "key": "mustProvide_policyNumber",
+      "value": "SET_ME_ACTIVE_POLICY_NUMBER",
+      "type": "string",
+      "description": "Existing active policy number; for TCSCH IDIT scenario prefer a product compatible with product-code 105"
+    },
+    {
+      "key": "mustProvide_policyHolderPersonalId",
+      "value": "SET_ME_POLICY_HOLDER_PERSONAL_ID",
+      "type": "string",
+      "description": "Existing policy holder personal id"
+    },
+    {
+      "key": "mustProvide_informantPersonalId",
+      "value": "SET_ME_INFORMANT_PERSONAL_ID",
+      "type": "string",
+      "description": "Existing informant personal id"
+    },
+    {
+      "key": "mustProvide_personalReference",
+      "value": "SET_ME_PERSONAL_REFERENCE",
+      "type": "string",
+      "description": "Existing personal reference"
+    },
+    {
+      "key": "mustProvide_email",
+      "value": "SET_ME_EMAIL",
+      "type": "string",
+      "description": "Reachable email address used by downstream flows"
+    },
+    {
+      "key": "mustProvide_documentListGUUID",
+      "value": "SET_ME_DOCUMENT_LIST_GUID",
+      "type": "string",
+      "description": "Existing grouped document guid when number-of-documents > 0"
+    },
+    {
+      "key": "mustProvide_documentUuid1",
+      "value": "SET_ME_DOCUMENT_UUID_1",
+      "type": "string",
+      "description": "Existing document uuid referenced under document-list-guuid"
+    }
+  ],
+  "item": [
+    {
+      "name": "📁 ASSISTACH",
+      "description": "Consumer-specific tests for ASSISTACH.\n\nACE routing rule observed in insurance-claims-integration-claims:\n- X-Origin-Caller-Code = ASSISTACH forces POST /claim to ALIS async flow.",
+      "auth": {
+        "type": "oauth2",
+        "oauth2": [
+          {
+            "key": "scope",
+            "value": "{{client_id-x-assistach}}/.default",
+            "type": "string"
+          },
+          {
+            "key": "clientSecret",
+            "value": "{{client_secret-x-assistach}}",
+            "type": "string"
+          },
+          {
+            "key": "clientId",
+            "value": "{{client_id-x-assistach}}",
+            "type": "string"
+          },
+          {
+            "key": "accessTokenUrl",
+            "value": "{{url-oauth2-access-token}}",
+            "type": "string"
+          },
+          {
+            "key": "grant_type",
+            "value": "client_credentials",
+            "type": "string"
+          },
+          {
+            "key": "addTokenTo",
+            "value": "header",
+            "type": "string"
+          },
+          {
+            "key": "client_authentication",
+            "value": "body",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "OK - Create claim routed to ALIS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-assistach}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{mustProvide_policyNumber}}\",\n  \"channel-extCode\": \"Salesforce\",\n  \"event\": {\n    \"date\": \"2024-06-10\",\n    \"description\": \"Customer reported a legal claim via internet portal\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": {\n      \"country-code\": \"CH\",\n      \"type-desc\": \"country\"\n    }\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    },\n    {\n      \"personal-id\": \"{{mustProvide_informantPersonalId}}\",\n      \"role\": \"informant\",\n      \"role-desc\": \"Informant\"\n    }\n  ],\n  \"claimed-cover\": [\n    {\n      \"functional-id\": \"1000033\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000040\",\n          \"reimbursement\": [\n            {\n              \"estimated-amount\": 150.0,\n              \"currency\": \"CHF\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"total-estimated-damaged-currency-amount\": 150.0,\n  \"total-estimated-damaged-currency-code\": \"CHF\",\n  \"attributes\": [\n    {\n      \"type\": \"product-code\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"107\"\n    },\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"FR\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    },\n    {\n      \"type\": \"number-of-documents\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"integer\",\n      \"value-code\": \"1\"\n    },\n    {\n      \"type\": \"document-list-guuid\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_documentListGUUID}}\",\n      \"sub-attributes\": [\n        [\n          {\n            \"type\": \"document-uuid\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"{{mustProvide_documentUuid1}}\"\n          },\n          {\n            \"type\": \"document-type\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"invoice\"\n          },\n          {\n            \"type\": \"file-name\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"invoice-1.pdf\"\n          }\n        ]\n      ]\n    },\n    {\n      \"type\": \"confirmation-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"PGh0bWw+PGhlYWQ+PHRpdGxlPkNsYWltPC90aXRsZT48L2hlYWQ+PGJvZHk+Q0xBSU1fTlVNQkVSIE1FU1NBR0UgTElFTiBOQl9QSUVDRV9KT0lOVEU8L2JvZHk+PC9odG1sPg==\"\n    },\n    {\n      \"type\": \"X-CONSUMER-NAME\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"ASSISTACH\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "External internet claim submission for ASSISTACH.\n\nACE findings:\n- Request reaches insurance-claims-integration-claims\n- X-Origin-Caller-Code=ASSISTACH forces async ALIS path\n- HTTP 202 is produced by ACE after MQ enqueue, before downstream ALIS completion\n- Downstream side effects may include EDM metadata and email notifications"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyNumber\",\"mustProvide_policyHolderPersonalId\",\"mustProvide_informantPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\",\"mustProvide_documentListGUUID\",\"mustProvide_documentUuid1\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(8000);",
+                  "});",
+                  "const schema = {",
+                  "    type: \"object\",",
+                  "    required: [\"isAccepted\"],",
+                  "    properties: {",
+                  "        isAccepted: { type: \"boolean\" }",
+                  "    }",
+                  "};",
+                  "pm.test(\"Response matches async acceptance schema\", function () {",
+                  "    pm.expect(tv4.validate(pm.response.json(), schema)).to.be.true;",
+                  "});",
+                  "pm.test(\"Response confirms async acceptance\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject create claim when policy-number is missing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-assistach}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": {\n    \"date\": \"2024-06-10\"\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    }\n  ],\n  \"attributes\": [\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"FR\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "ACE validation should reject the request before async routing because both policy-number and product-code are absent."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyHolderPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(8000);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Find claims by personal-id",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-assistach}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    }\n  ],\n  \"operational-statuses\": [\n    {\n      \"status\": [\n        {\n          \"operational-status-code\": \"SEARCH\",\n          \"operational-status-date\": \"2024-01-18T12:35:44Z\",\n          \"complementaries\": [\n            {\n              \"operational-status-compl-code\": \"number-of-years\",\n              \"operational-status-compl-info\": \"5\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find?numberOfYears=5",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "find"
+              ],
+              "query": [
+                {
+                  "key": "numberOfYears",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Find claims by personal-id.\n\nACE runtime evidence shows number-of-years is effectively extracted from operational-statuses/status/complementaries and then forwarded to the technical IDIT service as query parameter."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyHolderPersonalId\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(8000);",
+                  "});",
+                  "pm.test(\"Response contains claims payload\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(Array.isArray(j) || Array.isArray(j.claims)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Get claim by claim-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-assistach}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "ASSISTACH",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim?claim-id={{mustProvide_existingClaimId}}",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ],
+              "query": [
+                {
+                  "key": "claim-id",
+                  "value": "{{mustProvide_existingClaimId}}"
+                }
+              ]
+            },
+            "description": "Retrieve a claim by claim-id through the internet API. Request is routed by insurance-claims-integration-claims to the technical IDIT ACE flow."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var val = pm.collectionVariables.get(\"mustProvide_existingClaimId\");",
+                  "if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "    throw new Error(\"❌ Missing collection variable: mustProvide_existingClaimId\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(8000);",
+                  "});",
+                  "const schema = {",
+                  "  type: \"object\",",
+                  "  required: [\"policy-number\", \"event\"],",
+                  "  properties: {",
+                  "    \"policy-number\": { type: \"string\" },",
+                  "    \"claim-number\": { type: \"string\" },",
+                  "    event: { type: \"object\" },",
+                  "    \"claim-contacts\": { type: \"array\" },",
+                  "    \"claimed-cover\": { type: \"array\" }",
+                  "  }",
+                  "};",
+                  "pm.test(\"Response matches core claim schema\", function () {",
+                  "    pm.expect(tv4.validate(pm.response.json(), schema)).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains core claim fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"policy-number\");",
+                  "    pm.expect(j).to.have.property(\"event\");",
+                  "  });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📁 LEXFORYOU",
+      "description": "Consumer-specific tests for LEXFORYOU.\n\nACE routing rule observed in insurance-claims-integration-claims:\n- X-Origin-Caller-Code = LEXFORYOU forces POST /claim to ALIS async flow.",
+      "auth": {
+        "type": "oauth2",
+        "oauth2": [
+          {
+            "key": "scope",
+            "value": "{{client_id-x-lexforyou}}/.default",
+            "type": "string"
+          },
+          {
+            "key": "clientSecret",
+            "value": "{{client_secret-x-lexforyou}}",
+            "type": "string"
+          },
+          {
+            "key": "clientId",
+            "value": "{{client_id-x-lexforyou}}",
+            "type": "string"
+          },
+          {
+            "key": "accessTokenUrl",
+            "value": "{{url-oauth2-access-token}}",
+            "type": "string"
+          },
+          {
+            "key": "grant_type",
+            "value": "client_credentials",
+            "type": "string"
+          },
+          {
+            "key": "addTokenTo",
+            "value": "header",
+            "type": "string"
+          },
+          {
+            "key": "client_authentication",
+            "value": "body",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "OK - Create claim routed to ALIS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-lexforyou}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "LEXFORYOU",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "LEXFORYOU",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{mustProvide_policyNumber}}\",\n  \"channel-extCode\": \"Salesforce\",\n  \"event\": {\n    \"date\": \"2024-06-10\",\n    \"description\": \"Customer reported a legal claim via internet portal\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": {\n      \"country-code\": \"CH\",\n      \"type-desc\": \"country\"\n    }\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    },\n    {\n      \"personal-id\": \"{{mustProvide_informantPersonalId}}\",\n      \"role\": \"informant\",\n      \"role-desc\": \"Informant\"\n    }\n  ],\n  \"claimed-cover\": [\n    {\n      \"functional-id\": \"1000033\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000040\",\n          \"reimbursement\": [\n            {\n              \"estimated-amount\": 150.0,\n              \"currency\": \"CHF\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"total-estimated-damaged-currency-amount\": 150.0,\n  \"total-estimated-damaged-currency-code\": \"CHF\",\n  \"attributes\": [\n    {\n      \"type\": \"product-code\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"107\"\n    },\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"FR\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    },\n    {\n      \"type\": \"number-of-documents\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"integer\",\n      \"value-code\": \"1\"\n    },\n    {\n      \"type\": \"document-list-guuid\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_documentListGUUID}}\",\n      \"sub-attributes\": [\n        [\n          {\n            \"type\": \"document-uuid\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"{{mustProvide_documentUuid1}}\"\n          },\n          {\n            \"type\": \"document-type\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"invoice\"\n          },\n          {\n            \"type\": \"file-name\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"invoice-1.pdf\"\n          }\n        ]\n      ]\n    },\n    {\n      \"type\": \"confirmation-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"PGh0bWw+PGhlYWQ+PHRpdGxlPkNsYWltPC90aXRsZT48L2hlYWQ+PGJvZHk+Q0xBSU1fTlVNQkVSIE1FU1NBR0UgTElFTiBOQl9QSUVDRV9KT0lOVEU8L2JvZHk+PC9odG1sPg==\"\n    },\n    {\n      \"type\": \"X-CONSUMER-NAME\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"LEXFORYOU\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "External internet claim submission for LEXFORYOU. ACE routing forces async ALIS path."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyNumber\",\"mustProvide_policyHolderPersonalId\",\"mustProvide_informantPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\",\"mustProvide_documentListGUUID\",\"mustProvide_documentUuid1\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(8000);",
+                  "});",
+                  "pm.test(\"Response confirms async acceptance\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Find claims by personal-id",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-lexforyou}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "LEXFORYOU",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "LEXFORYOU",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    }\n  ],\n  \"operational-statuses\": [\n    {\n      \"status\": [\n        {\n          \"operational-status-code\": \"SEARCH\",\n          \"operational-status-date\": \"2024-01-18T12:35:44Z\",\n          \"complementaries\": [\n            {\n              \"operational-status-compl-code\": \"number-of-years\",\n              \"operational-status-compl-info\": \"5\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find?numberOfYears=5",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "find"
+              ],
+              "query": [
+                {
+                  "key": "numberOfYears",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Find claims by personal-id for LEXFORYOU."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var val = pm.collectionVariables.get(\"mustProvide_policyHolderPersonalId\");",
+                  "if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "    throw new Error(\"❌ Missing collection variable: mustProvide_policyHolderPersonalId\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response contains claims payload\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(Array.isArray(j) || Array.isArray(j.claims)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Get claim by claim-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-lexforyou}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "LEXFORYOU",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "LEXFORYOU",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim?claim-id={{mustProvide_existingClaimId}}",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ],
+              "query": [
+                {
+                  "key": "claim-id",
+                  "value": "{{mustProvide_existingClaimId}}"
+                }
+              ]
+            },
+            "description": "Retrieve a claim by claim-id for LEXFORYOU."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var val = pm.collectionVariables.get(\"mustProvide_existingClaimId\");",
+                  "if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "    throw new Error(\"❌ Missing collection variable: mustProvide_existingClaimId\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response contains core claim fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"policy-number\");",
+                  "    pm.expect(j).to.have.property(\"event\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📁 TCSCH",
+      "description": "Consumer-specific tests for TCSCH.\n\nACE routing rule observed in insurance-claims-integration-claims:\n- TCSCH does not force ALIS\n- Destination for POST /claim is determined by product-code and damage-code rules\n- Product-code 105 is routed to IDIT and triggers extra bike-specific validation",
+      "auth": {
+        "type": "oauth2",
+        "oauth2": [
+          {
+            "key": "scope",
+            "value": "{{client_id-x-tcsch}}/.default",
+            "type": "string"
+          },
+          {
+            "key": "clientSecret",
+            "value": "{{client_secret-x-tcsch}}",
+            "type": "string"
+          },
+          {
+            "key": "clientId",
+            "value": "{{client_id-x-tcsch}}",
+            "type": "string"
+          },
+          {
+            "key": "accessTokenUrl",
+            "value": "{{url-oauth2-access-token}}",
+            "type": "string"
+          },
+          {
+            "key": "grant_type",
+            "value": "client_credentials",
+            "type": "string"
+          },
+          {
+            "key": "addTokenTo",
+            "value": "header",
+            "type": "string"
+          },
+          {
+            "key": "client_authentication",
+            "value": "body",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "OK - Create claim routed to IDIT",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{mustProvide_policyNumber}}\",\n  \"channel-extCode\": \"Salesforce\",\n  \"event\": {\n    \"date\": \"2024-06-10\",\n    \"description\": \"Customer reported a bike claim\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": {\n      \"country-code\": \"CH\",\n      \"type-desc\": \"country\"\n    }\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    },\n    {\n      \"personal-id\": \"{{mustProvide_informantPersonalId}}\",\n      \"role\": \"informant\",\n      \"role-desc\": \"Informant\"\n    }\n  ],\n  \"claimed-cover\": [\n    {\n      \"functional-id\": \"1000105\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000106\",\n          \"damaged-objects-details\": {\n            \"bike\": {\n              \"type\": \"RoadBike\",\n              \"brand\": \"TREK\",\n              \"color\": \"BLACK\",\n              \"frame\": \"FRM-123456\",\n              \"25km-more\": true,\n              \"plate\": \"BE-12345\",\n              \"purchase-date\": \"2022-05-10\",\n              \"first-reg-date\": \"2022-05-10\",\n              \"purchase-value\": 2200\n            }\n          },\n          \"reimbursement\": [\n            {\n              \"estimated-amount\": 2200,\n              \"currency\": \"CHF\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"total-estimated-damaged-currency-amount\": 2200,\n  \"total-estimated-damaged-currency-code\": \"CHF\",\n  \"attributes\": [\n    {\n      \"type\": \"product-code\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"105\"\n    },\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"FR\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    },\n    {\n      \"type\": \"iban\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"CH9300762011623852957\"\n    },\n    {\n      \"type\": \"iban-holder\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_policyHolderPersonalId}}\"\n    },\n    {\n      \"type\": \"number-of-documents\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"integer\",\n      \"value-code\": \"1\"\n    },\n    {\n      \"type\": \"document-list-guuid\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_documentListGUUID}}\",\n      \"sub-attributes\": [\n        [\n          {\n            \"type\": \"document-uuid\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"{{mustProvide_documentUuid1}}\"\n          },\n          {\n            \"type\": \"document-type\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"invoice\"\n          },\n          {\n            \"type\": \"file-name\",\n            \"value-type\": \"free\",\n            \"value-id-format\": \"string\",\n            \"value-code\": \"invoice-1.pdf\"\n          }\n        ]\n      ]\n    },\n    {\n      \"type\": \"confirmation-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"PGh0bWw+PGhlYWQ+PHRpdGxlPkNsYWltPC90aXRsZT48L2hlYWQ+PGJvZHk+Q0xBSU1fTlVNQkVSIE1FU1NBR0UgTElFTiBOQl9QSUVDRV9KT0lOVEU8L2JvZHk+PC9odG1sPg==\"\n    },\n    {\n      \"type\": \"X-CONSUMER-NAME\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"TCSCH\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "TCSCH claim submission designed to satisfy IDIT-side routing validations using product-code 105 and bike-specific data.\n\nACE findings:\n- product-code 105 routes to IDIT\n- IDIT destination requires event.description, primary-cause-of-loss-extcode, event.location.country-code, event.location.type-desc, informant personal-id, e-mail, language FR/DE/IT, personal-reference and document-list consistency"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyNumber\",\"mustProvide_policyHolderPersonalId\",\"mustProvide_informantPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\",\"mustProvide_documentListGUUID\",\"mustProvide_documentUuid1\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(202);",
+                  "});",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(8000);",
+                  "});",
+                  "pm.test(\"Response confirms async acceptance\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.isAccepted).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject create claim when informant is missing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{mustProvide_policyNumber}}\",\n  \"event\": {\n    \"date\": \"2024-06-10\",\n    \"description\": \"Customer reported a bike claim\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": {\n      \"country-code\": \"CH\",\n      \"type-desc\": \"country\"\n    }\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    }\n  ],\n  \"claimed-cover\": [\n    {\n      \"functional-id\": \"1000105\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000106\",\n          \"damaged-objects-details\": {\n            \"bike\": {\n              \"type\": \"RoadBike\",\n              \"brand\": \"TREK\",\n              \"color\": \"BLACK\",\n              \"frame\": \"FRM-123456\",\n              \"25km-more\": true,\n              \"plate\": \"BE-12345\",\n              \"purchase-date\": \"2022-05-10\",\n              \"first-reg-date\": \"2022-05-10\",\n              \"purchase-value\": 2200\n            }\n          },\n          \"reimbursement\": [\n            {\n              \"estimated-amount\": 2200,\n              \"currency\": \"CHF\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"attributes\": [\n    {\n      \"type\": \"product-code\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"105\"\n    },\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"FR\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    },\n    {\n      \"type\": \"number-of-documents\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"integer\",\n      \"value-code\": \"0\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "IDIT-destination validation should fail because informant contact is missing."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyNumber\",\"mustProvide_policyHolderPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject create claim when bike plate is missing while 25km-more is true",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{mustProvide_policyNumber}}\",\n  \"event\": {\n    \"date\": \"2024-06-10\",\n    \"description\": \"Customer reported a bike claim\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": {\n      \"country-code\": \"CH\",\n      \"type-desc\": \"country\"\n    }\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    },\n    {\n      \"personal-id\": \"{{mustProvide_informantPersonalId}}\",\n      \"role\": \"informant\",\n      \"role-desc\": \"Informant\"\n    }\n  ],\n  \"claimed-cover\": [\n    {\n      \"functional-id\": \"1000105\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000106\",\n          \"damaged-objects-details\": {\n            \"bike\": {\n              \"type\": \"RoadBike\",\n              \"brand\": \"TREK\",\n              \"color\": \"BLACK\",\n              \"frame\": \"FRM-123456\",\n              \"25km-more\": true,\n              \"purchase-date\": \"2022-05-10\",\n              \"first-reg-date\": \"2022-05-10\",\n              \"purchase-value\": 2200\n            }\n          },\n          \"reimbursement\": [\n            {\n              \"estimated-amount\": 2200,\n              \"currency\": \"CHF\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"attributes\": [\n    {\n      \"type\": \"product-code\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"105\"\n    },\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"FR\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    },\n    {\n      \"type\": \"number-of-documents\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"integer\",\n      \"value-code\": \"0\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "ACE product 105 rule should reject a bike claim when bike.25km-more=true and bike.plate is missing."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyNumber\",\"mustProvide_policyHolderPersonalId\",\"mustProvide_informantPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject create claim when language attribute is invalid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{mustProvide_policyNumber}}\",\n  \"event\": {\n    \"date\": \"2024-06-10\",\n    \"description\": \"Customer reported a bike claim\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": {\n      \"country-code\": \"CH\",\n      \"type-desc\": \"country\"\n    }\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    },\n    {\n      \"personal-id\": \"{{mustProvide_informantPersonalId}}\",\n      \"role\": \"informant\",\n      \"role-desc\": \"Informant\"\n    }\n  ],\n  \"claimed-cover\": [\n    {\n      \"functional-id\": \"1000105\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000106\",\n          \"damaged-objects-details\": {\n            \"bike\": {\n              \"type\": \"RoadBike\",\n              \"brand\": \"TREK\",\n              \"color\": \"BLACK\",\n              \"frame\": \"FRM-123456\",\n              \"25km-more\": false,\n              \"purchase-date\": \"2022-05-10\",\n              \"first-reg-date\": \"2022-05-10\",\n              \"purchase-value\": 2200\n            }\n          },\n          \"reimbursement\": [\n            {\n              \"estimated-amount\": 2200,\n              \"currency\": \"CHF\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"attributes\": [\n    {\n      \"type\": \"product-code\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"105\"\n    },\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"EN\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    },\n    {\n      \"type\": \"number-of-documents\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"integer\",\n      \"value-code\": \"0\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "ACE validation should reject language because only FR, DE and IT are accepted."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyNumber\",\"mustProvide_policyHolderPersonalId\",\"mustProvide_informantPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject create claim when document-list-guuid is missing while number-of-documents > 0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policy-number\": \"{{mustProvide_policyNumber}}\",\n  \"event\": {\n    \"date\": \"2024-06-10\",\n    \"description\": \"Customer reported a bike claim\",\n    \"primary-cause-of-loss-extcode\": \"11900\",\n    \"location\": {\n      \"country-code\": \"CH\",\n      \"type-desc\": \"country\"\n    }\n  },\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    },\n    {\n      \"personal-id\": \"{{mustProvide_informantPersonalId}}\",\n      \"role\": \"informant\",\n      \"role-desc\": \"Informant\"\n    }\n  ],\n  \"claimed-cover\": [\n    {\n      \"functional-id\": \"1000105\",\n      \"claimed-damages\": [\n        {\n          \"functional-id\": \"1000106\",\n          \"damaged-objects-details\": {\n            \"bike\": {\n              \"type\": \"RoadBike\",\n              \"brand\": \"TREK\",\n              \"color\": \"BLACK\",\n              \"frame\": \"FRM-123456\",\n              \"25km-more\": false,\n              \"purchase-date\": \"2022-05-10\",\n              \"first-reg-date\": \"2022-05-10\",\n              \"purchase-value\": 2200\n            }\n          },\n          \"reimbursement\": [\n            {\n              \"estimated-amount\": 2200,\n              \"currency\": \"CHF\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"attributes\": [\n    {\n      \"type\": \"product-code\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"105\"\n    },\n    {\n      \"type\": \"e-mail\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_email}}\"\n    },\n    {\n      \"type\": \"language\",\n      \"value-type\": \"enum\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"FR\"\n    },\n    {\n      \"type\": \"personal-reference\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"string\",\n      \"value-code\": \"{{mustProvide_personalReference}}\"\n    },\n    {\n      \"type\": \"number-of-documents\",\n      \"value-type\": \"free\",\n      \"value-id-format\": \"integer\",\n      \"value-code\": \"1\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "ACE validation should reject the request because number-of-documents > 0 requires document-list-guuid and matching sub-attributes."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "[\"mustProvide_policyNumber\",\"mustProvide_policyHolderPersonalId\",\"mustProvide_informantPersonalId\",\"mustProvide_personalReference\",\"mustProvide_email\"].forEach(function(v) {",
+                  "    var val = pm.collectionVariables.get(v);",
+                  "    if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "        throw new Error(\"❌ Missing collection variable: \" + v);",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Find claims by personal-id",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    }\n  ],\n  \"operational-statuses\": [\n    {\n      \"status\": [\n        {\n          \"operational-status-code\": \"SEARCH\",\n          \"operational-status-date\": \"2024-01-18T12:35:44Z\",\n          \"complementaries\": [\n            {\n              \"operational-status-compl-code\": \"number-of-years\",\n              \"operational-status-compl-info\": \"5\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find?numberOfYears=5",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "find"
+              ],
+              "query": [
+                {
+                  "key": "numberOfYears",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Find claims by personal-id for TCSCH."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var val = pm.collectionVariables.get(\"mustProvide_policyHolderPersonalId\");",
+                  "if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "    throw new Error(\"❌ Missing collection variable: mustProvide_policyHolderPersonalId\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response contains claims payload\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(Array.isArray(j) || Array.isArray(j.claims)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject find claims when personal-id is missing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    }\n  ],\n  \"operational-statuses\": [\n    {\n      \"status\": [\n        {\n          \"operational-status-code\": \"SEARCH\",\n          \"operational-status-date\": \"2024-01-18T12:35:44Z\",\n          \"complementaries\": [\n            {\n              \"operational-status-compl-code\": \"number-of-years\",\n              \"operational-status-compl-info\": \"5\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find?numberOfYears=5",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "find"
+              ],
+              "query": [
+                {
+                  "key": "numberOfYears",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "ACE validation should reject the request because claim personal-id / policy holder is missing."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject find claims when number-of-years is not numeric",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claim-contacts\": [\n    {\n      \"personal-id\": \"{{mustProvide_policyHolderPersonalId}}\",\n      \"role\": \"polHold\",\n      \"role-desc\": \"Policy Holder\"\n    }\n  ],\n  \"operational-statuses\": [\n    {\n      \"status\": [\n        {\n          \"operational-status-code\": \"SEARCH\",\n          \"operational-status-date\": \"2024-01-18T12:35:44Z\",\n          \"complementaries\": [\n            {\n              \"operational-status-compl-code\": \"number-of-years\",\n              \"operational-status-compl-info\": \"abc\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/find?numberOfYears=abc",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "find"
+              ],
+              "query": [
+                {
+                  "key": "numberOfYears",
+                  "value": "abc"
+                }
+              ]
+            },
+            "description": "ACE validation should reject the request because operational-status-compl-info for number-of-years is not numeric."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var val = pm.collectionVariables.get(\"mustProvide_policyHolderPersonalId\");",
+                  "if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "    throw new Error(\"❌ Missing collection variable: mustProvide_policyHolderPersonalId\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OK - Get claim by claim-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim?claim-id={{mustProvide_existingClaimId}}",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ],
+              "query": [
+                {
+                  "key": "claim-id",
+                  "value": "{{mustProvide_existingClaimId}}"
+                }
+              ]
+            },
+            "description": "Retrieve a claim by claim-id for TCSCH."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var val = pm.collectionVariables.get(\"mustProvide_existingClaimId\");",
+                  "if (!val || val.indexOf(\"SET_ME\") === 0) {",
+                  "    throw new Error(\"❌ Missing collection variable: mustProvide_existingClaimId\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response contains core claim fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"policy-number\");",
+                  "    pm.expect(j).to.have.property(\"event\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "KO - Reject get claim when claim-id is missing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "fr",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/claim",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "claim"
+              ]
+            },
+            "description": "ACE validation should reject GET /claim when query parameter claim-id is missing."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(400);",
+                  "});",
+                  "pm.test(\"Error response contains standard fields\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"httpCode\");",
+                  "    pm.expect(j).to.have.property(\"httpMessage\");",
+                  "    pm.expect(j).to.have.property(\"moreInformation\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📁 Health",
+      "description": "Health check routed by insurance-claims-integration-claims to the technical IDIT health endpoint.",
+      "auth": {
+        "type": "oauth2",
+        "oauth2": [
+          {
+            "key": "scope",
+            "value": "{{client_id-x-tcsch}}/.default",
+            "type": "string"
+          },
+          {
+            "key": "clientSecret",
+            "value": "{{client_secret-x-tcsch}}",
+            "type": "string"
+          },
+          {
+            "key": "clientId",
+            "value": "{{client_id-x-tcsch}}",
+            "type": "string"
+          },
+          {
+            "key": "accessTokenUrl",
+            "value": "{{url-oauth2-access-token}}",
+            "type": "string"
+          },
+          {
+            "key": "grant_type",
+            "value": "client_credentials",
+            "type": "string"
+          },
+          {
+            "key": "addTokenTo",
+            "value": "header",
+            "type": "string"
+          },
+          {
+            "key": "client_authentication",
+            "value": "body",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "OK - Health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/health+json",
+                "type": "text"
+              },
+              {
+                "key": "x-tcs-client-id",
+                "value": "{{client_id-x-tcsch}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Global-Transaction-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Origin-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              },
+              {
+                "key": "X-Caller-Code",
+                "value": "TCSCH",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{url-apic-external}}/insurance-claims/v2/claims/health",
+              "host": [
+                "{{url-apic-external}}"
+              ],
+              "path": [
+                "insurance-claims",
+                "v2",
+                "claims",
+                "health"
+              ]
+            },
+            "description": "Health check through the internet API. ACE health mapping returns api=insurance-claims-api-claims and a checks array describing downstream status."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is expected\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test(\"Response time is acceptable\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});",
+                  "const schema = {",
+                  "  type: \"object\",",
+                  "  required: [\"api\", \"checks\", \"status\", \"timestamp\"],",
+                  "  properties: {",
+                  "    api: { type: \"string\" },",
+                  "    checks: { type: \"array\" },",
+                  "    status: { type: \"string\" },",
+                  "    timestamp: { type: \"string\" }",
+                  "  }",
+                  "};",
+                  "pm.test(\"Response matches health schema\", function () {",
+                  "    pm.expect(tv4.validate(pm.response.json(), schema)).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains expected health identity\", function () {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j.api).to.eql(\"insurance-claims-api-claims\");",
+                  "    pm.expect(j.status).to.be.oneOf([\"pass\", \"warn\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

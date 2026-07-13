@@ -1,0 +1,4 @@
+Generate postman collection for insuranc-claims-api-claims-internet.
+The service which insurance-claims-api-claims-internet calls is insurance-claims-integration-claims.
+By this relation now you should figure out the other relations between the IBM ACE 12 components given in the system prompt.
+

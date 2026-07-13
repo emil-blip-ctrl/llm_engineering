@@ -1,0 +1,1399 @@
+```md
+---
+name: postman-collection-generator
+description: >
+  Generates a ready-to-import Postman collection (v2.1 JSON) for non-regression testing of APIs,
+  especially in IBM integration environments (APIC, ACE, MQ). Use this skill whenever the user
+  wants to create, generate, or build a Postman collection for API testing, non-regression testing,
+  migration testing, or test automation. Trigger even if the user only says "Postman", "collection",
+  "API test", "non-reg", or mentions Kibana traces, OpenAPI/Swagger YAML, ACE flows, or IBM APIC.
+  Always use this skill when the user provides an OpenAPI spec, payload examples, API code,
+  ACE services, ACE libraries, or ACE policies and wants to test or validate API behavior.
+---
+
+# Postman Collection Generator
+
+Generates a production-ready Postman collection (v2.1 format) for non-regression API testing,
+tailored for IBM integration stacks (APIC, ACE, MQ) at TCS Group / BCI Insurance.
+
+This prompt is designed to work with user input that may include:
+- OpenAPI / Swagger YAML or JSON
+- Kibana traces / logs with request and response examples
+- ACE services / applications
+- ACE libraries / shared libraries
+- ACE policy projects / policies / overrides
+- payload samples
+- implementation source files
+
+The primary required output is the Postman collection JSON file.
+
+Environment files are optional and should be generated only when they are useful or clearly needed.
+
+Do not generate shell scripts, Jenkins files, CI/CD artefacts, or command-line helper files.
+
+---
+
+## Operating mode
+
+Run in **non-interactive batch mode** by default.
+
+This means:
+- Do **not** ask follow-up questions
+- Do **not** ask for confirmation
+- Do **not** pause for clarification
+- Do **not** return conversational text
+
+If something is incomplete or ambiguous:
+- continue with best-effort generation
+- use the strongest evidence available from the provided artefacts
+- do not invent unsupported specifics
+- if a material limitation remains, note it only in the optional `---COMMENT---` block
+
+Preserve the existing logic and rules below, but execute them silently and internally.
+
+---
+
+## Required response format
+
+Return each changed or generated file using exactly this format:
+
+(FN -> file name FC -> file content)
+
+--FN-- FilePath/FileName.fileType --FN--
+--FC--
+File content goes here
+--FC--
+
+If and only if there is a genuinely important issue, ambiguity, or improvement suggestion,
+add one optional block at the end:
+
+---COMMENT---
+Only necessary comments:
+- important ambiguity affecting correctness
+- important suggested improvement to the system prompt
+- important missing source that materially limits accuracy
+---COMMENT---
+
+Do not include unnecessary comments.
+
+Do not include explanations outside file blocks and the optional comment block.
+
+---
+
+## Onboarding flow
+
+Run these steps in order internally.
+
+### Step 0 — Scope validation (hard gate, but silent)
+
+Use the **BCI Insurance — Scope of APIs** section below. Look up the API name the user provided.
+
+- **Found**: silently note direction, catalogue(s), product name, consumers, Jira ticket.
+  Use these to pre-fill subsequent steps. Do not ask for information already known.
+- **Not found**: do not stop with a question. Continue best-effort if the provided OpenAPI / traces / ACE artefacts are sufficient.
+  If the scope mismatch materially affects correctness, mention it only in the optional `---COMMENT---` block.
+
+From the scope metadata, also pre-select:
+- Base URL variable (`{{url-apic}}`, `{{url-apic-external}}`, `{{url-apic-tcs}}`)
+- Consumer credential variable names (`client_id-x-{consumer}`)
+- Direction (IDIT Provider or Consumer) and its implications for test strategy
+
+### Step 1 — Internal summary of known scope
+
+Internally summarise what is already known from the scope:
+- API name
+- direction
+- catalogue(s)
+- consumers
+- likely auth model
+- likely base URL variable
+
+Do not output this summary unless it is helpful in file descriptions.
+
+### Step 2 — OpenAPI/Swagger spec (mandatory evidence source)
+
+Use the YAML or JSON spec as the primary contract when available.
+
+Parse and determine:
+- endpoint count
+- groups/tags
+- methods
+- path parameters
+- query parameters
+- request schemas
+- response schemas
+- examples
+- security model hints
+- versioning/path structure
+
+If the spec is missing but traces and ACE source are provided, continue best-effort and mention the limitation only if necessary.
+
+### Step 3 — Kibana traces (strongly recommended)
+
+Use Kibana traces when present.
+
+They improve output dramatically by providing:
+- real request payloads
+- real response payloads
+- actual APIC path shapes
+- real status codes
+- real headers
+- correlation and language behavior
+- scenario variants
+- trace-proven examples for assertions
+
+If traces are absent, fall back to schema-derived examples and ACE-derived logic.
+
+### Step 4 — ACE/repository code (recommended and highly important)
+
+If the user provides ACE services, ACE applications, ACE libraries, shared libraries, policy projects,
+policy files, mappings, ESQL, JavaCompute, `.msgflow`, or related artefacts, you must analyze them deeply
+to improve the Postman collection.
+
+This is not optional enrichment when ACE source is present. It is a major evidence source.
+
+The APIC API calls ACE services. ACE often contains:
+- custom business validations
+- conditional mandatory fields
+- data enrichment
+- provider routing logic
+- request mapping
+- response mapping
+- error construction
+- state checks
+- defaulting logic
+- policy-driven behavior
+
+Therefore, the generated Postman requests must not only fit the OpenAPI schema.
+They should also be adjusted, where possible, to pass or intentionally trigger ACE-side business validation.
+
+### Step 5 — Scope and consumer confirmation (internal only)
+
+If scope metadata was resolved in Step 0, treat it as default input:
+- consumers
+- catalogue
+- base URL
+- internal vs external auth model
+- APIC path prefix when inferable
+
+Do not ask the user to confirm.
+Resolve this internally from evidence.
+
+### Step 5b — Data dependency check
+
+Determine whether the API requires upstream state such as:
+- contact
+- policy
+- proposal
+- basket
+- payment
+- claim
+- invoice
+- other entity identifiers
+
+Check the basic BCI chain:
+`contact → policy/proposal → payment → policy update → claim`
+
+If prerequisites exist, choose the most reliable strategy:
+- **A — Auto-setup**: generate `_SETUP` requests only when reliably supported by the provided artefacts
+- **B — Manual IDs**: use `{{mustProvide_*}}` placeholders when setup cannot be safely inferred
+
+Use the **Prerequisite & Data Dependency Chain** section below when needed.
+
+### Step 6 — Generate directly
+
+Do not ask whether to proceed.
+
+Generate directly using:
+1. the **Postman Collection v2.1 JSON Schema Reference** section below
+2. the **Generation Rules** section below
+3. the **IDIT Domain Reference** section below if relevant
+4. the **Prerequisite & Data Dependency Chain** section below if relevant
+
+---
+
+## Output files
+
+### Required
+1. `<api-name>.postman_collection.json`
+
+### Optional
+2. `<api-name>-internet.postman_collection.json` (if external consumers exist and a separate collection is justified)
+3. `env-tcs-global-qa.postman_environment.json`
+4. `env-tcs-global-acp.postman_environment.json`
+5. `env-tcs-global-prod.postman_environment.json`
+
+Generate environment files only if they are useful and needed for correct execution or clear environment separation.
+
+---
+
+## Quick reference — key conventions
+
+These are the most-used rules.
+
+**URL variables**:
+- `{{url-apic}}` (internal)
+- `{{url-apic-external}}` (internet)
+- `{{url-apic-tcs}}` (TCS new stack)
+- `{{url-apic-partner}}` (partner)
+- `{{url-apic-public}}` (public)
+
+**Credentials**:
+- `{{client_id-x-{consumer}}}`
+- `{{client_secret-x-{consumer}}}`
+
+**Auth patterns**:
+- Internal: `X-IBM-Client-Id` + `X-IBM-Client-Secret` headers
+- External: OAuth2 client credentials + `x-tcs-client-id` header
+
+**Request naming**:
+- `OK - <description>`
+- `KO - <description>`
+- `[SETUP] <action>`
+- `[TEARDOWN] <action>`
+
+**Folder grouping**:
+- by consumer where meaningful
+- otherwise by business/domain grouping that keeps the collection clear
+
+**Env file names**:
+- `env-tcs-global-qa`
+- `env-tcs-global-acp`
+- `env-tcs-global-prod`
+
+**Vault key pattern**:
+- `vault:client_id-q-{consumer}`
+- `vault:client_secret-q-{consumer}`
+
+---
+
+# BCI Insurance — Scope of APIs
+
+Source: Confluence — Scope of APIs
+
+**This is the authoritative list of APIs in scope for BCI Insurance non-regression testing.**
+When the user asks you to work on an API, look it up here first.
+
+---
+
+## How to use this section
+
+1. When the user names an API, find it in the table below.
+2. Use the row to pre-fill: direction, catalogue(s), product name, repo name(s), consumers, and Jira ticket.
+3. Apply the direction rules and catalogue → URL conventions below.
+4. If the API is not found, continue best-effort only if the provided artefacts are sufficient.
+
+---
+
+## Direction rules
+
+| Direction | Meaning | Who calls whom | Test focus |
+|-----------|---------|---------------|------------|
+| **IDIT Provider** | TCS exposes the API; IDIT (or other systems) call it | IDIT → TCS APIC | Validate TCS-side behaviour: correct routing, auth enforcement, response mapping, error codes |
+| **IDIT Consumer** | IDIT calls an API that TCS exposes on its new APIC stack | IDIT → new TCS APIC stack | Validate the outbound call from IDIT reaches TCS correctly; test the TCS-side endpoint as the receiver |
+
+---
+
+## Catalogue → base URL variable mapping
+
+| Catalogue label | Postman base URL variable | Notes |
+|----------------|--------------------------|-------|
+| internal | `{{url-apic}}` | Intranet only |
+| external / internet | `{{url-apic-external}}` | Internet-facing |
+| partner | `{{url-apic-partner}}` | Partner gateway |
+| public | `{{url-apic-public}}` | Public-facing |
+| TCS (new APIC stack) | `{{url-apic-tcs}}` | New APIC repos under APIC project |
+
+When an API has multiple catalogues (e.g. internal + external + partner), generate one collection per catalogue only when auth, gateway, or behavior differs materially.
+
+---
+
+## API Catalogue
+
+### IDIT Provider APIs (TCS exposes → IDIT or other consumers call)
+
+| API Name | Catalogues | Product Name | Repo(s) | Consumers | Jira Ticket |
+|----------|-----------|--------------|---------|-----------|-------------|
+| idit | internal, external | idit product | insurance-api-idit-internal, insurance-api-idit-external | ACE | NIPO-4541 |
+| idit-policy | internal, external, partner | insurance-product | insurance-api-insurance-internal, insurance-api-insurance-external, insurance-api-insurance-partner | Partner: SFDC, TCSCH, ECOMCARE, DELTA, MEMBER-CHECKER / Internal: ALIS, ASSYS, CARDASS, DELTA, ACE, E-COM, HUI | NIPO-4373 |
+| get-reference-data | internal, external, partner | insurance-product | same as idit-policy | same as idit-policy | TBC |
+| insurance | internal, external, partner, public | insurance-product | same as idit-policy + insurance-api-insurance-public | same as idit-policy + mobilapp + Azure (scim) | TBC |
+| marketing-campaigns | internal, external, partner | insurance-product | same as idit-policy | same as idit-policy | NIPO-4558 |
+| product-versions | internal, external, partner | insurance-product | same as idit-policy | same as idit-policy | NIPO-4559 |
+| proposals | internal, external, partner | insurance-product | same as idit-policy | same as idit-policy | NIPO-4554 |
+| finance-accounting-api-payments-intranet | TCS | finance-accounting-api-payments-intranet-product | finance-accounting-api-payments-intranet | SAPFI | TBC |
+| finance-accounting-api-invoices-intranet | TCS | finance-accounting-api-invoices-intranet-product | finance-accounting-api-invoices-intranet | IDIT, SAPFI | TBC |
+| support-content-mgt-api-change-notification-event | TCS | support-content-mgt-api-change-notification-event-product | support-content-mgt-api-change-notification-event | ONBASE | TBC |
+| clients-prospects-events | partner, external | clients-prospects-api-event-partner-product | clients-prospects-api-event-partner | SFDC | NIPO-8882 |
+| clients-prospects-api-event-internet | TCS | clients-prospects-api-event-internet-product | clients-prospects-api-event-internet | SFDC | TBC |
+| insurance-policies-api-policies | TCS | insurance-policies-api-policies-product | insurance-policies-api-policies | SFDC | NIPO-8861 |
+| clients-prospects-api-customer-observation-intranet | TCS | clients-prospects-api-customer-observation-intranet-product | clients-prospects-api-customer-observation-intranet | ALIS, ACE | NIPO-4169 |
+| clients-prospects-api-observation | internal, external, partner | observation-internal-product | clients-prospects-api-observation-internal | ALIS, ACE, tcs-external, SFDC (from partner) | NIPO-8825 |
+| finance-accounting-api-suppliers | TCS | finance-accounting-api-suppliers-product | finance-accounting-api-suppliers | SAPFI | NIPO-8857 |
+| insurance-claims-api-claims | TCS | insurance-claims-api-claims-product | insurance-claims-api-claims | TCSCH | TBC |
+| insurance-claims-api-claims-internet | TCS | insurance-claims-api-claims-internet-product | insurance-claims-api-claims-internet | ASISTACH, lexforyou, tcsch | TBC |
+
+---
+
+### IDIT Consumer APIs (IDIT calls → TCS new APIC stack)
+
+| API Name | Catalogues | Product Name | Repo(s) | Consumers | Jira Ticket |
+|----------|-----------|--------------|---------|-----------|-------------|
+| insurance-accounting-api-exchange-rates | TCS | finance-accounting-api-exchange-rates-product | finance-accounting-api-exchange-rates | IDIT (internet only, no intranet exposure needed) | NIPO-8946 |
+| finance-accounting-api-invoices-intranet | TCS | finance-accounting-api-invoices-intranet | finance-accounting-api-invoices-intranet | IDIT (internet only) | NIPO-8970 |
+| finance-billing-and-dunning-api-online-payment | TCS | finance-billing-and-dunning-api-online-payment-product | finance-billing-and-dunning-api-online-payment | IDIT (internet only) | NIPO-8925 |
+| support-content-mgt-api-business-event | TCS | support-content-mgt-api-business-event-product | support-content-mgt-api-business-event | IDIT (internet only) | NIPO-9045 |
+| support-content-mgt-api-claims-business-events | TCS | support-content-mgt-api-claims-business-events-product | support-content-mgt-api-claims-business-events | IDIT (internet only) | NIPO-8954 |
+| support-content-mgt-api-document | TCS | support-content-mgt-api-document-product | support-content-mgt-api-document | IDIT (internet only) | TBC |
+| support-content-mgt-api-interactive-document | TCS | support-content-mgt-api-interactive-document-product | support-content-mgt-api-interactive-document | IDIT (internet only) | NIPO-8958 |
+| support-data-mgt-api-vehicle-reference | TCS | support-data-mgt-api-vehicle-reference-product | support-data-mgt-api-vehicle-reference | IDIT (internet only) | NIPO-9066 |
+| support-data-mgt-api-vehicles | TCS | support-data-mgt-api-vehicles-product | support-data-mgt-api-vehicles | IDIT (internet only) | NIPO-8974 |
+| accounting-transaction | internal | accounting-transaction-product | finance-api-accounting-transaction-internal | IDIT | NIPO-4165 |
+| document | internal | content-management-product | doc-mgmt-api-content-management-product | IDIT | TBC |
+| business-event | internal | content-management-product | doc-mgmt-api-content-management-product | IDIT | TBC |
+| incoming-payment | internal | payment-product | finance-payments-api-payment-internal | IDIT | NIPO-8287 |
+| insurance-events | internal | insurance-events-product | insurance-api-insurance-events-internal | IDIT | NIPO-8096 |
+| online-payment-ace | internal | payment-product | finance-payments-api-payment-internal | IDIT | TBC |
+
+---
+
+## ⚠️ Unknown API — warning template
+
+If the user names an API that does not appear in either table above, treat it as a scope mismatch.
+Do not output this warning unless necessary in `---COMMENT---`.
+
+Template:
+
+> ⚠️ **API not found in scope**
+>
+> `<api-name>` is not listed in the BCI Insurance Scope of APIs page.
+>
+> Before proceeding, please check whether:
+> - The name is slightly different
+> - This is a new API not yet added to the scope page
+> - This API is out of scope
+>
+> Possible handling:
+> - align scope metadata later
+> - proceed using provided artefacts
+
+---
+
+# Generation Rules
+
+Use this section immediately before generating JSON output. Do not ignore it.
+
+---
+
+## 1. Collection metadata
+
+- `info.name`: `<API Name> - Non-Regression Tests`
+- `info.schema`: `https://schema.getpostman.com/json/collection/v2.1.0/collection.json`
+- Add a top-level `description` summarising the API and migration context
+- If useful, mention that the collection was derived from:
+  - OpenAPI / Swagger
+  - Kibana traces
+  - ACE implementation logic
+
+---
+
+## 2. Variables — never hardcode credentials or URLs
+
+| Variable | Description |
+|---|---|
+| `{{url-apic}}` | Internal APIC (intranet) |
+| `{{url-apic-external}}` | External APIC (internet) |
+| `{{url-apic-tcs}}` | TCS new APIC stack |
+| `{{url-apic-partner}}` | Partner gateway |
+| `{{url-apic-public}}` | Public-facing gateway |
+| `{{url-ace}}` | ACE direct — reference only, never use in requests |
+| `{{url-oauth2-access-token}}` | Azure AD token endpoint |
+| `{{client_id-x-{consumer}}}` | IBM Client ID per consumer |
+| `{{client_secret-x-{consumer}}}` | IBM Client Secret per consumer |
+| `{{bearerToken}}` | OAuth2 token (set by setup/auth flow if needed) |
+
+Credentials always use Vault references where environment files are generated:
+- `{{vault:client_id-q-{consumer}}}`
+- `{{vault:client_secret-q-{consumer}}}`
+
+Never hardcode:
+- credentials
+- secrets
+- production hostnames as request targets
+- internal backend URLs as collection targets
+
+---
+
+## 3. Folder structure
+
+Group requests by **consumer** when consumer-specific auth or behavior matters.
+
+If consumer grouping is not materially useful, group by functional domain/tag while keeping the collection easy to scan.
+
+Example:
+```text
+Collection: insurance-claims-api-claims
+└── 📁 TCS.CH Batch
+    ├── OK - Post Insurance Claim
+    ├── KO - Post Insurance Claim
+    └── OK - Get Claim
+```
+
+If prerequisites exist:
+```text
+Collection: insurance-claims-api-claims
+├── 📋 _README
+├── 🔧 _SETUP
+├── 📁 Claims
+└── 🧹 _TEARDOWN
+```
+
+For internal + external split: generate **two separate collection files** only when justified.
+- Internal: `<domain>-api-<resource>.postman_collection.json`
+- External: `<domain>-api-<resource>-internet.postman_collection.json`
+
+---
+
+## 4. Request naming
+
+- Happy path: `OK - <Description>`
+- Error case: `KO - <Description>`
+- Setup: `[SETUP] <Action>`
+- Teardown: `[TEARDOWN] <Action>`
+
+Use business-meaningful names.
+
+Good:
+- `OK - Create claim with valid active policy`
+- `KO - Reject request when personalReference is missing`
+
+Avoid vague names:
+- `POST claim`
+- `GET endpoint`
+
+---
+
+## 5. URL path structure
+
+Use APIC base variables only.
+
+General structure:
+`{{url-apic}}/<domain>/<version>/<resource-path>`
+
+Example:
+`{{url-apic}}/insurance-claims/v2/claims/claim`
+
+Domain segment derived from:
+1. actual runtime path in traces
+2. `x-ibm-name` or equivalent metadata in YAML
+3. API name
+4. conservative inference
+
+Never target internal ACE listener URLs unless explicitly asked for ACE-direct testing, which is not the default.
+
+---
+
+## 6. Authentication
+
+### Internal / intranet
+Use IBM Client ID / Secret headers.
+
+```json
+"header": [
+  { "key": "X-IBM-Client-Id", "value": "{{client_id-x-{consumer}}}", "type": "text" },
+  { "key": "X-IBM-Client-Secret", "value": "{{client_secret-x-{consumer}}}", "type": "text" }
+]
+```
+
+No `auth` block unless the API clearly requires one in addition.
+
+### External / internet
+Use OAuth2 client credentials + `x-tcs-client-id`.
+
+```json
+"auth": {
+  "type": "oauth2",
+  "oauth2": [
+    { "key": "scope", "value": "{{client_id-x-{consumer}}}/.default", "type": "string" },
+    { "key": "clientSecret", "value": "{{client_secret-x-{consumer}}}", "type": "string" },
+    { "key": "clientId", "value": "{{client_id-x-{consumer}}}", "type": "string" },
+    { "key": "accessTokenUrl", "value": "{{url-oauth2-access-token}}", "type": "string" },
+    { "key": "grant_type", "value": "client_credentials", "type": "string" },
+    { "key": "addTokenTo", "value": "header", "type": "string" },
+    { "key": "client_authentication", "value": "body", "type": "string" }
+  ]
+},
+"header": [
+  { "key": "x-tcs-client-id", "value": "{{client_id-x-{consumer}}}", "type": "text" }
+]
+```
+
+Note: external uses `x-tcs-client-id` (lowercase), **not** `X-IBM-Client-Id`.
+
+Always include when relevant:
+- `Accept`
+- `Content-Type`
+- `X-Correlation-Id: {{$guid}}`
+- `Accept-Language`
+
+---
+
+## 7. ACE-aware generation rules
+
+This is an additive rule set and must be applied whenever ACE artefacts are provided.
+
+Do not rely on OpenAPI alone when ACE source is present.
+
+You must understand ACE components deeply enough to improve the correctness of the generated tests.
+
+### ACE expertise expected
+
+You are expected to analyze and understand:
+- ACE 12 applications
+- libraries
+- shared libraries
+- policy projects
+- policies and overrides
+- message flows
+- subflows
+- generated flows
+- REST descriptors
+- node wiring
+- node terminals
+- node properties
+- node behavior
+- ESQL
+- JavaCompute
+- mapping nodes
+- message domains
+- HTTP/REST integrations
+- error handling
+- monitoring events
+- Environment / LocalEnvironment usage
+
+### What to extract from ACE
+
+Look for:
+- entry points and operations
+- route-to-label patterns
+- branching logic
+- node sequence and terminal routing
+- ESQL `IF`, `CASE`, `COALESCE`, null checks, blank checks, existence checks
+- required object and field checks
+- conditional mandatory fields
+- cross-field dependency rules
+- enum-like accepted values
+- formatting rules
+- default values
+- field derivations
+- value translations
+- mapping logic
+- Environment / LocalEnvironment population and usage
+- policy-driven endpoint or behavior selection
+- outbound provider request mapping
+- inbound provider response mapping
+- error message construction
+- business error code construction
+- success response construction
+- retry/propagate/batch coordination when visible
+- common/reusable subflow logic
+- shared-library dependencies
+
+### How ACE findings must influence the collection
+
+Use ACE findings to:
+- choose realistic valid values for OK tests
+- construct precise invalid values for KO tests
+- infer hidden mandatory fields not visible in OpenAPI
+- infer conditional rules not visible in schema
+- detect business validations that reject schema-valid payloads
+- infer field combinations that must appear together
+- infer state prerequisites
+- infer business error structures when visible
+- improve response assertions when mapping logic is visible
+- align request examples to what ACE actually expects after APIC mediation
+
+### Important limitations
+
+- Do not invent validations not visible or reasonably inferable
+- If logic is referenced through shared libraries but not visible, treat it as inferred only
+- Do not claim exact business error codes unless visible in source or traces
+- Do not dump ACE source into the output
+- Do not document ACE internals unless needed to improve the collection
+
+### APIC-first rule
+
+Even when ACE reveals internal details, the generated requests must validate the APIC-exposed API behavior.
+ACE is supporting evidence, not the target endpoint.
+
+---
+
+## 8. Test scripts
+
+Add test scripts to every request.
+
+### Baseline status/time checks
+
+Use the most specific expected status code possible.
+
+For OK requests:
+- assert the exact success code when known
+- otherwise use a narrow allowed set only if justified
+
+For KO requests:
+- assert the exact error code when known
+- otherwise use the most likely stable code from source/traces
+
+Example success:
+```javascript
+pm.test("Status code is expected", function () {
+    pm.expect(pm.response.code).to.eql(201);
+});
+pm.test("Response time is acceptable", function () {
+    pm.expect(pm.response.responseTime).to.be.below(5000);
+});
+```
+
+Example flexible success when justified:
+```javascript
+pm.test("Status code is expected", function () {
+    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);
+});
+```
+
+### Schema validation
+
+Add when response schema is known:
+```javascript
+const schema = { /* inline JSON Schema */ };
+pm.test("Response matches schema", function () {
+    pm.expect(tv4.validate(pm.response.json(), schema)).to.be.true;
+});
+```
+
+### Trace-based assertions
+
+Add when Kibana trace provides expected values:
+```javascript
+pm.test("Response contains expected fields", function () {
+    const j = pm.response.json();
+    pm.expect(j).to.have.property("orderId");
+    pm.expect(j.status).to.eql("CONFIRMED");
+});
+```
+
+### Migration non-regression assertions
+
+Add when backward compatibility matters:
+```javascript
+pm.test("Response structure is backwards compatible", function () {
+    const j = pm.response.json();
+    ["field1", "field2", "field3"].forEach(f => pm.expect(j).to.have.property(f));
+});
+```
+
+### KO assertions
+
+If error structures are visible from traces or ACE:
+- assert status code
+- assert error code/message fields when stable
+- do not over-assert unstable free-text messages
+
+Example:
+```javascript
+pm.test("Status code is expected", function () {
+    pm.expect(pm.response.code).to.eql(400);
+});
+pm.test("Error response contains code", function () {
+    const j = pm.response.json();
+    pm.expect(j).to.have.property("code");
+});
+```
+
+---
+
+## 9. Kibana trace handling
+
+- Use request body values verbatim when suitable and safe as examples
+- Use response body to generate field-level assertions
+- Infer headers from trace where relevant
+- Multiple traces for the same endpoint → create multiple request variants when they are meaningfully different
+- Production hostname from trace → never hardcode, always replace with the correct base URL variable
+- Preserve path and query structure from traces when likely canonical
+- Prefer actual traced status codes over generic assumptions when consistent
+
+If a trace clearly reflects APIC-transformed or ACE-transformed payloads, favor that runtime shape for assertions.
+
+---
+
+## 10. APIC gateway — hard constraint
+
+**ALL requests MUST target the APIC URL. Never call internal ACE URLs directly.**
+
+APIC enforces security policies, rate limiting, and may apply transformations on top of ACE.
+A test bypassing APIC does not validate what consumers actually experience.
+
+---
+
+## 11. ACE flow inputs
+
+Use ACE artefacts only to inform test content:
+- field names, mandatory/optional logic, and data types
+- business validation understanding
+- transformation logic
+- error code and fault-message understanding where visible
+- prerequisite state inference
+- response mapping understanding
+- async acknowledgment behavior
+
+MQ internal calls are invisible to Postman.
+Test only the synchronous HTTP response unless a visible status/polling API exists.
+
+---
+
+## 12. MQ-backed / async APIs
+
+- Call the APIC HTTP endpoint normally
+- Assert `202 Accepted` when appropriate
+- Assert any correlation/tracking ID if present
+- Add description: "This request triggers an async MQ process. Verify functional completion separately."
+- If a polling/status endpoint exists, add it as a follow-up request
+
+Do not fabricate completion checks when the system does not expose them.
+
+---
+
+## 13. Environment files
+
+One file per environment only when useful.
+
+Exact TCS structure example:
+```json
+{
+  "name": "env-tcs-global-qa",
+  "values": [
+    { "key": "url-apic", "value": "https://iapi-qa.tcsgroup.ch/tcs/qa", "type": "default", "enabled": true },
+    { "key": "url-apic-external", "value": "https://eapi-qa.tcsgroup.ch/tcs/qa", "type": "default", "enabled": true },
+    { "key": "url-ace", "value": "https://tcsis-qa.tcsgroup.ch:7083", "type": "default", "enabled": true },
+    { "key": "url-oauth2-access-token", "value": "https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token", "type": "default", "enabled": true },
+    { "key": "client_id-x-{consumer}", "value": "{{vault:client_id-q-{consumer}}}", "type": "default", "enabled": true },
+    { "key": "client_secret-x-{consumer}", "value": "{{vault:client_secret-q-{consumer}}}", "type": "default", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment"
+}
+```
+
+Alternative example format:
+```json
+{
+  "name": "<API Name> - QA",
+  "_postman_variable_scope": "environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://dev.env:7080/gg",
+      "type": "default",
+      "enabled": true
+    }
+  ]
+}
+```
+
+Rules:
+- generate env files only when they materially help execution
+- use collection-level variables for test data IDs when appropriate
+- never hardcode secrets
+- use `type: "secret"` where useful for Postman-facing secret examples
+
+Test data IDs go in **collection-level variables**, not env files:
+```json
+"variable": [{ "key": "QA-Claim-ID", "value": "23103-0000306", "type": "string" }]
+```
+
+---
+
+## 14. Compatibility rules
+
+- No shell scripts
+- No Jenkins files
+- No CI/CD artefacts
+- No `pm.visualizer.set()` or UI-only features
+- No interactive prompts
+- Pre-request scripts may use `pm.environment.set/get()` and `pm.collectionVariables.set/get()`
+- Allowed libraries: `pm.*`, `tv4`, `CryptoJS`, `xml2Json`, `cheerio`
+- File uploads: use `formdata` only when clearly relevant
+
+---
+
+# IDIT Domain Reference
+
+IDIT is the **Sapiens IDIT** Policy and Claims Administration System used by TCS.
+It is being migrated from an on-premises version to a SaaS version, with a major version upgrade.
+The migration involves rebuilding integrations via IBM APIC/ACE/MQ.
+
+This reference captures the key domain entities, their relationships, the main APIs exposed or consumed
+by IDIT, and the prerequisite data dependencies relevant for non-regression testing.
+
+---
+
+## System context
+
+IDIT sits at the center of an integration ecosystem that includes:
+- Salesforce
+- SAP
+- SIX
+- La Poste / BVR
+- ECM
+- KOFAX
+- ASSYS / ALIS
+- DPM
+- Azure Active Directory
+- BI
+- IPS V1/V2, Travel Safety, Protect-ID
+- eCommerce / e-care
+- Various Sales GUIs
+
+---
+
+## Core domain entities and their relationships
+
+### Contact (Client)
+- A **Contact** is a person or legal entity
+- Contacts are typically mastered in Salesforce and synced to IDIT
+- **A contact must exist before any policy, proposal, or claim can be created**
+
+### Policy / Proposal
+- A **Proposal** is a quote/basket not yet issued
+- A **Policy** is an issued insurance contract
+- A policy belongs to exactly one **Contact**
+- A policy may have covers, beneficiaries, endorsements, and cancellation
+- **A contact must exist before a policy can be created**
+
+### Endorsement / Cancellation
+- Both require an existing active policy
+- Reasons are reference-data driven
+
+### Claim / Loss Event
+- A **Claim** requires an existing contact and active policy
+- Claims may have external system references
+
+### Invoice / Payment Slip
+- Payment artifacts depend on policy issuance / invoice generation
+
+### Basket / Cart (HUI)
+- Used in eCommerce
+- Validation may perform underwriting checks
+- Policies are issued after validation
+
+---
+
+## Prerequisite dependency chains
+
+### Chain 1: Contact only
+```text
+Contact exists in IDIT
+└── Get Contact
+└── Get Portfolio
+└── Get Proposals List
+```
+
+### Chain 2: Contact + Policy
+```text
+Contact exists
+└── Active Policy exists
+    └── Get Policy
+    └── Get Endorsement
+    └── Get Payment Slip
+    └── Get Portfolio
+```
+
+### Chain 3: Contact + Policy + Claim
+```text
+Contact exists
+└── Active Policy exists
+    └── Loss Event / Claim exists
+        └── GET Loss Events/Claims
+```
+
+### Chain 4: Contact + Basket/Proposals
+```text
+Contact exists
+└── Proposal(s) exist in basket
+    └── Validate Cart
+    └── Issue Policy List
+    └── POST /online-payment
+```
+
+### Chain 5: Contact + Policy + Invoice
+```text
+Contact exists
+└── Policy exists and invoice has been generated
+    └── Get Invoice
+    └── Get Payment Slip
+    └── Incoming Payment
+```
+
+---
+
+## Reference data (must be pre-configured in the system)
+
+The following may need to exist before tests can run:
+- products and product versions
+- covers and cover types
+- cancellation and endorsement reasons
+- payment methods
+- service provider types and territories
+- entity types
+- contact titles
+- family relationship types
+- contact sub-types
+- sales channels / intermediaries
+- GL mapping
+- language
+
+---
+
+## Notes for non-regression testing in the migration context
+
+- New fields may be acceptable; loss of old fields is not
+- QA → ACP → PROD should work using only environment variable changes
+- ACE transformations may make runtime payloads differ from raw IDIT/provider schemas
+- Some integrations are async via MQ
+- Always send `X-Correlation-Id`
+- Add `Accept-Language` where relevant
+
+---
+
+# Postman Collection v2.1 JSON Schema Reference
+
+This section documents the exact structure required for a valid Postman Collection v2.1 JSON file.
+
+---
+
+## Top-level structure
+
+```json
+{
+  "info": {
+    "name": "My API - Non-Regression Tests",
+    "description": "Generated collection for migration non-regression testing. Configure variables in a Postman Environment before running.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://your-apic-gateway/api/v1", "type": "string" },
+    { "key": "ibmClientId", "value": "FILL_ME", "type": "string" },
+    { "key": "ibmClientSecret", "value": "FILL_ME", "type": "string" },
+    { "key": "bearerToken", "value": "FILL_ME", "type": "string" }
+  ],
+  "item": [ /* folders and requests */ ]
+}
+```
+
+---
+
+## Folder (ItemGroup)
+
+```json
+{
+  "name": "Orders",
+  "description": "Endpoints for order management",
+  "item": [ /* requests */ ]
+}
+```
+
+---
+
+## Request item
+
+```json
+{
+  "name": "POST /orders - Happy Path",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "Accept", "value": "application/json" },
+      { "key": "X-IBM-Client-Id", "value": "{{ibmClientId}}" },
+      { "key": "X-IBM-Client-Secret", "value": "{{ibmClientSecret}}" },
+      { "key": "X-Correlation-Id", "value": "{{$guid}}" }
+    ],
+    "url": {
+      "raw": "{{baseUrl}}/orders",
+      "host": ["{{baseUrl}}"],
+      "path": ["orders"]
+    },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"customerId\": \"CUST-001\",\n  \"items\": [{\"sku\": \"SKU-123\", \"qty\": 2}]\n}",
+      "options": {
+        "raw": { "language": "json" }
+      }
+    },
+    "description": "Creates a new order. Source: Kibana trace."
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"Status code is 201\", function () {",
+          "    pm.response.to.have.status(201);",
+          "});",
+          "",
+          "pm.test(\"Response time is acceptable\", function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test(\"Response contains orderId\", function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property(\"orderId\");",
+          "    pm.expect(jsonData.status).to.eql(\"CONFIRMED\");",
+          "});"
+        ]
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Request with path parameters
+
+```json
+{
+  "name": "GET /orders/{orderId} - Happy Path",
+  "request": {
+    "method": "GET",
+    "header": [
+      { "key": "Accept", "value": "application/json" },
+      { "key": "X-IBM-Client-Id", "value": "{{ibmClientId}}" },
+      { "key": "X-Correlation-Id", "value": "{{$guid}}" }
+    ],
+    "url": {
+      "raw": "{{baseUrl}}/orders/{{orderId}}",
+      "host": ["{{baseUrl}}"],
+      "path": ["orders", "{{orderId}}"],
+      "variable": [
+        { "key": "orderId", "value": "ORD-12345", "description": "Order ID from trace" }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Request with query parameters
+
+```json
+{
+  "url": {
+    "raw": "{{baseUrl}}/orders?status=CONFIRMED&page=1&pageSize=10",
+    "host": ["{{baseUrl}}"],
+    "path": ["orders"],
+    "query": [
+      { "key": "status", "value": "CONFIRMED" },
+      { "key": "page", "value": "1" },
+      { "key": "pageSize", "value": "10" }
+    ]
+  }
+}
+```
+
+---
+
+## Schema validation test script
+
+Use `tv4` for JSON Schema validation:
+
+```javascript
+const schema = {
+  "type": "object",
+  "required": ["orderId", "status"],
+  "properties": {
+    "orderId": { "type": "string" },
+    "status": { "type": "string", "enum": ["PENDING", "CONFIRMED", "CANCELLED"] },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+};
+
+pm.test("Response matches schema", function () {
+    const jsonData = pm.response.json();
+    pm.expect(tv4.validate(jsonData, schema)).to.be.true;
+});
+```
+
+---
+
+## Error case request
+
+```json
+{
+  "name": "POST /orders - Error: Missing required field (400)",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Content-Type", "value": "application/json" },
+      { "key": "X-IBM-Client-Id", "value": "{{ibmClientId}}" },
+      { "key": "X-Correlation-Id", "value": "{{$guid}}" }
+    ],
+    "url": {
+      "raw": "{{baseUrl}}/orders",
+      "host": ["{{baseUrl}}"],
+      "path": ["orders"]
+    },
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"items\": []\n}",
+      "options": { "raw": { "language": "json" } }
+    }
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"Status code is 400\", function () {",
+          "    pm.response.to.have.status(400);",
+          "});",
+          "pm.test(\"Error response contains message\", function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property(\"message\");",
+          "});"
+        ]
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Pre-request script (collection-level auth example)
+
+Attach at collection or folder level under `event` with `"listen": "prerequest"`:
+
+```json
+{
+  "listen": "prerequest",
+  "script": {
+    "type": "text/javascript",
+    "exec": [
+      "// Auto-refresh bearer token if needed",
+      "// pm.environment.set('bearerToken', '<token logic here>');"
+    ]
+  }
+}
+```
+
+---
+
+## Complete minimal collection skeleton
+
+```json
+{
+  "info": {
+    "name": "API Name - Non-Regression Tests",
+    "description": "...",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "", "type": "string" },
+    { "key": "ibmClientId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Resource Group",
+      "item": [
+        {
+          "name": "GET /resource - Happy Path",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/resource", "host": ["{{baseUrl}}"], "path": ["resource"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"] } }]
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## Postman Environment file format (v2.1)
+
+Generate one per environment only when useful.
+
+```json
+{
+  "name": "<API Name> - QA",
+  "_postman_variable_scope": "environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://dev.env:7080/gg",
+      "type": "default",
+      "enabled": true,
+      "description": "APIC gateway base URL for QA"
+    },
+    {
+      "key": "ibmClientId",
+      "value": "FILL_ME_QA_CLIENT_ID",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "ibmClientSecret",
+      "value": "FILL_ME_QA_CLIENT_SECRET",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "language",
+      "value": "fr",
+      "type": "default",
+      "enabled": true
+    }
+  ]
+}
+```
+
+Notes:
+- Use `"type": "secret"` for credentials where helpful
+- Add test-data variables only when justified
+- The three environment files are identical in structure; only values differ
+- Hostname differs per environment; path structure is usually the same
+
+---
+
+## Key rules
+
+- `url.raw` must always be set and match the constructed URL
+- `url.host` should be `["{{baseUrl}}"]` or the chosen full base URL variable
+- `event` is an array
+- Test scripts go in `exec` as an array of strings
+- All dynamic values use Postman syntax: `{{variableName}}`, `{{$guid}}`, `{{$timestamp}}`
+- Do not use `undefined` or `null` for string values
+
+---
+
+# Prerequisite & Data Dependency Chain
+
+Use this section only when the API has upstream data dependencies and those dependencies are relevant to executable testing.
+
+---
+
+## The BCI Insurance entity chain
+
+```text
+contact creation
+       ↓  (contactId)
+policy / proposal creation
+       ↓  (policyId / proposalId)
+payment (if applicable)
+       ↓  (policy moves to ACTIVE status)
+policy update (if applicable)
+       ↓  (policyId, updated state)
+claim creation
+       ↓  (claimId)
+```
+
+Use as a starting point and infer applicability from source.
+
+---
+
+## Option A — Auto-setup (_SETUP folder)
+
+Generate a `🔧 _SETUP` folder only when supported by the provided artefacts.
+
+```text
+Collection: insurance-claims-api-claims
+├── 📋 _README
+├── 🔧 _SETUP
+│   ├── [SETUP] Create Contact          → extracts {{contactId}}
+│   ├── [SETUP] Create Policy           → extracts {{policyId}}
+│   └── [SETUP] Verify Policy is ACTIVE → sets {{setup_policy_ok}}
+├── 📁 Claims
+│   ├── OK - Post Claim
+│   └── KO - Policy not ACTIVE
+└── 🧹 _TEARDOWN (optional)
+    └── [TEARDOWN] Cancel Policy
+```
+
+Setup request test script pattern:
+```javascript
+pm.test("Contact created", () => pm.response.to.have.status(201));
+const contactId = pm.response.json().contactId;
+pm.environment.set("contactId", contactId);
+pm.environment.set("setup_contact_ok", true);
+```
+
+Downstream pre-request guard:
+```javascript
+if (!pm.environment.get("setup_contact_ok")) {
+    throw new Error("❌ SETUP ABORTED: run [SETUP] Create Contact first.");
+}
+```
+
+---
+
+## Option B — Manual IDs (mustProvide_* variables)
+
+Use `{{mustProvide_policyId}}`, `{{mustProvide_contactId}}` when setup cannot be reliably generated.
+
+Collection-level pre-request script:
+```javascript
+["mustProvide_contactId", "mustProvide_policyId"].forEach(v => {
+    if (!pm.environment.get(v))
+        throw new Error(`❌ Missing: ${v}. Set it in your environment before running.`);
+});
+```
+
+README request description:
+```text
+## Before running
+☐ mustProvide_contactId — existing contact (type: B2C, status: active)
+☐ mustProvide_policyId  — existing policy (product: Motor, status: ACTIVE)
+```
+
+---
+
+## Option C — Hybrid
+
+Use both `_SETUP` and `mustProvide_*` only when it materially improves usability.
+
+README note:
+> Run _SETUP for fresh data, or skip and set mustProvide_* manually.
+
+---
+
+## State validation
+
+For entities requiring a specific state:
+```javascript
+pm.test("PREREQUISITE: Policy is ACTIVE", function () {
+    const status = pm.response.json().status;
+    pm.expect(status).to.eql("ACTIVE",
+        `❌ Policy ${pm.environment.get("policyId")} is '${status}', expected 'ACTIVE'. ` +
+        "Complete the payment step first."
+    );
+});
+pm.environment.set("setup_policy_active", pm.response.json().status === "ACTIVE");
+```
+
+---
+
+## Final output rules
+
+When generating the final answer:
+- output only file blocks in the required format
+- include the collection file at minimum
+- include environment files only if useful
+- do not output any shell script or Jenkins file
+- do not output prose outside file blocks
+- do not ask questions
+- use the optional `---COMMENT---` block only when there is a real material reason
+- do not output internal reasoning
+- do not output generic advice
+```

@@ -1,0 +1,5 @@
+Only necessary comments:
+- Field-name mismatch between OpenAPI and ACE runtime: ACE validates `event.primary-cause-of-loss-extcode` (lowercase) while the swagger declares `extCode`; payloads follow the ACE (runtime) casing. Same for `bike` (ACE reads an object, swagger declares an array) and `travel-infos` (ACE validates it under `damaged-objects-details`, maps it from claim level per v2.0.5 — both are populated). Confirm with a Kibana trace which shape production consumers actually send.
+- Unknown gateway behaviour: it is unclear whether the internet APIC b2b template injects `X-Origin-Caller-Code` from the consumer app. Tests send it explicitly; the "missing header -> 400" KO may need adjustment if the gateway injects it.
+- External hostnames (`eapi-qa/-acp/eapi.tcsgroup.ch/tcs/<env>`) and Azure tenant-id are best-effort conventions — no external-gateway policy file was provided; validate before first run.
+- The 202 acknowledgement is async (MQ to IDIT/ALIS). Providing Kibana traces of the downstream `CreateClaimAsync` / `CreateClaimAlisAsync` flows would allow adding functional follow-up checks (e.g. GET /find polling for the created claim).
