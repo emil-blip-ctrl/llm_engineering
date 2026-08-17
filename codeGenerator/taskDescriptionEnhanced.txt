@@ -1,98 +1,213 @@
-ORIGINAL REQUEST: 3- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP), update the PaymentRequests with:
+ORIGINAL REQUEST: FIRST TASK: 
 
-PaymentRequest.Id = Salesforce internal document reference
+Problem
+insuranceAmount is returned as 0.00 on the generated documents.
 
-PaymentRequest.IntegrationMessage__c = SAP Error message
+Confirmed at scale: a Kibana export of the generated documents over the last few weeks shows insuranceAmount="0.00" on 100% of documents (94/94, product 103). It is systematic, not an edge case.
 
-PaymentRequest.IntegrationCode__c = SAP Error code
+Root cause
+The transformation reads the wrong field from the claim BOM. The insured amount exists at two levels:
 
-needs to be replaced by :  
+cover level — claimed-cover[].insured-amount, fed by IDIT claimedCoverAggregatedInsuranceAmount = aggregated / policy-period limit → not configured on this product, so always 0.00
 
-3a- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status = ‘Posted’, update the PaymentRequests with:
+damage level — claimed-cover[].claimed-damages[].insured-amount, fed by IDIT claimedCoverInsuranceAmountPerEvent = per-event insured limit (e.g. 120000.00)
 
-PaymentRequest.Id = Salesforce internal document reference
+Per IDIT US IDITS-1685, the value to display is the per-event one. The transformation currently reads the cover-level (aggregated) field → 0.00.
 
-PaymentRequest.Status=’In progress'
+What to fix
+Repo support-content-mgt-integration-claims-business-events → BuildXMLDocument.esql (~ line 203): read the damage-level insured amount instead of the cover-level one.
 
-PaymentRequest.IntegrationMessage__c = SAP Error message 
 
-PaymentRequest.IntegrationCode__c = SAP Error code
 
-3b- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status <> ‘Posted’, update the PaymentRequests with:
+-- BEFORE — reads cover level (claimedCoverAggregatedInsuranceAmount = 0.00)  [WRONG]
+SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."insured-amount";
+-- AFTER — reads damage level (claimedCoverInsuranceAmountPerEvent = 120000.00)  [OK]
+SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount";
+This is consistent with the neighbouring lines that already navigate to the damage level (damageDescription L196, purchaseValue L202, currency L221).
 
-PaymentRequest.Id = Salesforce internal document reference
+Expected result
+insuranceAmount = claimedCoverInsuranceAmountPerEvent (e.g. 120000.00) instead of 0.00.
 
-PaymentRequest.IntegrationMessage__c = SAP Error message 
+Verification example — claim 26103-0011829, BOM after transformation:
 
-PaymentRequest.IntegrationCode__c = SAP Error code
+
+
+"claimed-cover": [{
+   "insured-amount": "0.00",                              // read today  -> wrong
+   "claimed-damages": [{ "insured-amount": "120000.00" }] // should be read -> correct
+}]
+About the loop (Emil's point) — out of scope, keep as a warning
+In insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql (the NIPO-5484 lines, ~363-364), the claimed-cover mapping overwrites the cover fields on each iteration of the damages loop and ends up keeping the last element. This is genuinely wrong, but:
+
+there is never more than one damages element per claim in production today (confirmed via Kibana over the last few weeks);
+
+so the "last element wins" behaviour never triggers and is not the cause of the 0.00.
+
+→ Not in scope here. Suggestion: add a warning comment at those lines so it is not forgotten, and revisit only if/when multi-damage (or multi-cover) claims start to occur.
+
+ 
+
+Note to BA : See CS0088908 for the deductible part
+
+
+SECOND TASK:
+
+Specification
+
+Context
+
+We want to display the gross reimbursement amount (before deductible) per claim / damaged object on the customer statement. IDIT does not expose this amount — confirmed by Sapiens: it is available neither in the GET Claim response nor in the DB — so it must be computed in our claims BOM. Same customer-statement / auto-claim-payment scope as NIPO-9277. This is stage 1 (IDIT → BOM); the exposure of the computed field in the claims XML document (stage 2, BuildXMLDocument.esql) is handled in NIPO-9434, which is blocked by this ticket. Labels SSC_26-2.4 / SSC_26-3.1.
+
+Functional specifications (story)
+
+As a consumer of the customer statement, I want the gross reimbursement amount (before deductible) exposed per damaged object in the claim BOM, so that it can be displayed on the statement without deriving it downstream.
+
+Proposition of design
+
+Add a new BOM field total-approved-claim-payment-gross-amount = net + the deductible actually retained by the customer, where:
+
+net = totalApprovedClaimPaymentsAmountPerDamagedObject (the value already used for total-approved-claim-payment-amount).
+
+retained deductible = the deductible debit lines (invoiceLineVO.extCode = '500008') net of their counter-booking lines (invoiceLineVO.extCode = '500110'). A deductible that is counter-booked is not retained (contributes 0); a deductible with no counter-booking is retained and must be added back to the net.
+
+Sign warning (validated on real payloads, see Example): the computation must be implemented so that both cases below hold. A naive net + Σ500008 is wrong — with a deductible line stored as -200 it would give 99 + (-200) = -101. The intended result is net + retained deductible (99 + 200 = 299). The exact sign of the 500008 / 500110 line amounts in claimTransactionLineIVOs must be checked and handled accordingly.
+
+Implementation: insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql, in the reimbursement block that already iterates claimTransactionLineIVOs of the PAYMENT-type claimTransactionIVO. Note: invoiceLineVO.extCode is not currently mapped in the BOM (only invoiceLineVO.id and invoiceLineVO.desc are) — it must be read to filter the lines on 500008 / 500110. Add the field at the damaged-object level, next to total-approved-claim-payment-amount. Today there is at most one damage per claim in production, so object and damage levels coincide; the intended level should nevertheless be confirmed.
+
+estimatedDamageAmount must not be used (it is the estimate, not the amount actually reimbursed).
+
+Example
+
+Case 1 — retained deductible, no counter-booking (real document auto-claim-payment, claim 26103-0011829, product 103). The claims document shows balanceAmount = 99.00 (net) and a payment list with a payment of 299.00 and a Franchise of 200.00:
+
+<claims claimNumber="26103-0011829" ... balanceAmount="99.00" nbDamageList="1" currency="CHF">
+  ...
+  <paymentItem description="Remboursement frais d'annulation" amount="299.00" currency="CHF"/>
+  <paymentItem description="Franchise" amount="200.00" currency="CHF"/>
+
+→ total-approved-claim-payment-gross-amount = net 99.00 + retained Franchise 200.00 = 299.00. (Exposed downstream as grossAmount in NIPO-9434.)
+
+Case 2 — counter-booked deductible (Sapiens example): Payment 400 / Deductible (500008) -200 / Counter-booking (500110) +200 → retained deductible = 0 → gross = net 400 + 0 = 400.
+
+Also: bike claim 26105-0017043 — estimatedDamageAmount = 299 but the gross reimbursed = 433 → confirms estimatedDamageAmount is not usable.
+
+Acceptance criteria
+
+Scenario 1 — retained deductible (no counter-booking)
+
+Given an approved payment with net = 99.00, a deductible line (extCode 500008 = 200) and no counter-booking (no 500110) — as in claim 26103-0011829,
+
+when the claim BOM is produced,
+
+then total-approved-claim-payment-gross-amount = 299.00 (= net 99.00 + retained deductible 200.00).
+
+Scenario 2 — deductible counter-booked
+
+Given an approved payment with net = 400.00, a deductible line (500008 = -200) and its counter-booking (500110 = +200),
+
+when the claim BOM is produced,
+
+then total-approved-claim-payment-gross-amount = 400.00 (retained deductible = 0).
+
+Scenario 3 — no deductible
+
+Given an approved payment with no deductible line (no 500008 and no 500110),
+
+when the claim BOM is produced,
+
+then total-approved-claim-payment-gross-amount = net (= totalApprovedClaimPaymentsAmountPerDamagedObject).
 
 ANALYZED REQUEST BY LLM:
 SUMMARY
-- Replace the existing unconditional update for records with non-empty 'SAP status' by conditional updates: (3a) when Salesforce status = 'Posted' set Status = 'In progress' plus error fields; (3b) when Salesforce status <> 'Posted' set only the error fields.
+- Fix insuranceAmount mapping to read damage-level insured-amount (per-event) and add a new BOM field total-approved-claim-payment-gross-amount computed from payment invoice lines (extCode 500008 / 500110) per damaged object.
 
 TARGET
-- PaymentRequests (Salesforce PaymentRequest records / update logic for records that have a non-empty 'SAP status').
+- support-content-mgt-integration-claims-business-events → BuildXMLDocument.esql (~ line 203)
+- insurance-claims-integration-technical-idit → mappingResponseIditGetClaimByClaimId.esql (reimbursement block, PAYMENT-type claimTransactionIVO)
+- BOM produced by mappingResponseIditGetClaimByClaimId.esql (damaged-object level)
 
 REQUIRED_CHANGES
-- Remove/replace the current rule:
-  - "3- For the records with ‘SAP status’ not empty ... update PaymentRequests with PaymentRequest.Id = Salesforce internal document reference; PaymentRequest.IntegrationMessage__c = SAP Error message; PaymentRequest.IntegrationCode__c = SAP Error code"
-- Add new rule 3a (apply when Salesforce status = 'Posted'):
-  - Condition: 'SAP status' not empty AND Salesforce status = 'Posted'
-  - Updates to PaymentRequest:
-    - PaymentRequest.Id = Salesforce internal document reference
-    - PaymentRequest.Status = 'In progress'
-    - PaymentRequest.IntegrationMessage__c = SAP Error message
-    - PaymentRequest.IntegrationCode__c = SAP Error code
-- Add new rule 3b (apply when Salesforce status <> 'Posted'):
-  - Condition: 'SAP status' not empty AND Salesforce status <> 'Posted'
-  - Updates to PaymentRequest:
-    - PaymentRequest.Id = Salesforce internal document reference
-    - PaymentRequest.IntegrationMessage__c = SAP Error message
-    - PaymentRequest.IntegrationCode__c = SAP Error code
+- BuildXMLDocument.esql (~ L203)
+  - Change the insuranceAmount assignment to read the damage-level insured amount instead of the cover-level aggregated amount.
+  - Exact BEFORE / AFTER (use exact tokens):
+    - BEFORE (WRONG)
+      SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."insured-amount";
+    - AFTER (OK)
+      SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount";
+  - Ensure consistency with neighbouring lines that already navigate to the damage level (damageDescription L196, purchaseValue L202, currency L221).
+
+- insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql
+  - Map invoiceLineVO.extCode into the BOM (it is currently not mapped; only invoiceLineVO.id and invoiceLineVO.desc are mapped).
+    - Add invoiceLineVO.extCode to the data available during the reimbursement/payment iteration.
+  - In the reimbursement block that iterates claimTransactionLineIVOs of PAYMENT-type claimTransactionIVO, compute and populate per-damaged-object BOM field total-approved-claim-payment-gross-amount.
+    - Place the new BOM field at the damaged-object level, next to total-approved-claim-payment-amount (aka totalApprovedClaimPaymentsAmountPerDamagedObject).
+    - Computation rules:
+      - net = totalApprovedClaimPaymentsAmountPerDamagedObject (existing value).
+      - retained deductible = deductible debit lines (invoiceLineVO.extCode = '500008') net of their counter-booking lines (invoiceLineVO.extCode = '500110').
+      - Implementation must handle sign ambiguity: do not just add Σ500008 as-is. Use absolute/normalized amounts so that a stored deductible line of -200 contributes +200 when retained.
+      - Formula (implementation guidance): retained = max(0, sum_abs(extCode='500008') - sum_abs(extCode='500110')); gross = net + retained.
+    - Set BOM field total-approved-claim-payment-gross-amount = gross (decimal, same currency as net).
+  - Do not use estimatedDamageAmount for this calculation.
+
+- Optional / suggested (not functional fix)
+  - In mappingResponseIditGetClaimByClaimId.esql (NIPO-5484 lines ~363-364), add a warning comment noting that the claimed-cover mapping inside the damages loop currently overwrites cover fields on each iteration ("last element wins") and should be revisited if multi-damage or multi-cover claims appear in production. (This is a warning only — no behaviour change required now.)
 
 MAPPING_DETAILS
-- Source document/link: unclear (no document or repository path provided).
-- Sheets/tabs: unclear.
-- Lines/columns/dictionary references: unclear.
-- Conditional source fields (as named in request):
-  - 'SAP status' (used only as "not empty" check)
-  - 'Salesforce status' (compared to 'Posted')
-- Fields/attributes to set on PaymentRequest (exact names as provided):
-  - PaymentRequest.Id <= Salesforce internal document reference
-  - PaymentRequest.Status <= 'In progress' (only in 3a)
-  - PaymentRequest.IntegrationMessage__c <= SAP Error message
-  - PaymentRequest.IntegrationCode__c <= SAP Error code
+- Source code / files:
+  - support-content-mgt-integration-claims-business-events
+    - BuildXMLDocument.esql (~ line 203). Neighboring relevant lines: damageDescription L196, purchaseValue L202, currency L221.
+  - insurance-claims-integration-technical-idit
+    - mappingResponseIditGetClaimByClaimId.esql (reimbursement block; NIPO-5484 lines ~363-364 referenced for the multi-damage overwrite warning).
+- Sheets/tabs: not applicable.
+- Lines / dictionary references:
+  - BuildXMLDocument.esql: change at ~L203 as specified above.
+  - mappingResponseIditGetClaimByClaimId.esql: reimbursement block that iterates claimTransactionLineIVOs of PAYMENT-type claimTransactionIVO (exact line numbers depend on repo version; NIPO-5484 lines ~363-364 are relevant to claimed-cover overwrite).
+  - Invoice line codes: extCode '500008' (deductible) and '500110' (counter-booking).
+- Fields / attributes to add to BOM:
+  - Map invoiceLineVO.extCode (in addition to invoiceLineVO.id and invoiceLineVO.desc already mapped).
+  - Add damaged-object level field: total-approved-claim-payment-gross-amount (value = totalApprovedClaimPaymentsAmountPerDamagedObject + retained deductible).
+  - Change BuildXMLDocument behavior: claims.(XMLNSC.Attribute)insuranceAmount must be read from v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount" instead of v_claim."claimed-cover".Item[1]."insured-amount".
+
+- Computation pseudocode (implementor should adapt to actual ESQ data model / field names):
+  - For each damaged object (grouping key to be confirmed — see questions):
+    - net := totalApprovedClaimPaymentsAmountPerDamagedObject
+    - sum500008 := Σ abs(invoiceLineVO.amount) for claimTransactionLineIVOs where invoiceLineVO.extCode = '500008' and scoped to this damaged object
+    - sum500110 := Σ abs(invoiceLineVO.amount) for claimTransactionLineIVOs where invoiceLineVO.extCode = '500110' and scoped to this damaged object
+    - retained := max(0, sum500008 - sum500110)
+    - gross := net + retained
+    - set damaged-object.total-approved-claim-payment-gross-amount = gross
+  - Note: determine the actual invoice line amount field in code (e.g., invoiceLineVO.amount or invoiceLineVO.netAmount) and use that.
+
+- Example verification:
+  - Claim 26103-0011829 (product 103): net=99.00, deductible 500008=200 (no 500110) → gross = 99.00 + 200.00 = 299.00.
+  - Sapiens example: payment 400, deductible 500008 = -200, counter-booking 500110 = +200 → retained = 0 → gross = 400.
+  - Bike claim 26105-0017043: estimatedDamageAmount is not equal to gross; do not use estimatedDamageAmount.
+
+- Notes / references:
+  - Stage 2 (exposure to claims XML document / BuildXMLDocument.esql) is handled in NIPO-9434 and is blocked by this ticket.
+  - Labels: SSC_26-2.4 / SSC_26-3.1
+  - Note to BA: See CS0088908 for the deductible part.
 
 ASSUMPTIONS_OR_QUESTIONS
-- Ambiguous/missing items the implementer must confirm before finalizing:
-  - Exact API/field names for the source fields:
-    - What is the exact API/field name for "SAP status" in the incoming data/response?
-    - What is the exact API/field name and object for "Salesforce status" (is it PaymentRequest.Status or another field)?
-    - Where is the "Salesforce internal document reference" located in the incoming message (field name/path)?
-  - Clarify semantics of "PaymentRequest.Id = Salesforce internal document reference":
-    - Is the intent to use the Salesforce internal document reference value as the Salesforce record Id to target the update (i.e., perform an update by Id), or to write that value into a different field named Id? (Note: updating the primary Id of a Salesforce record is not typical.)
-  - Definition of "SAP status not empty":
-    - Should this be treated as any non-null, non-empty, non-whitespace string? Are there specific error codes/values that should be treated as "not empty"?
-  - Case sensitivity and exact matching rules for "Posted" and "In progress" (should comparisons be case-insensitive? use exact strings?).
-  - Where in the codebase/flow should this replacement be applied (file/flow name) — no path was provided.
-  - Desired behavior when the target PaymentRequest record cannot be found, or when update fails (retry/backout/logging).
-  - Transaction/isolation requirements (whether the change should be atomic with other updates).
-  - Required unit/integration tests or sample payloads to validate both branches.
-- The implementer should search the codebase for the existing step "3" or any logic referencing "SAP status", "IntegrationMessage__c", or "IntegrationCode__c" to locate the exact place to modify.
+(only list items needing clarification)
+- Association key: which exact field links a claimTransactionLineIVO / invoiceLineVO to a damaged object in the BOM? (e.g., damageNum, damageId, damagedObjectId). Implementation must group invoice lines by damaged-object; confirm the grouping key.
+- Exact invoice line amount field name in the claimTransactionLineIVO/invoiceLineVO structure (invoiceLineVO.amount, invoiceLineVO.netAmount, invoiceLineVO.value, etc.). Implementation must use the correct numeric field and handle sign.
+- Exact BOM path/name for the damaged-object element where total-approved-claim-payment-amount currently sits (we were instructed "next to total-approved-claim-payment-amount" — confirm full path).
+- Currency/rounding rules for the new gross field (same currency as net; confirm rounding/scale behavior).
+- Confirmation whether to add the suggested warning comment at NIPO-5484 (~L363-364). The request suggested adding a comment but marked the rewrite as out of scope.
+- Should tests be added (unit/integration) using the provided real-claim examples (26103-0011829 and 26105-0017043)? (recommended)
 
 EXECUTOR_BRIEF
-- Locate the existing integration code that implements the current step "3" (the logic that handles records where 'SAP status' is not empty and currently writes IntegrationMessage__c and IntegrationCode__c to PaymentRequest).
-- Replace that logic with two conditional branches:
-  1) If 'SAP status' is not empty AND Salesforce status = 'Posted':
-     - Target the PaymentRequest identified by the Salesforce internal document reference
-     - Set PaymentRequest.Status = 'In progress'
-     - Set PaymentRequest.IntegrationMessage__c = SAP Error message
-     - Set PaymentRequest.IntegrationCode__c = SAP Error code
-  2) If 'SAP status' is not empty AND Salesforce status <> 'Posted':
-     - Target the PaymentRequest identified by the Salesforce internal document reference
-     - Set PaymentRequest.IntegrationMessage__c = SAP Error message
-     - Set PaymentRequest.IntegrationCode__c = SAP Error code
-- Use the exact field names provided (PaymentRequest.Id, PaymentRequest.Status, PaymentRequest.IntegrationMessage__c, PaymentRequest.IntegrationCode__c).
-- Ensure null/empty checks on 'SAP status' and perform the 'Posted' comparison per the confirmed matching rules.
-- Add/adjust tests to cover both branches and error handling (record not found, update failure).
-- If any of the ambiguous items in ASSUMPTIONS_OR_QUESTIONS remain unresolved, add TODOs in the code and raise for clarification before final deployment.
+- In BuildXMLDocument.esql: change the SET claims.(XMLNSC.Attribute)insuranceAmount assignment to read the damage-level insured-amount:
+  - Replace v_claim."claimed-cover".Item[1]."insured-amount" with v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount".
+- In mappingResponseIditGetClaimByClaimId.esql (reimbursement/payment iteration):
+  - Expose invoiceLineVO.extCode to the BOM processing.
+  - Identify the correct invoice line numeric amount field in the codebase and use it.
+  - For each damaged object, aggregate invoice lines where extCode IN ('500008','500110') (scope by damaged object), compute retained deductible = max(0, sum_abs(500008) - sum_abs(500110)), then set damaged-object.total-approved-claim-payment-gross-amount = totalApprovedClaimPaymentsAmountPerDamagedObject + retained deductible.
+  - Ensure sign handling so that stored negative deductible lines are treated as positive retained amounts when appropriate (see examples).
+  - Add the new BOM field at the damaged-object level (adjacent to total-approved-claim-payment-amount).
+  - Add unit/integration checks for the three acceptance scenarios:
+    1) retained deductible with no counter-booking → gross = net + retained
+    2) deductible counter-booked → gross = net
+    3) no deductible → gross = net
+- Optionally add a warning comment at mappingResponseIditGetClaimByClaimId.esql NIPO-5484 lines (~363-364) about claimed-cover being overwritten inside the damages loop (no behaviour change required now).

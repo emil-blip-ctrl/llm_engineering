@@ -1,15 +1,23 @@
-I changed the invoice accounting update logic in `updateSAPPayment_updateRequestPayments.esql` to split the previous unconditional SAP-error handling into the two requested branches:
+I updated insurance-claims-integration-technical-idit/apps/insurance_claims_integration_technical_idit/mappingResponseIditGetClaimByClaimId.esql for the second task.
 
-- SAP status not empty + Salesforce status = `Posted`  
-  -> update `Status = 'In progress'` and set `IntegrationMessage__c` / `IntegrationCode__c`
-- SAP status not empty + Salesforce status <> `Posted`  
-  -> update only `IntegrationMessage__c` / `IntegrationCode__c`
+What changed:
+- Added BOM field total-approved-claim-payment-gross-amount at:
+  - claim root level, next to total-approved-claim-payment-amount
+  - claimed-damages item level, next to total-approved-claim-payment-amount
+- Implemented retained deductible calculation from approved PAYMENT claimTransactionIVO lines only:
+  - deductible lines: invoiceLineVO.extCode = 500008
+  - counter-booking lines: invoiceLineVO.extCode = 500110
+  - sign-safe logic: retained = max(0, sum(abs(500008)) - sum(abs(500110)))
+  - gross = net + retained
+- Added a warning comment near the existing NIPO-5484 overwrite logic to document the current "last damage wins" behavior if multi-damage payloads appear later.
 
-To keep the implementation consistent with the existing design, I also added a new policy template `PaymentRequest_Error_InProgress` in `Common.policyxml`, and the ESQL now selects between that new template and the existing `PaymentRequest_Error` template.
+Assumptions made:
+- I aligned the gross computation with approved payments only, because the target field is total-approved-claim-payment-gross-amount and the net source is the approved amount.
+- Because the requested level was slightly ambiguous and current production has one damage per object, I exposed the new gross amount both:
+  - at claim root level, to mirror the existing root total-approved-claim-payment-amount
+  - at claimed-damages level, where downstream mappings already navigate for neighboring damage data
+- I did not expose invoiceLineVO.extCode in the output BOM because it was only required to compute the new gross field.
 
-Assumption made:
-- The correct place to implement this request is the invoices application module `updateSAPPayment_updateRequestPayments.esql`, because that is where the existing “SAP status not empty” invoice-accounting logic already exists.
-- The comparison for Salesforce status remains case-insensitive via the existing `UPPER(...) = 'POSTED'` logic.
-- The requested target status string is exactly `In progress`.
-
-I did not change any flows or descriptors because the existing node wiring already points to the same ESQL module and no additional artifacts were required.
+Limitation / incomplete part:
+- I could not implement the first task in support-content-mgt-integration-claims-business-events / BuildXMLDocument.esql because that repository/file content was not provided in the supplied source set. 
+So I made the safe partial change that was possible in the provided project only.

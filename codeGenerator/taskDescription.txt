@@ -1,27 +1,118 @@
-3- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP), update the PaymentRequests with:
+FIRST TASK: 
 
-PaymentRequest.Id = Salesforce internal document reference
+Problem
+insuranceAmount is returned as 0.00 on the generated documents.
 
-PaymentRequest.IntegrationMessage__c = SAP Error message
+Confirmed at scale: a Kibana export of the generated documents over the last few weeks shows insuranceAmount="0.00" on 100% of documents (94/94, product 103). It is systematic, not an edge case.
 
-PaymentRequest.IntegrationCode__c = SAP Error code
+Root cause
+The transformation reads the wrong field from the claim BOM. The insured amount exists at two levels:
 
-needs to be replaced by :  
+cover level — claimed-cover[].insured-amount, fed by IDIT claimedCoverAggregatedInsuranceAmount = aggregated / policy-period limit → not configured on this product, so always 0.00
 
-3a- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status = ‘Posted’, update the PaymentRequests with:
+damage level — claimed-cover[].claimed-damages[].insured-amount, fed by IDIT claimedCoverInsuranceAmountPerEvent = per-event insured limit (e.g. 120000.00)
 
-PaymentRequest.Id = Salesforce internal document reference
+Per IDIT US IDITS-1685, the value to display is the per-event one. The transformation currently reads the cover-level (aggregated) field → 0.00.
 
-PaymentRequest.Status=’In progress'
+What to fix
+Repo support-content-mgt-integration-claims-business-events → BuildXMLDocument.esql (~ line 203): read the damage-level insured amount instead of the cover-level one.
 
-PaymentRequest.IntegrationMessage__c = SAP Error message 
 
-PaymentRequest.IntegrationCode__c = SAP Error code
 
-3b- For the records with ‘SAP status’ not empty (means an error occured during accounting in SAP) and a Salesforce status <> ‘Posted’, update the PaymentRequests with:
+-- BEFORE — reads cover level (claimedCoverAggregatedInsuranceAmount = 0.00)  [WRONG]
+SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."insured-amount";
+-- AFTER — reads damage level (claimedCoverInsuranceAmountPerEvent = 120000.00)  [OK]
+SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount";
+This is consistent with the neighbouring lines that already navigate to the damage level (damageDescription L196, purchaseValue L202, currency L221).
 
-PaymentRequest.Id = Salesforce internal document reference
+Expected result
+insuranceAmount = claimedCoverInsuranceAmountPerEvent (e.g. 120000.00) instead of 0.00.
 
-PaymentRequest.IntegrationMessage__c = SAP Error message 
+Verification example — claim 26103-0011829, BOM after transformation:
 
-PaymentRequest.IntegrationCode__c = SAP Error code
+
+
+"claimed-cover": [{
+   "insured-amount": "0.00",                              // read today  -> wrong
+   "claimed-damages": [{ "insured-amount": "120000.00" }] // should be read -> correct
+}]
+About the loop (Emil's point) — out of scope, keep as a warning
+In insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql (the NIPO-5484 lines, ~363-364), the claimed-cover mapping overwrites the cover fields on each iteration of the damages loop and ends up keeping the last element. This is genuinely wrong, but:
+
+there is never more than one damages element per claim in production today (confirmed via Kibana over the last few weeks);
+
+so the "last element wins" behaviour never triggers and is not the cause of the 0.00.
+
+→ Not in scope here. Suggestion: add a warning comment at those lines so it is not forgotten, and revisit only if/when multi-damage (or multi-cover) claims start to occur.
+
+ 
+
+Note to BA : See CS0088908 for the deductible part
+
+
+SECOND TASK:
+
+Specification
+
+Context
+
+We want to display the gross reimbursement amount (before deductible) per claim / damaged object on the customer statement. IDIT does not expose this amount — confirmed by Sapiens: it is available neither in the GET Claim response nor in the DB — so it must be computed in our claims BOM. Same customer-statement / auto-claim-payment scope as NIPO-9277. This is stage 1 (IDIT → BOM); the exposure of the computed field in the claims XML document (stage 2, BuildXMLDocument.esql) is handled in NIPO-9434, which is blocked by this ticket. Labels SSC_26-2.4 / SSC_26-3.1.
+
+Functional specifications (story)
+
+As a consumer of the customer statement, I want the gross reimbursement amount (before deductible) exposed per damaged object in the claim BOM, so that it can be displayed on the statement without deriving it downstream.
+
+Proposition of design
+
+Add a new BOM field total-approved-claim-payment-gross-amount = net + the deductible actually retained by the customer, where:
+
+net = totalApprovedClaimPaymentsAmountPerDamagedObject (the value already used for total-approved-claim-payment-amount).
+
+retained deductible = the deductible debit lines (invoiceLineVO.extCode = '500008') net of their counter-booking lines (invoiceLineVO.extCode = '500110'). A deductible that is counter-booked is not retained (contributes 0); a deductible with no counter-booking is retained and must be added back to the net.
+
+Sign warning (validated on real payloads, see Example): the computation must be implemented so that both cases below hold. A naive net + Σ500008 is wrong — with a deductible line stored as -200 it would give 99 + (-200) = -101. The intended result is net + retained deductible (99 + 200 = 299). The exact sign of the 500008 / 500110 line amounts in claimTransactionLineIVOs must be checked and handled accordingly.
+
+Implementation: insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql, in the reimbursement block that already iterates claimTransactionLineIVOs of the PAYMENT-type claimTransactionIVO. Note: invoiceLineVO.extCode is not currently mapped in the BOM (only invoiceLineVO.id and invoiceLineVO.desc are) — it must be read to filter the lines on 500008 / 500110. Add the field at the damaged-object level, next to total-approved-claim-payment-amount. Today there is at most one damage per claim in production, so object and damage levels coincide; the intended level should nevertheless be confirmed.
+
+estimatedDamageAmount must not be used (it is the estimate, not the amount actually reimbursed).
+
+Example
+
+Case 1 — retained deductible, no counter-booking (real document auto-claim-payment, claim 26103-0011829, product 103). The claims document shows balanceAmount = 99.00 (net) and a payment list with a payment of 299.00 and a Franchise of 200.00:
+
+<claims claimNumber="26103-0011829" ... balanceAmount="99.00" nbDamageList="1" currency="CHF">
+  ...
+  <paymentItem description="Remboursement frais d'annulation" amount="299.00" currency="CHF"/>
+  <paymentItem description="Franchise" amount="200.00" currency="CHF"/>
+
+→ total-approved-claim-payment-gross-amount = net 99.00 + retained Franchise 200.00 = 299.00. (Exposed downstream as grossAmount in NIPO-9434.)
+
+Case 2 — counter-booked deductible (Sapiens example): Payment 400 / Deductible (500008) -200 / Counter-booking (500110) +200 → retained deductible = 0 → gross = net 400 + 0 = 400.
+
+Also: bike claim 26105-0017043 — estimatedDamageAmount = 299 but the gross reimbursed = 433 → confirms estimatedDamageAmount is not usable.
+
+Acceptance criteria
+
+Scenario 1 — retained deductible (no counter-booking)
+
+Given an approved payment with net = 99.00, a deductible line (extCode 500008 = 200) and no counter-booking (no 500110) — as in claim 26103-0011829,
+
+when the claim BOM is produced,
+
+then total-approved-claim-payment-gross-amount = 299.00 (= net 99.00 + retained deductible 200.00).
+
+Scenario 2 — deductible counter-booked
+
+Given an approved payment with net = 400.00, a deductible line (500008 = -200) and its counter-booking (500110 = +200),
+
+when the claim BOM is produced,
+
+then total-approved-claim-payment-gross-amount = 400.00 (retained deductible = 0).
+
+Scenario 3 — no deductible
+
+Given an approved payment with no deductible line (no 500008 and no 500110),
+
+when the claim BOM is produced,
+
+then total-approved-claim-payment-gross-amount = net (= totalApprovedClaimPaymentsAmountPerDamagedObject).

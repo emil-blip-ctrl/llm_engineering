@@ -1,18 +1,28 @@
-Generate postman collection for finance-accounting-api-exchange-rates.
+Generate postman collection for insuranc-claims-api-claims-internet.
+The service which insurance-claims-api-claims-internet calls is insurance-claims-integration-claims.
+By this relation now you should figure out the other relations between the IBM ACE 12 components given in the system prompt.
+
 
 
 File directory: conf.yaml
 
 ---
+artifact:
+  artifact_id: support-content-mgt-api-change-notification-event
+  group_id: ch.tcs.nip.apic
+  version: 3.0.1-SNAPSHOT
 api:
-  name: finance-accounting-api-exchange-rates
-  domain: finance-accounting
-  cmdb_id: CMP21882
+  name: support-content-mgt-api-change-notification-event
+  domain: support-content-mgt
+  cmdb_id: CMP21835
 template:
   name: intranet/oa3/client-secret
   properties:
-    validation:
+    cors:
       enable: true
+    lan_backend: true      
+    validation:
+      enable: false      
 plans:
   platinum:
     title: Platinum
@@ -20,381 +30,371 @@ plans:
     approval: false
     rate-limits:
       hard-limits-per-sec:
-        value: 100/1day
+        value: 20000/1day
         hard-limit: true
     burst-limits:
       Platinum:
-        value: 10/1minute	
+        value: 40/1second
   gold:
     title: Gold
     description: Gold Plan
     approval: false
     rate-limits:
       hard-limits-per-sec:
-        value: 50/1day
+        value: 8000/1day
         hard-limit: true
     burst-limits:
       Gold:
-        value: 5/1minute	
+        value: 20/1second
   silver:
     title: Silver
     description: Silver Plan
     approval: false
     rate-limits:
       hard-limits-per-sec:
-        value: 10/1day
+        value: 4000/1day
         hard-limit: true
     burst-limits:
       Silver:
-        value: 1/1minute	
+        value: 10/1second
 
-File directory: finance-accounting-api-exchange-rates.yaml
+File directory: support-content-mgt-api-change-notification-event.yaml
 
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: finance-accounting-api-exchange-rates
-  version: 1.0.0
   description: >
-    In Claim context, API to get currency exchange rates 
+    API for Enterprise Content Management (ECM) document event notifications.
+
+    This API allows external systems (e.g., OnBase) to notify document-related events
+    with associated metadata and keywords.
+
+    ### 🔑 Key Features
+
+    - 📄 Receive document metadata (type, dates, creator, etc.)
+
+    - 🏷️ Handle structured keywords and keyword groups
+
+    - 🔗 Support for multi-index keyword groups
+
+    - ⚡ Real-time document event notification
+
+
+    ### 📦 Payload Structure
+
+    - **properties**
+      - Document identification and metadata
+      - Includes document type, creation info, and lifecycle dates
+
+    - **keywords**
+      - List of keywords or keyword groups
+      - Supports nested structures for complex classification
+
+
     <details>
-      <summary>ALL RELEASES NOTES</summary>
-        <details>
-          <summary>RELEASE NOTES 1.0.0</summary>
-            <br>
-              <table border="1">
-                <tr>
-                  <td>JIRA</td>
-                  <td>Description</td>
-                  <td>Inconsistency</td>
-                  <td>Observed</td>
-                  <td>Expected</td>
-                  <td>Applied</td>
-                </tr>
-                <tr>
-                  <td><a href="https://tcsgroup.atlassian.net/browse/NIPO-96">NIPO-96</a></td>
-                  <td>Claims payments - Synchronize exchange rate to IDIT</td>
-                  <td>N/A</td>
-                  <td>N/A</td>
-                  <td>N/A</td>
-                  <td>Initial version</td>
-                </tr>
-              </table>
-            <br>
-        </details>
+      <summary>📘 Release Notes (click to expand)</summary>
+      <details>
+        <summary>🟢 RELEASE NOTES 2.0.0</summary>
+        <br/>
+        <br/>
+        <table border="1">
+          <tr>
+            <td>🔗 JIRA</td>
+            <td>📝 inconsistency</td>
+            <td>📝 Observed</td>
+            <td>📝 Expected</td>
+            <td>📝 Applied</td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://tcsgroup.atlassian.net/browse/NIPO-6031">NIPO-6031</a>
+            </td>
+            <td/>
+            <td/>
+            <td/>
+            <td>API creation</td>
+          </tr>
+        </table>
+        <br/>
+      </details>
+       <br/>
+      <details>
+        <summary>🟢 RELEASE NOTES 2.1.0</summary>
+        <br/>
+        <br/>
+        <table border="1">
+          <tr>
+            <td>🔗 JIRA</td>
+            <td>📝 inconsistency</td>
+            <td>📝 Observed</td>
+            <td>📝 Expected</td>
+            <td>📝 Applied</td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://tcsgroup.atlassian.net/browse/NIPO-7101">NIPO-7101</a>
+            </td>
+            <td/>
+            <td/>
+            <td>Need new fields</td>
+            <td>The uuid and original fields have been added</td>
+          </tr>
+        </table>
+        <br/>
+      </details>
+       <br/>
+      <details>
+        <summary>🟢 RELEASE NOTES 3.0.0</summary>
+        <br/>
+        <br/>
+        <table border="1">
+          <tr>
+            <td>🔗 JIRA</td>
+            <td>📝 inconsistency</td>
+            <td>📝 Observed</td>
+            <td>📝 Expected</td>
+            <td>📝 Applied</td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://tcsgroup.atlassian.net/browse/NIPO-7904">NIPO-7904</a>
+            </td>
+            <td/>
+            <td/>
+            <td>New format send by onbase</td>
+            <td>new definition</td>
+          </tr>
+        </table>
+        <br/>
+      </details>
+       <br/>
+      <details>
+        <summary>🟢 RELEASE NOTES 3.0.1</summary>
+        <br/>
+        <br/>
+        <table border="1">
+          <tr>
+            <td>🔗 JIRA</td>
+            <td>📝 inconsistency</td>
+            <td>📝 Observed</td>
+            <td>📝 Expected</td>
+            <td>📝 Applied</td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://tcsgroup.atlassian.net/browse/NIPO-6914">NIPO-6914</a>
+            </td>
+            <td/>
+            <td/>
+            <td></td>
+            <td>Change consumption plan</td>
+          </tr>
+        </table>
+        <br/>
+      </details>       
     </details>
-  
+     <br/>
+  version: 3.0.0
+  title: support-content-mgt-api-change-notification-event
   contact:
     name: IT Application Solution Team
     url: https://tcsgroup.atlassian.net/wiki/spaces/TEAMDEV/pages/52900742/Equipe
     email: 05_IT_Applications_Solutions@tcs.ch
 externalDocs:
   description: API Description
-  url: https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/152568596/API+finance-accouting-api-exchange-rates
+  url: https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/209717617/API+support-content-mgt-api-change-notification
 servers:
-  - url: /finance-accounting/v1/exchange-rates
+- url: /support-content-mgt/v3/document
 paths:
-  /:
-    get:
-      tags:
-        - ExchangeRates
-      summary: Get exchange rates
-      description: 'Get currency exchange rates at a given date.'
-      operationId: GetExchangeRates
-      parameters:
-        - name: rate_date
-          in: query
-          description: Date at which you want to have the exchange rates
-          required: true
-          schema:
-            type: string
-            format: date
-            pattern: '^\d{4}-((0[1-9])|(1[0-2]))-((0[1-9])|([1-2]\d)|(3[0-1]))$'
-          example: '2023-03-21'   
+  /notify:
+    post:
+      summary: postNotification
+      requestBody:
+        description: OnBase document notification payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnbaseDocument'
       responses:
-        "2XX":
-          description: Success
-          headers:
-            status-code:
-              description: Status Code
-              schema:
-                type: integer
-                pattern: '^2\d{2}$'
-                example: 200
-            status-line:
-              description: Status Line
-              schema:
-                type: string
-                example: OK
-            X-Global-Transaction-ID:   
-              description: Global Transaction ID of the call
-              schema:
-                type: string   
-                example: c7e7e40e654b93e204caa8a3    
+        '200':
+          description: No Content
+        '500':
+          description: Unexpected Error
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ExchangeRate"
-        '4XX':
-          description: Client Error
-          headers:
-            status-code:
-              description: Status Code
-              schema:
-                type: integer
-                pattern: '^4\d{2}$'
-                example: 404
-            status-line:
-              description: Status Line
-              schema:
-                type: string
-                example: Not Found
-            X-Global-Transaction-ID:   
-              description: Global Transaction ID of the call
-              schema:
-                type: string  
-                example: c7e7e40e654b93e204caa8a3
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResponseClientError' 
-        '5XX':
-          description: Server Error
-          headers:
-            status-code:
-              description: Status Code
-              schema:
-                type: integer
-                pattern: '^5\d{2}$'
-                example: 500
-            status-line:
-              description: Status Line
-              schema:
-                type: string
-                example: Internal Server Error
-            X-Global-Transaction-ID:   
-              description: Global Transaction ID of the call
-              schema:
-                type: string            
-                example: c7e7e40e654b93e204caa8a3
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResponseServerError'            
-  /health:
-      get:
-        tags:
-        - HealthCheck
-        summary: Provide resource status of the API
-        description: 'Resource to allow the backend to respond according to his state.'
-        operationId: health
-        responses:
-          '200':
-            description: Success
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ResponseHealthSuccess' 
-          '500':
-            description: Error      
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ResponseHealthError'
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
-    Check:
+
+    Error:
       type: object
-      properties:
-        component:
-          description: name of the tested component (MQ, Baloise, Toni, etc..)
-          type: string
-          example: MQ
-        status:
-          description: status of the tested component
-          type: string
-          enum:
-            - pass
-            - error
-            - warn
-          example: pass 
-        details:
-          description: details
-          type: string
-          enum:
-            - pass
-            - error
-            - warn   
-          example: pass 
-      required:
-        - component
-        - status
-        - details  
-    ExchangeRate:
-      type: object
-      properties:
-        fromCurrency:
-          description: Source currency
-          type: string
-          pattern: ^[A-Z]{3}$
-          example: 'DZD'
-        toCurrency:
-          description: Target currency
-          type: string
-          pattern: ^[A-Z]{3}$
-          example: 'CHF'
-        validFrom:
-          description: Date from which the entry is valid
-          type: integer
-          example: 20200101
-        rate:
-          description : Exchange rate quoted at the date
-          type: number
-          format: float
-          example: 0.82
-        fromFactor:
-          description : Multiplier for the source currency (to be applied before the conversion)
-          type: number
-          example: 100
-        toFactor: 
-          description :  Multiplier for the target currency (to be applied after the conversion)
-          type: number
-          example: 1
-      required:
-        - fromCurrency
-        - toCurrency
-        - validFrom
-        - rate     
-        - fromFactor
-        - toFactor
-    ResponseClientError:
-      type: object
-      properties:
-        timestamp:
-          description: timestamp
-          type: string
-          format: date-time
-          example: '2022-04-04T12:42:04.612Z'
-        httpCode:
-          description: status code relayed from the System Provider
-          type: string
-          example: 'ACE : 400'
-        httpMessage:
-          description: error message relayed from the System Provider
-          type: string
-          example: 'ACE : Bad Request'
-        moreInformation:
-          description: detailed error message relayed from the System Provider
-          type: string
-          example: 'ACE : Please check your request syntax and / or your input parameters.'
-      required:
-        - timestamp
-        - httpCode
-        - httpMessage
-        - moreInformation        
-    ResponseHealthError:
-      type: object
-      properties:
-        httpCode:
-          description: status code
-          type: string
-          example: '500'
-        httpMessage:
-          description: error message
-          type: string
-          example: Internal Server Error
-        moreInformation:
-          description: detailed error message
-          type: string
-          example: Failed to handle request
       required:
         - httpCode
         - httpMessage
-        - moreInformation       
-    ResponseHealthSuccess:
-      type: object
+        - moreInformation
       properties:
-        status:
-          description: status of the healthcheck
+        httpCode:
           type: string
-          enum:
-            - pass
-            - error
-          example: pass  
-        api:
-          description: api/app name of the component
+        httpMessage:
           type: string
-          example: finance-accounting-api-exchange-rates
-        timestamp:
-          description: timestamp
+        moreInformation:
           type: string
-          format: date-time
-          example: '2022-04-04T12:42:04.612Z'
-        checks:
-          description: 'list of checks on components (MQ, DataBase, BackEnd etc..)'
+
+    OnbaseDocument:
+      type: object
+      required:
+        - properties
+        - keywords
+      properties:
+        properties:
+          $ref: '#/components/schemas/OnbaseProperties'
+        keywords:
           type: array
           items:
-            $ref: '#/components/schemas/Check'
-      required:
-        - status
-        - api
-        - timestamp
-        - checks       
-    ResponseServerError:
+            $ref: '#/components/schemas/KeywordBase'
+      example:
+        properties:
+          doc-id: 45641
+          created-by: CX44444
+          document-type-id: 145
+          document-type-name: Claims Medical
+          document-date: "2019-12-31T00:00:00Z"
+          document-archival-date: "2022-12-31T00:00:00Z"
+          document-group-id: 115
+          document-group-name: TAS - Gestion des sinistres
+        keywords:
+          - "type": TCS.MultiIndexKeywordGroup
+            keyword-id: 106
+            keyword-name: TCS - Claims
+            content:
+              - "type": TCS.Keyword
+                keyword-id: 222
+                keyword-name: ecm_business_line
+                keyword-value: insurance
+                keyword-datatype: Alphanumeric
+              - "type": TCS.Keyword
+                keyword-id: 235
+                keyword-name: ecm_document_original
+                keyword-value: 1
+                keyword-datatype: Numeric9
+          - "type": TCS.Keyword
+            keyword-id: 171
+            keyword-name: ecm_document_uuid
+            keyword-value: f587dc51-0874-44ef-ad6e-523895d04518
+            keyword-datatype: Alphanumeric
+
+    OnbaseProperties:
       type: object
+      required:
+        - doc-id
+        - document-type-id
       properties:
-        timestamp:
-          description: timestamp
+        doc-id:
+          type: integer
+          description: OnBase document identifier
+        created-by:
+          type: string
+          description: samAccountName or email used during document creation
+        document-type-id:
+          type: integer
+        document-type-name:
+          type: string
+        document-date:
           type: string
           format: date-time
-          example: '2022-04-04T12:42:04.612Z'
-        httpCode:
-          description: status code relayed from the System Provider
+        document-archival-date:
           type: string
-          example: 'ACE : 500'
-        httpMessage:
-          description: error message relayed from the System Provider
+          format: date-time
+        document-group-id:
+          type: integer
+        document-group-name:
           type: string
-          example: 'ACE : error during UDP recovery processing'
-        moreInformation:
-          description: detailed error message relayed from the System Provider
-          type: string
-          example: 'ACE : Java Exception calling CallStaticObjectMethodA'
+
+    KeywordBase:
+      type: object
       required:
-        - timestamp
-        - httpCode
-        - httpMessage
-        - moreInformation    
+        - "type"
+      properties:
+        "type":
+          type: string
+      oneOf:
+        - $ref: '#/components/schemas/Keyword'
+        - $ref: '#/components/schemas/KeywordGroup'
+
+    Keyword:
+      type: object
+      required:
+        - type
+        - keyword-id
+        - keyword-name
+        - keyword-value
+        - keyword-datatype
+      properties:
+        type:
+          type: string
+          example: TCS.Keyword
+        keyword-id:
+          type: integer
+        keyword-name:
+          type: string
+        keyword-value:
+          oneOf:
+            - type: string
+            - type: number
+            - type: integer
+        keyword-datatype:
+          type: string
+          description: Alphanumeric, Numeric9, Date, etc.
+
+    KeywordGroup:
+      type: object
+      required:
+        - type
+        - keyword-id
+        - keyword-name
+        - content
+      properties:
+        type:
+          type: string
+          example: TCS.MultiIndexKeywordGroup
+        keyword-id:
+          type: integer
+        keyword-name:
+          type: string
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Keyword'
 
 File directory: values.yaml
 
 ---
 dev:
   subscriptions:
-    - consumer_org: idit-org
-      consumer_app: idit-app-default
-      plan: platinum
+    - consumer_org: onbase-org
+      consumer_app: onbase-app-default
+      plan: gold
   backend:
-    url: https://tcsis-dev.tcsgroup.ch:7083/finance-accounting/v1/exchange-rates
+    url: https://tcsis-dev.tcsgroup.ch:7083/support-content-mgt/v3/document/notification
 qa:
   subscriptions:
-    - consumer_org: idit-org
-      consumer_app: idit-app-default
-      plan: platinum
+    - consumer_org: onbase-org
+      consumer_app: onbase-app-default
+      plan: gold
   backend:
-    url: https://tcsis-qa.tcsgroup.ch:7083/finance-accounting/v1/exchange-rates
+    url: https://tcsis-qa.tcsgroup.ch:7083/support-content-mgt/v3/document/notification
 acp:
   subscriptions:
-    - consumer_org: idit-org
-      consumer_app: idit-app-default
-      plan: silver
+    - consumer_org: onbase-org
+      consumer_app: onbase-app-default
+      plan: gold
   backend:
-    url: https://tcsis-acp.tcsgroup.ch:7083/finance-accounting/v1/exchange-rates
+    url: https://tcsis-acp.tcsgroup.ch:7083/support-content-mgt/v3/document/notification
 prod:
   subscriptions:
-    - consumer_org: idit-org
-      consumer_app: idit-app-default
-      plan: silver
+    - consumer_org: onbase-org
+      consumer_app: onbase-app-default
+      plan: gold
   backend:
-    url: https://tcsis-prod.tcsgroup.ch:7083/finance-accounting/v1/exchange-rates
+    url: https://tcsis-prod.tcsgroup.ch:7083/support-content-mgt/v3/document/notification
