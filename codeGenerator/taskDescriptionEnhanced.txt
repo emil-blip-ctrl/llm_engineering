@@ -1,213 +1,926 @@
-ORIGINAL REQUEST: FIRST TASK: 
+ORIGINAL REQUEST: I am giving you a service which already has similar operation ASV/SarGe/SarVd and etc. You need to analyse the service and its dependencies.
+The idea is that we are adding new operation which is similar to the ones we have now. You need to follow the project structure ans scelenton 
+and create the new operation. You will see that there might be some properties which need to be set for the new operation but just stick to the 
+syntax that we already have for the other operations. For the purpose you will need to update the rest schema too. 
+The rest schema is used only to generate the operation, it has no other meaning, no validation now syntax following no nothing.
+I am giving you the original schema from which this one is created. Just see the original, see what we have now and add the new operation following 
+what we have in the ACE rest schema now:   
 
-Problem
-insuranceAmount is returned as 0.00 on the generated documents.
+openapi: 3.0.1
+info:
+  title: Ambulance Invoices Integration Trigger
+  x-ibm-name: finance-accounting-api-invoices-ingestion
+  version: 2.3.2
+  description: |
+    **Finance & Accounting API: Invoice Integration Trigger**
 
-Confirmed at scale: a Kibana export of the generated documents over the last few weeks shows insuranceAmount="0.00" on 100% of documents (94/94, product 103). It is systematic, not an edge case.
+    This API facilitates file-based integration workflows between external systems and SAP for finance and accounting purposes.
 
-Root cause
-The transformation reads the wrong field from the claim BOM. The insured amount exists at two levels:
+     ### Documentation
+    - [Invoice and Payments Financial Data Flows](https://tcsgroup.atlassian.net/wiki/x/HgvwAg)
+    - [API Documentation](https://tcsgroup.atlassian.net/wiki/x/MIAmJ)
+    - [Initial API Story](https://tcsgroup.atlassian.net/browse/NIPO-6628)
+  contact:
+    name: 05_IT_Applications_Solutions
+    email: 05_IT_Applications_Solutions@tcs.ch
+externalDocs:
+  description: SP TCS multi-business invoice financial data flows
+  url: https://tcsgroup.atlassian.net/wiki/x/HgvwAg
+servers:
+  - url: /finance-accounting/v2/invoice-ingestion
+paths:
+  /asv-files-injection-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /asv-files-purge-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarge-files-injection-trigger:
+    post:
+      tags:
+        - SARGE Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarge-files-purge-trigger:
+    post:
+      tags:
+        - SARGE Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarvd-files-injection-trigger:
+    post:
+      tags:
+        - SAR VD Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarvd-files-purge-trigger:
+    post:
+      tags:
+        - SAR VD Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-injection-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-purge-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /health:
+    get:
+      summary: Pings the target receiver to check the connection
+      operationId: get-health
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthType'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+components:
+  schemas:
+    ServiceError:
+      title: ServiceError
+      type: object
+      description: Object returned when errors occurred
+      properties:
+        httpCode:
+          type: string
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+    BulkFinancialSubmissionResponse:
+      title: BulkFinancialSubmissionResponse
+      type: object
+      description: Response returned after submitting financial documents in bulk to SAP.
+      properties:
+        meta:
+          type: object
+          properties:
+            submissionId:
+              type: string
+              example: "9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5"
+            timestamp:
+              type: string
+              description: ISO-8601 UTC timestamp
+              example: "2025-01-02T15:36:52Z"
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [ACCEPTED, ERROR, NO_FILE]
+              example: ACCEPTED
+            receivedCount:
+              type: integer
+              description: Number of financial documents received by SAP.
+              example: 10
+            message:
+              type: string
+              description: Additional info or error message.
+              example: ""
+      required:
+        - meta
+        - data
+    PurgeResponse:
+      title: PurgeResponse
+      type: object
+      description: Response returned when the Purge is successfully triggered.
+      properties:
+        httpCode:
+          type: integer
+          example: 202
+        httpMessage:
+          type: string
+          example: Accepted
+        moreInformation:
+          type: string
+          example: ASV File Purge triggered properly
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+    HealthType:
+      type: object
+      properties:
+        status:
+          type: string
+          description: status of the health check
+          enum:
+            - pass
+            - error
+        api:
+          type: string
+          description: api/app name of the component
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Check'
+    Check:
+      type: object
+      description: describe a component check (MQ, DataBase, BackEnd etc..)
+      properties:
+        component:
+          type: string
+          description: name of the tested component (MQ, Baloise, Toni, etc..)
+        status:
+          type: string
+          description: status of the tested component
+          enum:
+            - pass
+            - error
+            - warn
+        details:
+          type: string
+          description: details
 
-cover level — claimed-cover[].insured-amount, fed by IDIT claimedCoverAggregatedInsuranceAmount = aggregated / policy-period limit → not configured on this product, so always 0.00
 
-damage level — claimed-cover[].claimed-damages[].insured-amount, fed by IDIT claimedCoverInsuranceAmountPerEvent = per-event insured limit (e.g. 120000.00)
+I have explained besically what is the idea of the changes, but we have a task given with description of what exactly should be done.
+I will give you the task and you need to figure out the changes yourself that are written there. You will be given all the service 
+dependencies so will need to make chenges there too, because I read the task. What I told you about the operation should be done 
+but it was not described in this task, so this is why I started with that. Here you have the task itself.
 
-Per IDIT US IDITS-1685, the value to display is the per-event one. The transformation currently reads the cover-level (aggregated) field → 0.00.
+# US NIPO\-9498 Sansys \- Routing \- Invoice Ingestion to Financial Document V2
 
-What to fix
-Repo support-content-mgt-integration-claims-business-events → BuildXMLDocument.esql (~ line 203): read the damage-level insured amount instead of the cover-level one.
+**Ticket:** [NIPO-9498](https://tcsgroup.atlassian.net/browse/NIPO-9498) · **Owner:** Integration engineer · **Status:** design complete — ready for build
 
+**Design references:** [ADR-0001](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265776280) (tenancy vs functional layer), [ADR-0009](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2266333273) (company-neutral process\_control)
 
+**Scope:** only the routing policy-property tuple in `finance-accounting-integration-invoices-policy-project`. The `process_control` value is emitted by [NIPO-9422](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2232615118/US+NIPO-9422+Sansys+-+File+to+Invoice+Ingestion); SAP dispatch is [SAPS-2744](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2265776241/US+SAPS-2744+AIF+producer_app+carriage); `producer_app` stamping is [NIPO-9499](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233008237/US+NIPO-9499+Sansys+-+Financial+Document+V2+to+S_FIN_DOC).
 
--- BEFORE — reads cover level (claimedCoverAggregatedInsuranceAmount = 0.00)  [WRONG]
-SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."insured-amount";
--- AFTER — reads damage level (claimedCoverInsuranceAmountPerEvent = 120000.00)  [OK]
-SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount";
-This is consistent with the neighbouring lines that already navigate to the damage level (damageDescription L196, purchaseValue L202, currency L221).
+## Why
 
-Expected result
-insuranceAmount = claimedCoverInsuranceAmountPerEvent (e.g. 120000.00) instead of 0.00.
+The ACE routing layer resolves every outbound target by looking up policy properties named `{sender_id}_{process_control}_{attr}` — a data-driven lookup, not a code branch. There are two parallel routing apps sharing the same policy project: v1 (`finance-accounting-integration-invoices`, kebab-case, today's Attrib path) and v2 (`finance-accounting-integration-invoices-v2`, camelCase). Sansys's EOM v2 mapper output only resolves cleanly through **v2**, so this story adds one new property tuple for Sansys traffic — no code change to any shared app.
 
-Verification example — claim 26103-0011829, BOM after transformation:
+Key mechanics (identical in both apps):
 
+- `sender_id` = the inbound `X-Origin-Caller-Code` header — the **caller** of the ACE entry point, not the source app. VTOM drives the Sansys trigger, so the caller is `VTOM` (same as the live Attrib rows).
+- Routing key = `lower(sender_id || '_' || process_control || '_' || attr)`, with 5 attributes per tuple: `_target`, `_application`, `_endpoint`, `_timeout`, `_call`.
+- Naming trap: `_endpoint` is a **host** alias and `_application` is a **path** alias — the reverse of what the names suggest.
 
+## What
 
-"claimed-cover": [{
-   "insured-amount": "0.00",                              // read today  -> wrong
-   "claimed-damages": [{ "insured-amount": "120000.00" }] // should be read -> correct
-}]
-About the loop (Emil's point) — out of scope, keep as a warning
-In insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql (the NIPO-5484 lines, ~363-364), the claimed-cover mapping overwrites the cover fields on each iteration of the damages loop and ends up keeping the last element. This is genuinely wrong, but:
+- One new policy-property tuple `vtom_ambulance_transport_billing_{target,application,endpoint,timeout,call}` — **one tuple for all 6 companies** (`process_control` is company-neutral; per-company visibility lives in the AIF hierarchy, not in routing).
+- No `SANSYS.policyxml` — the caller stays `VTOM`, whose (empty, mandatory) policy file already exists.
+- Attrib's 3 existing tuples untouched.
 
-there is never more than one damages element per claim in production today (confirmed via Kibana over the last few weeks);
+**Definition of done:** the `common.policyxml` diff shows exactly 5 new properties and no other row touched; a test call with `X-Origin-Caller-Code: VTOM` and `process_control = AMBULANCE_TRANSPORT_BILLING` resolves to the v2 technical app without a `422`.
 
-so the "last element wins" behaviour never triggers and is not the cause of the 0.00.
+## How — dev tasks
 
-→ Not in scope here. Suggestion: add a warning comment at those lines so it is not forgotten, and revisit only if/when multi-damage (or multi-cover) claims start to occur.
+| # | Task | Object / file | Note |
+| --- | --- | --- | --- |
+| 1 | Add the 5-property tuple below | `common.policyxml` | Additive; mirrors the SFCAS v2 receivable tuple's shape. |
+| 2 | Confirm with the ACE team the actual `X-Origin-Caller-Code` the Sansys trigger presents | — | One question. Everything assumes `VTOM`; if wrong, the tuple's sender prefix changes. |
+| 3 | Verify `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents` exists in `finance-integration-policies-endpoints : AceEndPointsPolicy` | external policy project | The SFCAS row implies it exists, but that path has never provably run end-to-end — verify, don't assume. |
 
- 
+Proposed rows (task 1):
 
-Note to BA : See CS0088908 for the deductible part
+```xml
+<!-- Sansys ambulance ingestion → v2 receivable-documents (SSC-331 / NIPO-9498).
+     One tuple for all 6 companies: process_control is company-neutral. -->
+<vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
+<vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
+<vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
+<vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
+<vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
+```
 
+| Property | Value | Why |
+| --- | --- | --- |
+| `_target` | `financial-documents` | Same target family as the Attrib ambulance and SFCAS v2 rows. |
+| `_application` | `…-financial-documents-v2-receivable-documents` | The **v2** technical app — not the v1 app the Attrib rows use. |
+| `_endpoint` | `sapnative` | Host alias; identical across every ambulance + SFCAS v2 row. |
+| `_timeout` | `55` | Every row in the file uses 55. |
+| `_call` | `httpAsync` | Same as the ambulance and SFCAS v2 rows. |
 
-SECOND TASK:
+## Blocked by
 
-Specification
+- [NIPO-9422](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2232615118/US+NIPO-9422+Sansys+-+File+to+Invoice+Ingestion) must actually call the v2 routing app (its task 14) for this tuple to be reached. The tuple itself can be added independently.
 
-Context
+## How to test
 
-We want to display the gross reimbursement amount (before deductible) per claim / damaged object on the customer statement. IDIT does not expose this amount — confirmed by Sapiens: it is available neither in the GET Claim response nor in the DB — so it must be computed in our claims BOM. Same customer-statement / auto-claim-payment scope as NIPO-9277. This is stage 1 (IDIT → BOM); the exposure of the computed field in the claims XML document (stage 2, BuildXMLDocument.esql) is handled in NIPO-9434, which is blocked by this ticket. Labels SSC_26-2.4 / SSC_26-3.1.
+| Check | How | Env |
+| --- | --- | --- |
+| Routing tuple works, one for all 6 companies | `common.policyxml` diff shows exactly the 5 new properties; test call with `X-Origin-Caller-Code: VTOM` resolves without `422` | QA |
+| Attrib untouched | The 3 `vtom_<company>_intervention_customer_billing_*` tuples are byte-identical before/after | QA |
+| v2 end-to-end | NIPO-9422's mapper output, POSTed to the v2 routing app, resolves `process_control` without `422 ACEFONC0021` | QA |
 
-Functional specifications (story)
+**Regression:** v1 (the CAS/IDIT/Camping routing app) is untouched — Sansys uses a different app, no shared-ESQL change, no regression pass needed there.
 
-As a consumer of the customer statement, I want the gross reimbursement amount (before deductible) exposed per damaged object in the claim BOM, so that it can be displayed on the statement without deriving it downstream.
-
-Proposition of design
-
-Add a new BOM field total-approved-claim-payment-gross-amount = net + the deductible actually retained by the customer, where:
-
-net = totalApprovedClaimPaymentsAmountPerDamagedObject (the value already used for total-approved-claim-payment-amount).
-
-retained deductible = the deductible debit lines (invoiceLineVO.extCode = '500008') net of their counter-booking lines (invoiceLineVO.extCode = '500110'). A deductible that is counter-booked is not retained (contributes 0); a deductible with no counter-booking is retained and must be added back to the net.
-
-Sign warning (validated on real payloads, see Example): the computation must be implemented so that both cases below hold. A naive net + Σ500008 is wrong — with a deductible line stored as -200 it would give 99 + (-200) = -101. The intended result is net + retained deductible (99 + 200 = 299). The exact sign of the 500008 / 500110 line amounts in claimTransactionLineIVOs must be checked and handled accordingly.
-
-Implementation: insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql, in the reimbursement block that already iterates claimTransactionLineIVOs of the PAYMENT-type claimTransactionIVO. Note: invoiceLineVO.extCode is not currently mapped in the BOM (only invoiceLineVO.id and invoiceLineVO.desc are) — it must be read to filter the lines on 500008 / 500110. Add the field at the damaged-object level, next to total-approved-claim-payment-amount. Today there is at most one damage per claim in production, so object and damage levels coincide; the intended level should nevertheless be confirmed.
-
-estimatedDamageAmount must not be used (it is the estimate, not the amount actually reimbursed).
-
-Example
-
-Case 1 — retained deductible, no counter-booking (real document auto-claim-payment, claim 26103-0011829, product 103). The claims document shows balanceAmount = 99.00 (net) and a payment list with a payment of 299.00 and a Franchise of 200.00:
-
-<claims claimNumber="26103-0011829" ... balanceAmount="99.00" nbDamageList="1" currency="CHF">
-  ...
-  <paymentItem description="Remboursement frais d'annulation" amount="299.00" currency="CHF"/>
-  <paymentItem description="Franchise" amount="200.00" currency="CHF"/>
-
-→ total-approved-claim-payment-gross-amount = net 99.00 + retained Franchise 200.00 = 299.00. (Exposed downstream as grossAmount in NIPO-9434.)
-
-Case 2 — counter-booked deductible (Sapiens example): Payment 400 / Deductible (500008) -200 / Counter-booking (500110) +200 → retained deductible = 0 → gross = net 400 + 0 = 400.
-
-Also: bike claim 26105-0017043 — estimatedDamageAmount = 299 but the gross reimbursed = 433 → confirms estimatedDamageAmount is not usable.
-
-Acceptance criteria
-
-Scenario 1 — retained deductible (no counter-booking)
-
-Given an approved payment with net = 99.00, a deductible line (extCode 500008 = 200) and no counter-booking (no 500110) — as in claim 26103-0011829,
-
-when the claim BOM is produced,
-
-then total-approved-claim-payment-gross-amount = 299.00 (= net 99.00 + retained deductible 200.00).
-
-Scenario 2 — deductible counter-booked
-
-Given an approved payment with net = 400.00, a deductible line (500008 = -200) and its counter-booking (500110 = +200),
-
-when the claim BOM is produced,
-
-then total-approved-claim-payment-gross-amount = 400.00 (retained deductible = 0).
-
-Scenario 3 — no deductible
-
-Given an approved payment with no deductible line (no 500008 and no 500110),
-
-when the claim BOM is produced,
-
-then total-approved-claim-payment-gross-amount = net (= totalApprovedClaimPaymentsAmountPerDamagedObject).
 
 ANALYZED REQUEST BY LLM:
 SUMMARY
-- Fix insuranceAmount mapping to read damage-level insured-amount (per-event) and add a new BOM field total-approved-claim-payment-gross-amount computed from payment invoice lines (extCode 500008 / 500110) per damaged object.
+Add a new vt om_ambulance_transport_billing routing-property tuple (5 properties) to the routing policy file so VTOM + AMBULANCE_TRANSPORT_BILLING traffic routes to the v2 receivable financial-documents application.
 
 TARGET
-- support-content-mgt-integration-claims-business-events → BuildXMLDocument.esql (~ line 203)
-- insurance-claims-integration-technical-idit → mappingResponseIditGetClaimByClaimId.esql (reimbursement block, PAYMENT-type claimTransactionIVO)
-- BOM produced by mappingResponseIditGetClaimByClaimId.esql (damaged-object level)
+- Primary file: finance-accounting-integration-invoices-policy-project/common.policyxml
+- Verification target (external): finance-integration-policies-endpoints : AceEndPointsPolicy (to confirm path existence)
+- Runtime header: X-Origin-Caller-Code (sender_id), expected value: VTOM
+- Routing key convention: lower(sender_id || '_' || process_control || '_' || attr)
 
 REQUIRED_CHANGES
-- BuildXMLDocument.esql (~ L203)
-  - Change the insuranceAmount assignment to read the damage-level insured amount instead of the cover-level aggregated amount.
-  - Exact BEFORE / AFTER (use exact tokens):
-    - BEFORE (WRONG)
-      SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."insured-amount";
-    - AFTER (OK)
-      SET claims.(XMLNSC.Attribute)insuranceAmount = v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount";
-  - Ensure consistency with neighbouring lines that already navigate to the damage level (damageDescription L196, purchaseValue L202, currency L221).
+- Add exactly the following five property entries to finance-accounting-integration-invoices-policy-project/common.policyxml (additive change; mirror shape of existing SFCAS v2 receivable tuple):
+  <vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
+  <vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
+  <vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
+  <vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
+  <vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
 
-- insurance-claims-integration-technical-idit / mappingResponseIditGetClaimByClaimId.esql
-  - Map invoiceLineVO.extCode into the BOM (it is currently not mapped; only invoiceLineVO.id and invoiceLineVO.desc are mapped).
-    - Add invoiceLineVO.extCode to the data available during the reimbursement/payment iteration.
-  - In the reimbursement block that iterates claimTransactionLineIVOs of PAYMENT-type claimTransactionIVO, compute and populate per-damaged-object BOM field total-approved-claim-payment-gross-amount.
-    - Place the new BOM field at the damaged-object level, next to total-approved-claim-payment-amount (aka totalApprovedClaimPaymentsAmountPerDamagedObject).
-    - Computation rules:
-      - net = totalApprovedClaimPaymentsAmountPerDamagedObject (existing value).
-      - retained deductible = deductible debit lines (invoiceLineVO.extCode = '500008') net of their counter-booking lines (invoiceLineVO.extCode = '500110').
-      - Implementation must handle sign ambiguity: do not just add Σ500008 as-is. Use absolute/normalized amounts so that a stored deductible line of -200 contributes +200 when retained.
-      - Formula (implementation guidance): retained = max(0, sum_abs(extCode='500008') - sum_abs(extCode='500110')); gross = net + retained.
-    - Set BOM field total-approved-claim-payment-gross-amount = gross (decimal, same currency as net).
-  - Do not use estimatedDamageAmount for this calculation.
-
-- Optional / suggested (not functional fix)
-  - In mappingResponseIditGetClaimByClaimId.esql (NIPO-5484 lines ~363-364), add a warning comment noting that the claimed-cover mapping inside the damages loop currently overwrites cover fields on each iteration ("last element wins") and should be revisited if multi-damage or multi-cover claims appear in production. (This is a warning only — no behaviour change required now.)
+- Do not modify any other rows in common.policyxml. The three existing Attrib tuples (pattern: vtom_<company>_intervention_customer_billing_*) must remain byte-identical.
+- Do NOT add a SANSYS.policyxml; caller remains VTOM and properties must use the lowercase vtom_ prefix (routing key is lowercased).
+- Verify (and document) that the endpoint application path referenced exists in the external AceEndPointsPolicy:
+  - path to check: finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents
+  - policy project to check: finance-integration-policies-endpoints : AceEndPointsPolicy
+  - If missing, escalate/create follow-up (do not change endpoint repo without confirmation).
+- Testing requirement (QA):
+  - Confirm that a routing/test call with header X-Origin-Caller-Code: VTOM and process_control = AMBULANCE_TRANSPORT_BILLING resolves to the v2 technical app and does NOT return 422 (ACEFONC0021).
+  - Ensure common.policyxml diff shows exactly these 5 new properties added and no other edits.
 
 MAPPING_DETAILS
-- Source code / files:
-  - support-content-mgt-integration-claims-business-events
-    - BuildXMLDocument.esql (~ line 203). Neighboring relevant lines: damageDescription L196, purchaseValue L202, currency L221.
-  - insurance-claims-integration-technical-idit
-    - mappingResponseIditGetClaimByClaimId.esql (reimbursement block; NIPO-5484 lines ~363-364 referenced for the multi-damage overwrite warning).
-- Sheets/tabs: not applicable.
-- Lines / dictionary references:
-  - BuildXMLDocument.esql: change at ~L203 as specified above.
-  - mappingResponseIditGetClaimByClaimId.esql: reimbursement block that iterates claimTransactionLineIVOs of PAYMENT-type claimTransactionIVO (exact line numbers depend on repo version; NIPO-5484 lines ~363-364 are relevant to claimed-cover overwrite).
-  - Invoice line codes: extCode '500008' (deductible) and '500110' (counter-booking).
-- Fields / attributes to add to BOM:
-  - Map invoiceLineVO.extCode (in addition to invoiceLineVO.id and invoiceLineVO.desc already mapped).
-  - Add damaged-object level field: total-approved-claim-payment-gross-amount (value = totalApprovedClaimPaymentsAmountPerDamagedObject + retained deductible).
-  - Change BuildXMLDocument behavior: claims.(XMLNSC.Attribute)insuranceAmount must be read from v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount" instead of v_claim."claimed-cover".Item[1]."insured-amount".
-
-- Computation pseudocode (implementor should adapt to actual ESQ data model / field names):
-  - For each damaged object (grouping key to be confirmed — see questions):
-    - net := totalApprovedClaimPaymentsAmountPerDamagedObject
-    - sum500008 := Σ abs(invoiceLineVO.amount) for claimTransactionLineIVOs where invoiceLineVO.extCode = '500008' and scoped to this damaged object
-    - sum500110 := Σ abs(invoiceLineVO.amount) for claimTransactionLineIVOs where invoiceLineVO.extCode = '500110' and scoped to this damaged object
-    - retained := max(0, sum500008 - sum500110)
-    - gross := net + retained
-    - set damaged-object.total-approved-claim-payment-gross-amount = gross
-  - Note: determine the actual invoice line amount field in code (e.g., invoiceLineVO.amount or invoiceLineVO.netAmount) and use that.
-
-- Example verification:
-  - Claim 26103-0011829 (product 103): net=99.00, deductible 500008=200 (no 500110) → gross = 99.00 + 200.00 = 299.00.
-  - Sapiens example: payment 400, deductible 500008 = -200, counter-booking 500110 = +200 → retained = 0 → gross = 400.
-  - Bike claim 26105-0017043: estimatedDamageAmount is not equal to gross; do not use estimatedDamageAmount.
-
-- Notes / references:
-  - Stage 2 (exposure to claims XML document / BuildXMLDocument.esql) is handled in NIPO-9434 and is blocked by this ticket.
-  - Labels: SSC_26-2.4 / SSC_26-3.1
-  - Note to BA: See CS0088908 for the deductible part.
+- Source document / ticket:
+  - US NIPO-9498 Sansys - Routing - Invoice Ingestion to Financial Document V2
+  - Ticket link: https://tcsgroup.atlassian.net/browse/NIPO-9498
+  - Relevant ADRs: ADR-0001, ADR-0009 (links in ticket)
+  - Related stories: NIPO-9422 (process_control emitter), NIPO-9499 (producer_app stamping), SAPS-2744 (SAP dispatch)
+- Proposed rows (exact text to add):
+  <!-- Sansys ambulance ingestion → v2 receivable-documents (SSC-331 / NIPO-9498).
+       One tuple for all 6 companies: process_control is company-neutral. -->
+  <vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
+  <vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
+  <vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
+  <vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
+  <vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
+- Field/attribute mapping (exact attr suffix semantics):
+  - _target => target family (value: financial-documents)
+  - _application => application path alias (value: finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents) — note: this is the v2 technical app
+  - _endpoint => host alias (value: sapnative) — naming trap: endpoint is host alias
+  - _timeout => timeout in seconds (value: 55)
+  - _call => call type (value: httpAsync)
+- Routing key rule: use lower(sender_id + '_' + process_control + '_' + attr) — for header X-Origin-Caller-Code: VTOM and process_control: AMBULANCE_TRANSPORT_BILLING the lookup key is vtom_ambulance_transport_billing_{attr}
 
 ASSUMPTIONS_OR_QUESTIONS
-(only list items needing clarification)
-- Association key: which exact field links a claimTransactionLineIVO / invoiceLineVO to a damaged object in the BOM? (e.g., damageNum, damageId, damagedObjectId). Implementation must group invoice lines by damaged-object; confirm the grouping key.
-- Exact invoice line amount field name in the claimTransactionLineIVO/invoiceLineVO structure (invoiceLineVO.amount, invoiceLineVO.netAmount, invoiceLineVO.value, etc.). Implementation must use the correct numeric field and handle sign.
-- Exact BOM path/name for the damaged-object element where total-approved-claim-payment-amount currently sits (we were instructed "next to total-approved-claim-payment-amount" — confirm full path).
-- Currency/rounding rules for the new gross field (same currency as net; confirm rounding/scale behavior).
-- Confirmation whether to add the suggested warning comment at NIPO-5484 (~L363-364). The request suggested adding a comment but marked the rewrite as out of scope.
-- Should tests be added (unit/integration) using the provided real-claim examples (26103-0011829 and 26105-0017043)? (recommended)
+- Assumed X-Origin-Caller-Code presented by Sansys trigger is VTOM; confirm with ACE team. If the real header value differs, the vt om_ prefix must be changed to lower(<actual-caller>).
+- Confirm repository path: finance-accounting-integration-invoices-policy-project/common.policyxml is the correct file to edit in the repo given to you.
+- Confirm whether the XML comment block (the one preceding the five tags in the ticket) is desired in the file; the strict requirement is “exactly 5 new properties” — adding the comment is optional but acceptable if team prefers documentation.
+- Confirm where / how process_control is set in the runtime test (header vs body vs property injector). Tests require setting process_control = AMBULANCE_TRANSPORT_BILLING in the same place the ACE routing layer reads it.
+- Confirm CI/PR branch naming and required reviewers for the policy change (link PR to NIPO-9498).
+- Confirm what to do if the external AceEndPointsPolicy does not contain the referenced application path — raise issue vs add it in that repo.
 
 EXECUTOR_BRIEF
-- In BuildXMLDocument.esql: change the SET claims.(XMLNSC.Attribute)insuranceAmount assignment to read the damage-level insured-amount:
-  - Replace v_claim."claimed-cover".Item[1]."insured-amount" with v_claim."claimed-cover".Item[1]."claimed-damages".Item[1]."insured-amount".
-- In mappingResponseIditGetClaimByClaimId.esql (reimbursement/payment iteration):
-  - Expose invoiceLineVO.extCode to the BOM processing.
-  - Identify the correct invoice line numeric amount field in the codebase and use it.
-  - For each damaged object, aggregate invoice lines where extCode IN ('500008','500110') (scope by damaged object), compute retained deductible = max(0, sum_abs(500008) - sum_abs(500110)), then set damaged-object.total-approved-claim-payment-gross-amount = totalApprovedClaimPaymentsAmountPerDamagedObject + retained deductible.
-  - Ensure sign handling so that stored negative deductible lines are treated as positive retained amounts when appropriate (see examples).
-  - Add the new BOM field at the damaged-object level (adjacent to total-approved-claim-payment-amount).
-  - Add unit/integration checks for the three acceptance scenarios:
-    1) retained deductible with no counter-booking → gross = net + retained
-    2) deductible counter-booked → gross = net
-    3) no deductible → gross = net
-- Optionally add a warning comment at mappingResponseIditGetClaimByClaimId.esql NIPO-5484 lines (~363-364) about claimed-cover being overwritten inside the damages loop (no behaviour change required now).
+Locate finance-accounting-integration-invoices-policy-project/common.policyxml in the codebase; add the five property entries shown (vtom_ambulance_transport_billing_target/application/endpoint/timeout/call), using exactly the tag names and values provided; do not edit any other property lines (Attrib tuples must remain byte-identical). After commit, run a diff to confirm exactly these five properties were added. Verify the external AceEndPointsPolicy contains path finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents; if missing, stop and raise an issue. Create a PR referencing NIPO-9498 and include QA test steps: test with X-Origin-Caller-Code: VTOM and process_control = AMBULANCE_TRANSPORT_BILLING and confirm routing resolves to the v2 application without returning 422.

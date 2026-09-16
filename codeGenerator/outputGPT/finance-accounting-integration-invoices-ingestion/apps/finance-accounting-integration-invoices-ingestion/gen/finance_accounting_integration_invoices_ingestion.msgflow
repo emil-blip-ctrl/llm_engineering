@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmWSInput.msgnode="ComIbmWSInput.msgnode" xmlns:ComIbmRouteToLabel.msgnode="ComIbmRouteToLabel.msgnode" xmlns:ComIbmWSReply.msgnode="ComIbmWSReply.msgnode" xmlns:ComIbmLabel.msgnode="ComIbmLabel.msgnode" xmlns:get_health.subflow="get_health.subflow" xmlns:postAsv_files_injection_trigger.subflow="postAsv_files_injection_trigger.subflow" xmlns:postAsv_files_purge_trigger.subflow="postAsv_files_purge_trigger.subflow" xmlns:postSarge_files_injection_trigger.subflow="postSarge_files_injection_trigger.subflow" xmlns:postSarge_files_purge_trigger.subflow="postSarge_files_purge_trigger.subflow" xmlns:postSarvd_files_injection_trigger.subflow="postSarvd_files_injection_trigger.subflow" xmlns:postSarvd_files_purge_trigger.subflow="postSarvd_files_purge_trigger.subflow" xmlns:postSansys_files_injection_trigger.subflow="postSansys_files_injection_trigger.subflow" xmlns:postSansys_files_purge_trigger.subflow="postSansys_files_purge_trigger.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="gen/finance_accounting_integration_invoices_ingestion.msgflow" 
+nsPrefix="gen_finance_accounting_integration_invoices_ingestion.msgflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" nodeLayoutStyle="RECTANGLE">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<translation xmi:type="utility:TranslatableString" key="finance_accounting_integration_invoices_ingestion" bundleName="gen/finance_accounting_integration_invoices_ingestion" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/finance_accounting_integration_invoices_ingestion.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/finance_accounting_integration_invoices_ingestion.gif"/>
+<composition>
+<nodes xmi:type="ComIbmWSInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="25,150" URLSpecifier="/finance-accounting/v2/invoice-ingestion*" useHTTPS="true" parseQueryString="true" messageDomainProperty="JSON" faultFormat="JSON">
+<translation xmi:type="utility:ConstantString" string="HTTP Input"/>
+</nodes>
+<nodes xmi:type="ComIbmRouteToLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="275,150">
+<translation xmi:type="utility:ConstantString" string="Route To Label"/>
+</nodes>
+<nodes xmi:type="ComIbmWSReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="550,150">
+<translation xmi:type="utility:ConstantString" string="HTTP Reply"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="125,225" labelName="get-health">
+<translation xmi:type="utility:ConstantString" string="get-health (Label)"/>
+</nodes>
+<nodes xmi:type="get_health.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="325,225">
+<translation xmi:type="utility:ConstantString" string="get-health (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="125,300" labelName="postAsv-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postAsv_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="325,300">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="125,375" labelName="postAsv-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postAsv_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="325,375">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-purge-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="125,450" labelName="postSarge-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarge_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_11" location="325,450">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="125,525" labelName="postSarge-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarge_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="325,525">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-purge-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="125,600" labelName="postSarvd-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarvd_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_15" location="325,600">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="125,675" labelName="postSarvd-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarvd_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_17" location="325,675">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-purge-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="125,750" labelName="postSansys-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSansys_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_19" location="325,750">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="125,825" labelName="postSansys-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSansys_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_21" location="325,825">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-purge-trigger (Implementation)"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="Output" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_21" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_21" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+</propertyOrganizer>
+<stickyBoard>
+<stickyNote location="25,25" >
+<body xmi:type="utility:ConstantString" string="This message flow is automatically generated.&#xA;Do not edit this message flow.&#xA;If you edit the message flow, your changes will be overwritten without a warning.&#xA;"/>
+</stickyNote>
+</stickyBoard>
+</eClassifiers>
+</ecore:EPackage>

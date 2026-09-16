@@ -1,461 +1,2006 @@
---FN-- insurance-claims-integration-technical-idit/apps/insurance_claims_integration_technical_idit/mappingResponseIditGetClaimByClaimId.esql --FN--
+--FN-- finance-accounting-integration-invoices-ingestion/apps/finance-accounting-integration-invoices-ingestion/finance-accounting-api-invoice 2.1.0.yml --FN--
 --FC--
-CREATE COMPUTE MODULE mappingResponseIditGetClaimByClaimId
-	
-CREATE FUNCTION Main() RETURNS BOOLEAN
+openapi: 3.0.1
+info:
+  title: Ambulance Invoices Integration Trigger
+  x-ibm-name: finance-accounting-api-invoices-ingestion
+  version: 2.2.0
+  description: |
+    **Finance & Accounting API: Invoice Integration Trigger**
+
+    This API facilitates file-based integration workflows between external systems and SAP for finance and accounting purposes.
+ 
+     ### Documentation
+    - [Invoice and Payments Financial Data Flows](https://tcsgroup.atlassian.net/wiki/x/HgvwAg)
+    - [API Documentation](https://tcsgroup.atlassian.net/wiki/x/MIAmJ)
+    - [Initial API Story](https://tcsgroup.atlassian.net/browse/NIPO-6628)
+
+  contact:
+    name: 05_IT_Applications_Solutions
+    email: 05_IT_Applications_Solutions@tcs.ch
+
+x-change-log:
+  - date: 2025-09-03
+    author: HUENI Victor
+    from: 1.0.0
+    to: 2.0.0
+    description: |
+      Breaking changes : All the response body changes
+      Change the flow from async to sync with a multi items response
+      Add example in the response of the ingestion
+      Add GET /health operation
+    ticket: https://tcsgroup.atlassian.net/browse/NIPO-7290
+  - date: 2025-09-22
+    author: HUENI Victor
+    from: 2.0.0
+    to: 2.1.0
+    description: |
+      Added two new operations:
+      - POST /sarge-files-injection-trigger (copy of /asv-files-injection-trigger)
+      - POST /sarge-files-purge-trigger (copy of /asv-files-purge-trigger)
+    ticket: https://tcsgroup.atlassian.net/browse/NIPO-7289
+  - date: 2025-09-25
+    author: HUENI Victor
+    from: 2.1.0
+    to: 2.2.0
+    description: |
+      Added two new operations:
+      - POST /sarvd-files-injection-trigger (copy of /asv-files-injection-trigger)
+      - POST /sarvd-files-purge-trigger (copy of /asv-files-purge-trigger)
+    ticket: https://tcsgroup.atlassian.net/browse/NIPO-7376
+
+externalDocs:
+  description: SP TCS multi-business invoice financial data flows
+  url: https://tcsgroup.atlassian.net/wiki/x/HgvwAg
+  
+servers:
+  - url: /finance-accounting/v2/invoice-ingestion
+paths:
+  /asv-files-injection-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionResponse'
+              examples:
+                SuccessfulProcessing:
+                  $ref: '#/components/examples/SuccessfulProcessing'
+                FailedProcessing:
+                  $ref: '#/components/examples/FailedProcessing'
+                PartialFailureProcessing:
+                  $ref: '#/components/examples/PartialFailureProcessing'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+              examples:
+                EmptyProcessing:
+                  $ref: '#/components/examples/EmptyProcessing'
+                TechnicalIssueOnTheFlow:
+                  $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /asv-files-purge-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarge-files-injection-trigger:
+      post:
+        tags:
+          - SARGE Attrib
+        description: Post a notification to start files injection flow
+        responses:
+          '200':
+            description: File ingestion triggered successfully.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/IngestionResponse'
+                examples:
+                  SuccessfulProcessing:
+                    $ref: '#/components/examples/SuccessfulProcessing'
+                  FailedProcessing:
+                    $ref: '#/components/examples/FailedProcessing'
+                  PartialFailureProcessing:
+                    $ref: '#/components/examples/PartialFailureProcessing'
+          '400':
+            description: Bad Request.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '401':
+            description: Unauthorized.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '403':
+            description: Forbidden.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '404':
+            description: Not Found.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '422':
+            description: Unprocessable Entity.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '429':
+            description: Too Many Requests.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '500':
+            description: Internal Server Error.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+                examples:
+                  EmptyProcessing:
+                    $ref: '#/components/examples/EmptyProcessing'
+                  TechnicalIssueOnTheFlow:
+                    $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+          '502':
+            description: Bad Gateway.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '503':
+            description: Service Unavailable.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+  /sarge-files-purge-trigger:
+    post:
+      tags:
+        - SARGE Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'  
+  /sarvd-files-injection-trigger:
+    post:
+        tags:
+          - SAR VD Attrib
+        description: Post a notification to start files injection flow
+        responses:
+          '200':
+            description: File ingestion triggered successfully.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/IngestionResponse'
+                examples:
+                  SuccessfulProcessing:
+                    $ref: '#/components/examples/SuccessfulProcessing'
+                  FailedProcessing:
+                    $ref: '#/components/examples/FailedProcessing'
+                  PartialFailureProcessing:
+                    $ref: '#/components/examples/PartialFailureProcessing'
+          '400':
+            description: Bad Request.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '401':
+            description: Unauthorized.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '403':
+            description: Forbidden.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '404':
+            description: Not Found.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '422':
+            description: Unprocessable Entity.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '429':
+            description: Too Many Requests.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '500':
+            description: Internal Server Error.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+                examples:
+                  EmptyProcessing:
+                    $ref: '#/components/examples/EmptyProcessing'
+                  TechnicalIssueOnTheFlow:
+                    $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+          '502':
+            description: Bad Gateway.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '503':
+            description: Service Unavailable.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+  /sarvd-files-purge-trigger:
+    post:
+      tags:
+        - SAR VD Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-injection-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionResponse'
+              examples:
+                SuccessfulProcessing:
+                  $ref: '#/components/examples/SuccessfulProcessing'
+                FailedProcessing:
+                  $ref: '#/components/examples/FailedProcessing'
+                PartialFailureProcessing:
+                  $ref: '#/components/examples/PartialFailureProcessing'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+              examples:
+                EmptyProcessing:
+                  $ref: '#/components/examples/EmptyProcessing'
+                TechnicalIssueOnTheFlow:
+                  $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-purge-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /health:
+    get:
+      summary: Pings the target receiver to check the connection
+      operationId: get-health
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthType'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+components:
+  schemas:
+    ServiceError:
+      title: ServiceError
+      type: object
+      description: Object returned when errors occurred
+      properties:
+        httpCode:
+          type: string
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+
+    IngestionResponse:
+      title: IngestionResponse
+      type: object
+      description: Detailed response for invoice ingestion, including per-invoice results.
+      properties:
+        status:
+          type: string
+          description: Overall status of the ingestion process.
+          enum: [success, partial_success, failure]
+          example: partial_success
+        summary:
+          type: object
+          description: Summary of the ingestion results.
+          properties:
+            processed:
+              type: integer
+              example: 5
+            successful:
+              type: integer
+              example: 3
+            failed:
+              type: integer
+              example: 2
+          required:
+            - processed
+            - successful
+            - failed
+        results:
+          type: array
+          description: List of individual invoice processing results.
+          items:
+            type: object
+            properties:
+              reference:
+                type: string
+                description: FIP number associated with the invoice.
+                example: "123"
+              status:
+                type: string
+                description: Status of the invoice processing.
+                enum: [success, failure]
+                example: success
+              message:
+                type: string
+                description: Message describing the result.
+                example: Invoice processed successfully.
+            required:
+              - reference
+              - status
+              - message
+      required:
+        - status
+        - summary
+        - results
+
+    PurgeResponse:
+      title: PurgeResponse
+      type: object
+      description: Response returned when the Purge is successfully triggered.
+      properties:
+        httpCode:
+          type: integer
+          example: 202
+        httpMessage:
+          type: string
+          example: "Accepted"
+        moreInformation:
+          type: string
+          example: "ASV File Purge triggered properly"
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+        
+    HealthType:
+      type: object
+      properties:
+        status:
+          type: string
+          description: status of the health check
+          enum: [pass, error]
+        api:
+          type: string
+          description: api/app name of the component
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Check'
+    Check:
+      type: object
+      description: 'describe a component check (MQ, DataBase, BackEnd etc..)'
+      properties:
+        component:
+          type: string
+          description: 'name of the tested component (MQ, Baloise, Toni, etc..)'
+        status:
+          type: string
+          description: status of the tested component
+          enum: [pass, error, warn]
+        details:
+          type: string
+          description: details
+
+  examples:
+    EmptyProcessing:
+      summary: No invoices processed
+      value:
+        httpCode: '500'
+        httpMessage: 'Internal server error'
+        moreInformation: 'Error reading file. File is missing, file is empty or file is bad formated(JSON)'
+    TechnicalIssueOnTheFlow:
+      summary: Either ACE app / SAP is having tehcnical issue
+      value:
+        httpCode: '500'
+        httpMessage: 'Internal server error'
+        moreInformation: 'Error calling SAP. Invoices moved to error file'
+    FailedProcessing:
+      summary: All invoices failed
+      value:
+        status: failure
+        summary:
+          processed: 2
+          successful: 0
+          failed: 2
+        results: 
+          - reference: '123'
+            status: failure
+            message: Invoice not processed.
+          - reference: '456'
+            status: failure
+            message: Invoice not processed.
+    SuccessfulProcessing:
+      summary: All invoices processed successfully
+      value:
+        status: success
+        summary:
+          processed: 2
+          successful: 2
+          failed: 0
+        results: 
+          - reference: '123'
+            status: success
+            message: Invoice processed successfully.
+          - reference: '456'
+            status: success
+            message: Invoice processed successfully.
+    PartialFailureProcessing:
+      summary: Some invoices failed
+      value:
+        status: partial_success
+        summary:
+          processed: 5
+          successful: 3
+          failed: 2
+        results:
+        - reference: '123'
+          status: success
+          message: Invoice processed successfully.
+        - reference: '456'
+          status: success
+          message: Invoice processed successfully.
+        - reference: '789'
+          status: failure
+          message: 'Validation error: missing tax code.'
+        - reference: '101112'
+          status: success
+          message: Invoice processed successfully.
+        - reference: '131415'
+          status: failure
+          message: Internal server error during BAPI execution.
+--FC--
+
+--FN-- finance-accounting-integration-invoices-ingestion/apps/finance-accounting-integration-invoices-ingestion/restapi.descriptor --FN--
+--FC--
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:restapiDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.restapi" definitionType="openapi_3" definitionFile="finance-accounting-api-invoice 2.1.0.yml" implementation="gen/finance_accounting_integration_invoices_ingestion.msgflow" https="true" definitionWithExtRef="false" faultFormat="JSON">
+    <references>
+        <sharedLibraryReference>
+            <libraryName>common-integration-shlib-encapsulate-calls</libraryName>
+        </sharedLibraryReference>
+        <sharedLibraryReference>
+            <libraryName>SHLIB_PoliciesReader</libraryName>
+        </sharedLibraryReference>
+    </references>
+    <ns2:operations>
+        <ns2:operation name="get-health" implementation="get_health.subflow"/>
+        <ns2:operation name="postAsv-files-injection-trigger" implementation="postAsv_files_injection_trigger.subflow"/>
+        <ns2:operation name="postAsv-files-purge-trigger" implementation="postAsv_files_purge_trigger.subflow"/>
+        <ns2:operation name="postSarge-files-injection-trigger" implementation="postSarge_files_injection_trigger.subflow"/>
+        <ns2:operation name="postSarge-files-purge-trigger" implementation="postSarge_files_purge_trigger.subflow"/>
+        <ns2:operation name="postSarvd-files-injection-trigger" implementation="postSarvd_files_injection_trigger.subflow"/>
+        <ns2:operation name="postSarvd-files-purge-trigger" implementation="postSarvd_files_purge_trigger.subflow"/>
+        <ns2:operation name="postSansys-files-injection-trigger" implementation="postSansys_files_injection_trigger.subflow"/>
+        <ns2:operation name="postSansys-files-purge-trigger" implementation="postSansys_files_purge_trigger.subflow"/>
+    </ns2:operations>
+    <ns2:errorHandlers/>
+</ns2:restapiDescriptor>
+--FC--
+
+--FN-- finance-accounting-integration-invoices-ingestion/apps/finance-accounting-integration-invoices-ingestion/gen/finance_accounting_integration_invoices_ingestion.msgflow --FN--
+--FC--
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" 
+xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmWSInput.msgnode="ComIbmWSInput.msgnode" xmlns:ComIbmRouteToLabel.msgnode="ComIbmRouteToLabel.msgnode" xmlns:ComIbmWSReply.msgnode="ComIbmWSReply.msgnode" xmlns:ComIbmLabel.msgnode="ComIbmLabel.msgnode" xmlns:get_health.subflow="get_health.subflow" xmlns:postAsv_files_injection_trigger.subflow="postAsv_files_injection_trigger.subflow" xmlns:postAsv_files_purge_trigger.subflow="postAsv_files_purge_trigger.subflow" xmlns:postSarge_files_injection_trigger.subflow="postSarge_files_injection_trigger.subflow" xmlns:postSarge_files_purge_trigger.subflow="postSarge_files_purge_trigger.subflow" xmlns:postSarvd_files_injection_trigger.subflow="postSarvd_files_injection_trigger.subflow" xmlns:postSarvd_files_purge_trigger.subflow="postSarvd_files_purge_trigger.subflow" xmlns:postSansys_files_injection_trigger.subflow="postSansys_files_injection_trigger.subflow" xmlns:postSansys_files_purge_trigger.subflow="postSansys_files_purge_trigger.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" 
+xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="gen/finance_accounting_integration_invoices_ingestion.msgflow" 
+nsPrefix="gen_finance_accounting_integration_invoices_ingestion.msgflow">
+<eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" nodeLayoutStyle="RECTANGLE">
+<eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+<translation xmi:type="utility:TranslatableString" key="finance_accounting_integration_invoices_ingestion" bundleName="gen/finance_accounting_integration_invoices_ingestion" pluginId="flowAPIgenerated"/>
+<colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj16/finance_accounting_integration_invoices_ingestion.gif"/>
+<colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/flowAPIgenerated/icons/full/obj30/finance_accounting_integration_invoices_ingestion.gif"/>
+<composition>
+<nodes xmi:type="ComIbmWSInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="25,150" URLSpecifier="/finance-accounting/v2/invoice-ingestion*" useHTTPS="true" parseQueryString="true" messageDomainProperty="JSON" faultFormat="JSON">
+<translation xmi:type="utility:ConstantString" string="HTTP Input"/>
+</nodes>
+<nodes xmi:type="ComIbmRouteToLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="275,150">
+<translation xmi:type="utility:ConstantString" string="Route To Label"/>
+</nodes>
+<nodes xmi:type="ComIbmWSReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="550,150">
+<translation xmi:type="utility:ConstantString" string="HTTP Reply"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="125,225" labelName="get-health">
+<translation xmi:type="utility:ConstantString" string="get-health (Label)"/>
+</nodes>
+<nodes xmi:type="get_health.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="325,225">
+<translation xmi:type="utility:ConstantString" string="get-health (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="125,300" labelName="postAsv-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postAsv_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="325,300">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="125,375" labelName="postAsv-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postAsv_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="325,375">
+<translation xmi:type="utility:ConstantString" string="postAsv-files-purge-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="125,450" labelName="postSarge-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarge_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_11" location="325,450">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="125,525" labelName="postSarge-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarge_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="325,525">
+<translation xmi:type="utility:ConstantString" string="postSarge-files-purge-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="125,600" labelName="postSarvd-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarvd_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_15" location="325,600">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="125,675" labelName="postSarvd-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSarvd_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_17" location="325,675">
+<translation xmi:type="utility:ConstantString" string="postSarvd-files-purge-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="125,750" labelName="postSansys-files-injection-trigger">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-injection-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSansys_files_injection_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_19" location="325,750">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-injection-trigger (Implementation)"/>
+</nodes>
+<nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="125,825" labelName="postSansys-files-purge-trigger">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-purge-trigger (Label)"/>
+</nodes>
+<nodes xmi:type="postSansys_files_purge_trigger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_21" location="325,825">
+<translation xmi:type="utility:ConstantString" string="postSansys-files-purge-trigger (Implementation)"/>
+</nodes>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="Input"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="Output" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_21" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input_1"/>
+<connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_21" sourceTerminalName="OutTerminal.Output_1" targetTerminalName="InTerminal.in"/>
+</composition>
+<propertyOrganizer>
+</propertyOrganizer>
+<stickyBoard>
+<stickyNote location="25,25" >
+<body xmi:type="utility:ConstantString" string="This message flow is automatically generated.&#xA;Do not edit this message flow.&#xA;If you edit the message flow, your changes will be overwritten without a warning.&#xA;"/>
+</stickyNote>
+</stickyBoard>
+</eClassifiers>
+</ecore:EPackage>
+--FC--
+
+--FN-- finance-accounting-integration-invoices-ingestion/apps/finance-accounting-integration-invoices-ingestion/postSansys_files_injection_trigger.subflow --FN--
+--FC--
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmFileRead.msgnode="ComIbmFileRead.msgnode" xmlns:ComIbmFlowOrder.msgnode="ComIbmFlowOrder.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:common_integration_shlib_encapsulate_calls_cc_http_sync_call.subflow="common_integration_shlib_encapsulate_calls/cc_http_sync_call.subflow"
+    xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
+    nsURI="postSansys_files_injection_trigger.subflow" nsPrefix="postSansys_files_injection_trigger.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" nodeLayoutStyle="SQUARE">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="postSansys_files_injection_trigger" bundleName="postSansys_files_injection_trigger" pluginId="finance_accounting_integration_invoices_ingestion"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_ingestion/icons/full/obj16/postSansys_files_injection_trigger.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_ingestion/icons/full/obj30/postSansys_files_injection_trigger.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="19,202">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="postSansys_files_injection_trigger" pluginId="finance_accounting_integration_invoices_ingestion"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="1091,410">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="postSansys_files_injection_trigger" pluginId="finance_accounting_integration_invoices_ingestion"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_http_sync_call.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="751,296" monitoring-api-name="finance-accounting-integration-invoices" monitoring-api-operation="POST /invoice">
+        <translation xmi:type="utility:ConstantString" string="cc_http_sync_call"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="655,409" computeExpression="esql://routine/#emptyOrMissingFileError.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="EmptyOrMissingFile"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="EmptyOrMissingFile.terminal.out" eventIdentity="SUP: No file processed">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: No file processed"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="636,295" computeExpression="esql://routine/sansys#PrepareHTTPRequestMapping.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="CreateRequest"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="CreateRequest.terminal.in" eventIdentity="Create http request">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Create http request"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="289,208" filenamePattern="*.json" fileDispositionAction="moveToArchiveWithTimestamp" messageDomainProperty="JSON" messageCodedCharSetIdProperty="1208" messageEncodingProperty="546" fileFtp="true" deleteRemoteFileOnTransfer="true" remoteTransferType="SFTP" fileFtpServer="{AceAccesSftpPolicies}:AceAccesSftpGenericPolicy" fileFtpUser="SANSYSAceSftpIdentity" fileFtpDirectory="" fileFtpTransferMode="ASCII">
+        <translation xmi:type="utility:ConstantString" string="ProcessFile"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="ProcessFile.terminal.in" eventIdentity="SANSYS File ingestion starting">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SANSYS File ingestion starting"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="ProcessFile.terminal.out" eventIdentity="SUP: SANSYS File ingestion done">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SANSYS File ingestion done"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="No match terminal" eventSourceName="ProcessFile.terminal.noMatch" eventIdentity="SUP: SANSYS File Ingestion triggered properly but no file was processed">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SANSYS File Ingestion triggered properly but no file was processed"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="171,203" computeExpression="esql://routine/#PrepareProcessFile.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepareProcessFile"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="PrepareProcessFile.terminal.in" eventIdentity="Prepare Process File">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Prepare Process File"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow:FCMComposite_1" xmi:id="FCMComposite_1_6" location="74,202">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_start"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="579,34" computeExpression="esql://routine/#PrepareSaveFile.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepareSaveFile"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="PrepareSaveFile.terminal.in" eventIdentity="Prepare Save File">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Prepare Save File"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="608,216" computeExpression="esql://routine/#PrepareOutFiles.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepareOutFiles"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="PrepareOutFiles.terminal.out" eventIdentity="Send to Save Valid Invoices">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Send to Save Valid Invoices"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out2 terminal" eventSourceName="PrepareOutFiles.terminal.out2" eventIdentity="$Environment/Variables/EventMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/EventMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="659,125" outputFilename="invoice_*.json" writeMode="writeInPlace" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="{AceAccesSftpPolicies}:AceAccesSftpGenericPolicy" fileFtpUser="SANSYSAceSftpIdentity">
+        <translation xmi:type="utility:ConstantString" string="ProcessedInvalidInvoicesFile"/>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="ProcessedInvalidInvoicesFile.terminal.failure" eventIdentity="FAIL: Catch exeption when error invoices file writing">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exeption when error invoices file writing"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="ProcessedInvalidInvoicesFile.terminal.out" eventIdentity="SUP: SANSYS File invalid written">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SANSYS File invalid written"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="864,269" messageDomain="DataObject" resetMessageDomain="true" messageFormat="XML">
+        <translation xmi:type="utility:ConstantString" string="Reset Content Descriptor"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="698,38" outputFilename="*.json" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="{AceAccesSftpPolicies}:AceAccesSftpGenericPolicy" fileFtpUser="SANSYSAceSftpIdentity" fileFtpDirectory="">
+        <translation xmi:type="utility:ConstantString" string="SaveInvoicesFile"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SaveInvoicesFile.terminal.out" eventIdentity="SUP: SANSYS File saved">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SANSYS File saved"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="SaveInvoicesFile.terminal.failure" eventIdentity="FAIL: Catch exeption when original invoices file writing">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exeption when original invoices file writing"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="934,125">
+        <translation xmi:type="utility:ConstantString" string="END"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="713,220" outputFilename="invoice.json" writeMode="writeInPlace" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="{AceAccesSftpPolicies}:AceAccesSftpGenericPolicy" fileFtpUser="SANSYSAceSftpIdentity" fileFtpDirectory="">
+        <translation xmi:type="utility:ConstantString" string="ProcessedSuccessInvoicesFile"/>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="ProcessedSuccessInvoicesFile.terminal.failure" eventIdentity="FAIL: Catch exeption when success invoices file writing">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exeption when success invoices file writing"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="ProcessedSuccessInvoicesFile.terminal.in" eventIdentity="SUP: SANSYS File success written">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SANSYS File success written"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow:FCMComposite_1" xmi:id="FCMComposite_1_14" location="998,410">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_end"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="387,204">
+        <translation xmi:type="utility:ConstantString" string="Flow Order"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="462,214" transaction="commit" computeExpression="esql://routine/#post_injection_tcs_invoice_split_validation.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="InvoiceValidation"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="InvoiceValidation.terminal.out1" eventIdentity="SANSYS Invoice array">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SANSYS Invoice array"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="InvoiceValidation.terminal.out" eventIdentity="Send to prepare output file">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Send to prepare output file"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out2 terminal" eventSourceName="InvoiceValidation.terminal.out2" eventIdentity="SANSYS File contains validation error">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SANSYS File contains validation error"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="InvoiceValidation.terminal.in" eventIdentity="Send for Validation">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Send for Validation"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_17" location="889,347" computeExpression="esql://routine/#sapCallingError.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="SapCallingError"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SapCallingError.terminal.out" eventIdentity="SUP: Error calling SAP">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: Error calling SAP"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="1010,272" computeExpression="esql://routine/#SapResponseMapping.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="SapResponseMapping"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="767,457" computeExpression="esql://routine/#allInvoicesAreInvalidMapping.Main">
+        <translation xmi:type="utility:ConstantString" string="AllInvoicesAreInvalidMapping"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="AllInvoicesAreInvalidMapping.terminal.in" eventIdentity="SUP: All invoices are invalid">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: All invoices are invalid"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Response_Error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Response_Out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.first" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in">
+        <bendPoints>181,189,-210,-10</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_18" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input">
+        <bendPoints>72,-9,101,-147</bendPoints>
+        <bendPoints>72,70,101,-68</bendPoints>
+        <bendPoints>-53,71,-32,-66</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Response_Failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.second" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_25" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_26" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_27" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_28" targetNode="FCMComposite_1_6" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_29" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_31" targetNode="FCMComposite_1_20" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out4" targetTerminalName="InTerminal.in">
+        <bendPoints>90,232,-249,-11</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_32" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>
+--FC--
+
+--FN-- finance-accounting-integration-invoices-ingestion/apps/finance-accounting-integration-invoices-ingestion/postSansys_files_purge_trigger.subflow --FN--
+--FC--
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmFileRead.msgnode="ComIbmFileRead.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
+    nsURI="postSansys_files_purge_trigger.subflow" nsPrefix="postSansys_files_purge_trigger.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" nodeLayoutStyle="SQUARE">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="postSansys_files_purge_trigger" bundleName="postSansys_files_purge_trigger" pluginId="finance_accounting_integration_invoices_ingestion"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_ingestion/icons/full/obj16/postSansys_files_purge_trigger.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_ingestion/icons/full/obj30/postSansys_files_purge_trigger.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="26,173">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="postSansys_files_purge_trigger" pluginId="finance_accounting_integration_invoices_ingestion"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="443,79">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="postSansys_files_purge_trigger" pluginId="finance_accounting_integration_invoices_ingestion"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="591,231" computeExpression="esql://routine/gen#FileResponseOK.Main">
+        <translation xmi:type="utility:ConstantString" string="FileOK"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="FileOK.terminal.in" eventIdentity="Sucess file write">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Sucess file write"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="592,295" computeExpression="esql://routine/gen#ScanDirCheckDate.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="DirSave"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="DirSave.terminal.out" eventIdentity="SUP: File purged">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: File purged"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="DirSave.terminal.in" eventIdentity="Read/Delete File">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Read/Delete File"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="244,173" computeExpression="esql://routine/gen#Orchestrate.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="Orchestrate"/>
+        <monitorEvents eventSourceDescription="Out3 terminal" eventSourceName="Orchestrate.terminal.out3" eventIdentity="$Environment/Variables/endLog">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/endLog" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="Orchestrate.terminal.out1" eventIdentity="SUP: SEND response purge SANSYS ATTRIB">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SEND response purge SANSYS ATTRIB"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="591,170" computeExpression="esql://routine/gen#FileResponseERROR.Main">
+        <translation xmi:type="utility:ConstantString" string="FileError"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="FileError.terminal.in" eventIdentity="File Error write">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="File Error write"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="107,172" computeExpression="esql://routine/gen#SetTCSLog.Main">
+        <translation xmi:type="utility:ConstantString" string="Trackid"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="Trackid.terminal.out1" eventIdentity="SUP: RECEIVE request purge SANSYS ATTRIB">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator dataLocation="$Environment/Variables/trackID" eventCorrelation="dataLocation"/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: RECEIVE request purge SANSYS ATTRIB"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="Trackid.terminal.in" eventIdentity="Message propagated to Purge SANSYS">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator dataLocation="$Root/HTTPInputHeader/X-Global-Transaction-Id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Message propagated to Purge SANSYS"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="722,296">
+        <translation xmi:type="utility:ConstantString" string="Log"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="593,359" computeExpression="esql://routine/gen#FileReadNoMatch.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="NoMatch"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="443,177" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="{AceAccesSftpPolicies}:AceAccesSftpGenericPolicy" fileFtpUser="SANSYSAceSftpIdentity">
+        <translation xmi:type="utility:ConstantString" string="FileOutput"/>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="FileOutput.terminal.failure" eventIdentity="FAIL: Write file in failure">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Write file in failure"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="FileOutput.terminal.in" eventIdentity="INFO: Write message">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Write message"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="442,298" filenamePattern="*.json" fileDispositionAction="delete" messageCodedCharSetIdProperty="1208" messageEncodingProperty="546" fileFtp="true" deleteRemoteFileOnTransfer="true" remoteTransferType="SFTP" fileFtpServer="{AceAccesSftpPolicies}:AceAccesSftpGenericPolicy" fileFtpUser="SANSYSAceSftpIdentity" fileFtpDirectory="">
+        <translation xmi:type="utility:ConstantString" string="FileRead"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="FileRead.terminal.in" eventIdentity="INFO: start read file">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: start read file"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="FileRead.terminal.failure" eventIdentity="FAIL: Read message">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Read message"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="333,281">
+        <translation xmi:type="utility:ConstantString" string="Log2"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_5" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>
+--FC--
+
+--FN-- finance-accounting-integration-invoices-ingestion/apps/finance-accounting-integration-invoices-ingestion/sansys/PrepareHTTPRequest.esql --FN--
+--FC--
+BROKER SCHEMA sansys
+
+CREATE COMPUTE MODULE PrepareHTTPRequestMapping
+	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
-		CREATE FIELD OutputRoot.JSON.Data;
-		DECLARE inRef 	REFERENCE TO InputRoot.JSON.Data;
-		DECLARE outRef,externalClaimRef,travelersRef,claimContactsRef,damagedItemsRef REFERENCE TO OutputRoot.JSON.Data;
-		DECLARE pattern CHARACTER '##0.00';
-		DECLARE retainedDeductibleForRoot DECIMAL 0;
+		DECLARE variablesRef REFERENCE TO Environment.Variables;
+
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = Environment.Variables.Policy.RequestURL_invoice ;
+		SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/json';
+		SET OutputLocalEnvironment.Destination.HTTP.RequestLine.Method = 'POST';
 		
-		DECLARE productCode CHAR  
-		CASE
-			WHEN STARTSWITH(UPPER(inRef.targetClaimNumber),'SI-') THEN SUBSTRING(UPPER(inRef.targetClaimNumber) FROM 6 FOR 3)
-			ELSE SUBSTRING(UPPER(inRef.targetClaimNumber) FROM 3 FOR 3)
-		END;	
+        CREATE FIELD OutputRoot.JSON.Data TYPE JSON.Array;
+        DECLARE outRef REFERENCE TO OutputRoot.JSON.Data;
+        
+		DECLARE invoiceCount INTEGER CARDINALITY(InputRoot.JSON.Data.invoices.[]);
+		DECLARE I INTEGER 1;
+		-- Loop through all invoices
+		WHILE I <= invoiceCount DO
 			
-		--This block are the base informations for a claim
-		SET outRef."technical-id" 		= inRef.id;
-		SET outRef."claim-number" 		= inRef.targetClaimNumber;
-		SET outRef."claim-number" 		= inRef.targetClaimNumber;
-		SET outRef.status		 		= inRef.claimStatus.id;
-		SET outRef."status-desc" 		= inRef.claimStatus.desc;
-		SET outRef."update-version" 	= inRef.updateVersion;
-		SET outRef."notification-date" 	= SUBSTRING(inRef.signedNotificationDate BEFORE 'T');
-		SET outRef."policy-number" 		= inRef.externalPolicyNumber;
-		SET outRef.type					= inRef.claimFNOLind.desc;
-		SET outRef."policy-number"		= inRef.externalPolicyNumber;
-		SET outRef."closure-date"		= SUBSTRING(inRef.claimCloseDate BEFORE 'T');
-		SET outRef."status-reason-code"	= inRef.claimStatusReasonTypeVO.id;
-		SET outRef."status-reason-desc"	= inRef.claimStatusReasonTypeVO.desc;
-		
-		SET outRef."state-reason-code"	= inRef.claimState.id;
-		SET outRef."state-reason-desc"	= inRef.claimState.desc;
-		DECLARE claimantIBOsItem1Ref REFERENCE TO inRef."claimantIBOs".Item[1];
-		DECLARE claimantStateRef ROW claimantIBOsItem1Ref.claimantState;
-        IF EXISTS(claimantStateRef.*[]) THEN -- Check l'object claimantState existe 
-			SET outRef."claimant-state"	= claimantStateRef.desc; 
-        END IF;
-        DECLARE claimantStatusReasonRef ROW claimantIBOsItem1Ref.claimantStatusReason;
-        IF EXISTS(claimantStatusReasonRef.*[]) THEN -- Check l'object claimantStatusReason existe 
-			SET outRef."claimant-status-reason"	= claimantStatusReasonRef.desc; 
-        END IF;		
-		SET outRef."no-policy" = inRef.claimWithoutPolicy;	
-		SET outRef."channel"   = inRef.claimChannel.extCode;
-		
-		--totals amounts
-		DECLARE damagedObjectsItem1Ref REFERENCE TO claimantIBOsItem1Ref.damagedObjects.Item[1];	    
-	    SET outRef."total-approved-claim-payment-amount"      = CAST(CAST(damagedObjectsItem1Ref.totalApprovedClaimPaymentsAmountPerDamagedObject AS FLOAT) AS CHARACTER FORMAT pattern);
-	    SET retainedDeductibleForRoot                         = GetRetainedDeductibleForDamagedObject(damagedObjectsItem1Ref);
-	    SET outRef."total-approved-claim-payment-gross-amount" = FormatAmount(COALESCE(CAST(damagedObjectsItem1Ref.totalApprovedClaimPaymentsAmountPerDamagedObject AS DECIMAL), 0) + retainedDeductibleForRoot);
-	    SET outRef."total-unapproved-claim-payment-amount"    = CAST(CAST(damagedObjectsItem1Ref.totalUnapprovedClaimPaymentsAmountPerDamagedObject AS FLOAT) AS CHARACTER FORMAT pattern);
-	    SET outRef."total-approved-recovery-request-amount"   = CAST(CAST(damagedObjectsItem1Ref.totalApprovedRecoveryRequestsAmountPerDamagedObject AS FLOAT) AS CHARACTER FORMAT pattern);
-	    SET outRef."total-unapproved-recovery-request-amount" = CAST(CAST(damagedObjectsItem1Ref.totalUnapprovedRecoveryRequestsAmountPerDamagedObject AS FLOAT) AS CHARACTER FORMAT pattern);
-	    SET outRef."total-claim-reserve-amount"               = CAST(CAST(damagedObjectsItem1Ref.totalClaimReserveAmountPerDamagedObject AS FLOAT) AS CHARACTER FORMAT pattern);						
+			DECLARE refInvoice REFERENCE TO InputRoot.JSON.Data.invoices.[I];
+			
+	        -- Create the I item in the array
+	        CREATE FIELD outRef.Item[I];
+	        DECLARE refItem REFERENCE TO outRef.Item[I];
+	        
+	        -- Create the "process-control" object
+	        CREATE FIELD refItem."process-control"."specification-identifier" TYPE JSON.Array;
+	        DECLARE refSpecIdentifier REFERENCE TO refItem."process-control"."specification-identifier";
+	        SET refSpecIdentifier.Item[1]."content" = 'AMBULANCE_TRANSPORT_BILLING';
+	        
+	        -- Invoice type code and currency
+	        IF refInvoice.document_type = 1
+	        THEN
+	        	SET refItem."invoice-type-code".content = 380;
+	        ELSEIF refInvoice.document_type = 2
+	        THEN
+	        	SET refItem."invoice-type-code".content = 381;
+	        ELSE
+	        	SET refItem."invoice-type-code".content = refInvoice.document_type;
+	        END IF;
 
-		--external-claim
-		FOR externalClaimIDITRef AS inRef.relatedExternalClaims.Item[] DO
-			CREATE LASTCHILD OF outRef.(JSON.Array)"external-claim" AS externalClaimRef NAME 'Item';
-			SET externalClaimRef."external-claim-id"				  = externalClaimIDITRef.id;
-			SET externalClaimRef."external-claim-system"			  = externalClaimIDITRef.externalSystem;						
-			SET externalClaimRef."external-claimed-cover-internal-id" = externalClaimIDITRef.claimNumber;
-	    END FOR;	    
-	    
-	    --travel-infos
-	    IF productCode = '103' THEN
-	        DECLARE travelInfosRef REFERENCE TO outRef;
-	 		CREATE LASTCHILD OF outRef AS travelInfosRef NAME 'travel-infos';
- 		 	DECLARE travelDatesIDITRef REFERENCE TO inRef.travelDates;
- 		 	SET travelInfosRef."technical-id"      					 = travelDatesIDITRef.id;
-			SET travelInfosRef."travel-booking-date"				 = SUBSTRING(travelDatesIDITRef.travelBookingDate BEFORE 'T');
-			SET travelInfosRef."planned-travel-departure-date"		 = SUBSTRING(travelDatesIDITRef.travelDepartureDate BEFORE 'T');
-			SET travelInfosRef."planned-travel-return-date"			 = SUBSTRING(travelDatesIDITRef.travelReturnDate BEFORE 'T');
-			SET travelInfosRef."travel-duration"					 = travelDatesIDITRef.tripDuration;
-			SET travelInfosRef."impediment-date"					 = SUBSTRING(travelDatesIDITRef.dateOfImpediment BEFORE 'T');
-			SET travelInfosRef."impediment-departure-dates-interval" = travelDatesIDITRef.departureDateImpedimentDateInterval;
-			SET travelInfosRef."event-date"							 = SUBSTRING(inRef.claimEventDate BEFORE 'T');
-			SET travelInfosRef."event-departure-dates-interval"		 = travelDatesIDITRef.departureDateEventDateInterval;	
-	    END IF;
+	        SET refItem."invoice-currency-code".content = 'CHF';
+			SET refItem."precending-invoice-reference".content = COALESCE(refInvoice.invoice_id, '');
+	             
+	        -- Create the "invoice-number" array
+	        CREATE FIELD refItem."invoice-number" TYPE JSON.Array;
+	        DECLARE refInvNum REFERENCE TO refItem."invoice-number";
+	        SET refInvNum.Item[1]."content" = CAST(refInvoice.id AS CHARACTER);
+	        SET refInvNum.Item[1]."scheme-identifier" = 'INVOICE_ID';
+	        SET refInvNum.Item[2]."content" = CAST(refInvoice.patient.fip_number AS CHARACTER);
+	        SET refInvNum.Item[2]."scheme-identifier" = 'PATIENT_FIP_NUMBER';
+	
+			-- Invoice issue date
+	        SET refItem."invoice-issue-date".content = refInvoice.date;
+	
+	        -- Seller details
+	        SET refItem.seller."seller-name".content = 'SANSYS';
+	        SET refItem.seller."seller-postal-address"."country-code".content = 'CH';
+	
+	        -- VAT breakdown
+	        SET refItem."vat-breakdown"."vat-category-taxable-amount".content = 0;
+	        SET refItem."vat-breakdown"."vat-category-tax-amount".content = 0;
+	        SET refItem."vat-breakdown"."vat-category-code".content = 'E';
+	
+			-- Document totals
+			CREATE FIELD refItem."document-totals";
+			
+			-- Amount due for payment
+			SET refItem."document-totals"."amount-due-for-payment".content = refInvoice.total_price;
+			
+			-- Sum of invoice line net amount
+			SET refItem."document-totals"."sum-of-invoice-line-net-amount".content = refInvoice.total_price;
+			
+			-- Invoice total amount without VAT
+			SET refItem."document-totals"."invoice-total-amount-without-vat".content = refInvoice.total_price;
+			
+			-- Invoice total amount with VAT
+			SET refItem."document-totals"."invoice-total-amount-with-vat".content = refInvoice.total_price;
+	
+			-- Create the "invoice-note" array
+			CREATE FIELD refItem."invoice-note" TYPE JSON.Array;
+			DECLARE refInvNote REFERENCE TO refItem."invoice-note";
+			CREATE FIELD refInvNote.Item[1];
+		
+			SET refInvNote.Item[1]."invoice-note-subject-code".content = 'INTERVENTION_TYPE';
+			SET refInvNote.Item[1]."invoice-note-text".content = COALESCE(refInvoice.intervention.type, '');
+			
+			SET refInvNote.Item[2]."invoice-note-subject-code".content = 'INTERVENTION_START_TIME';
+			SET refInvNote.Item[2]."invoice-note-text".content = COALESCE(refInvoice.intervention.start_time, '');
 
-        --travelers
-		FOR listOfTravelersIDITRef AS inRef.listOfTravelers.Item[] DO
-			CREATE LASTCHILD OF outRef.(JSON.Array)travelers AS travelersRef NAME 'Item';
-		    SET travelersRef."functional-id" 		= listOfTravelersIDITRef.travelerCategory.id;
-		    SET travelersRef."technical-id" 		= listOfTravelersIDITRef.id;
-			SET travelersRef."personal-id"			= listOfTravelersIDITRef.travelerCategory.id;			
-			SET travelersRef."category-description" = listOfTravelersIDITRef.travelerCategory.desc;
-			SET travelersRef."first-name"			= listOfTravelersIDITRef.firstName;
-			SET travelersRef."last-name"			= listOfTravelersIDITRef.lastName;
-			IF(listOfTravelersIDITRef.youngerThan18 = 0) THEN
-				SET travelersRef."younger-18-years" = FALSE;
+			SET refInvNote.Item[3]."invoice-note-subject-code".content = 'INTERVENTION_END_TIME';
+			SET refInvNote.Item[3]."invoice-note-text".content = COALESCE(refInvoice.intervention.end_time, '');
+			
+			SET refInvNote.Item[4]."invoice-note-subject-code".content = 'INTERVENTION_SITE_NAME';
+			SET refInvNote.Item[4]."invoice-note-text".content = COALESCE(refInvoice.intervention.site_name, '');
+			
+			SET refInvNote.Item[5]."invoice-note-subject-code".content = 'INTERVENTION_SITE_STREET';
+			SET refInvNote.Item[5]."invoice-note-text".content = COALESCE(refInvoice.intervention.site_street, '');
+			
+			SET refInvNote.Item[6]."invoice-note-subject-code".content = 'INTERVENTION_SITE_STREET_NUMBER';
+			SET refInvNote.Item[6]."invoice-note-text".content = COALESCE(refInvoice.intervention.site_street_number, '');
+			
+			SET refInvNote.Item[7]."invoice-note-subject-code".content = 'INTERVENTION_SITE_COMPLEMENT';
+			SET refInvNote.Item[7]."invoice-note-text".content = COALESCE(refInvoice.intervention.site_complement, '');
+			
+			SET refInvNote.Item[8]."invoice-note-subject-code".content = 'INTERVENTION_SITE_POSTAL_CODE';
+			SET refInvNote.Item[8]."invoice-note-text".content = COALESCE(refInvoice.intervention.site_postal_code, '');
+			
+			SET refInvNote.Item[9]."invoice-note-subject-code".content = 'INTERVENTION_SITE_CITY';
+			SET refInvNote.Item[9]."invoice-note-text".content = COALESCE(refInvoice.intervention.site_city, '');
+			
+			SET refInvNote.Item[10]."invoice-note-subject-code".content = 'INTERVENTION_SITE_COUNTRY_CODE';
+			SET refInvNote.Item[10]."invoice-note-text".content = COALESCE(refInvoice.intervention.site_country_code, '');
+			
+			SET refInvNote.Item[11]."invoice-note-subject-code".content = 'INTERVENTION_DESTINATION_NAME';
+			SET refInvNote.Item[11]."invoice-note-text".content = COALESCE(refInvoice.intervention.destination_name, '');
+			
+			SET refInvNote.Item[12]."invoice-note-subject-code".content = 'INTERVENTION_DESTINATION_STREET';
+			SET refInvNote.Item[12]."invoice-note-text".content = COALESCE(refInvoice.intervention.destination_street, '');
+			
+			SET refInvNote.Item[13]."invoice-note-subject-code".content = 'INTERVENTION_DESTINATION_STREET_NUMBER';
+			SET refInvNote.Item[13]."invoice-note-text".content = COALESCE(refInvoice.intervention.destination_street_number, '');
+			
+			SET refInvNote.Item[14]."invoice-note-subject-code".content = 'INTERVENTION_DESTINATION_COMPLEMENT';
+			SET refInvNote.Item[14]."invoice-note-text".content = COALESCE(refInvoice.intervention.destination_complement, '');
+			
+			SET refInvNote.Item[15]."invoice-note-subject-code".content = 'INTERVENTION_DESTINATION_POSTAL_CODE';
+			SET refInvNote.Item[15]."invoice-note-text".content = COALESCE(refInvoice.intervention.destination_postal_code, '');
+			
+			SET refInvNote.Item[16]."invoice-note-subject-code".content = 'INTERVENTION_DESTINATION_CITY';
+			SET refInvNote.Item[16]."invoice-note-text".content = COALESCE(refInvoice.intervention.destination_city, '');
+			
+			SET refInvNote.Item[17]."invoice-note-subject-code".content = 'INTERVENTION_DESTINATION_COUNTRY_CODE';
+			SET refInvNote.Item[17]."invoice-note-text".content = COALESCE(refInvoice.intervention.destination_country_code, '');
+			
+			SET refInvNote.Item[18]."invoice-note-subject-code".content = 'PATIENT_INSURANCE_POLICY_NUMBER';
+			SET refInvNote.Item[18]."invoice-note-text".content = COALESCE(refInvoice.patient.insurance_policy_number, '');
+			
+			SET refInvNote.Item[19]."invoice-note-subject-code".content = 'PATIENT_CATEGORY_ID';
+			SET refInvNote.Item[19]."invoice-note-text".content = COALESCE(refInvoice.patient.category_id, '');
+			
+			SET refInvNote.Item[20]."invoice-note-subject-code".content = 'PATIENT_CATEGORY_NAME';
+			SET refInvNote.Item[20]."invoice-note-text".content = COALESCE(refInvoice.patient.category_name, '');
+			
+			SET refInvNote.Item[21]."invoice-note-subject-code".content = 'PATIENT_GENDER_ID';
+			SET refInvNote.Item[21]."invoice-note-text".content = COALESCE(refInvoice.patient.gender_id, '');
+			
+			SET refInvNote.Item[22]."invoice-note-subject-code".content = 'PATIENT_GENDER_NAME';
+			SET refInvNote.Item[22]."invoice-note-text".content = COALESCE(refInvoice.patient.gender_name, '');
+			
+			SET refInvNote.Item[23]."invoice-note-subject-code".content = 'PATIENT_LASTNAME';
+			SET refInvNote.Item[23]."invoice-note-text".content = COALESCE(refInvoice.patient.lastname, '');
+			
+			SET refInvNote.Item[24]."invoice-note-subject-code".content = 'PATIENT_FIRSTNAME';
+			SET refInvNote.Item[24]."invoice-note-text".content = COALESCE(refInvoice.patient.firstname, '');
+			
+			SET refInvNote.Item[25]."invoice-note-subject-code".content = 'PATIENT_BIRTHDATE';
+			SET refInvNote.Item[25]."invoice-note-text".content = COALESCE(refInvoice.patient.birthdate, '');
+			
+			SET refInvNote.Item[26]."invoice-note-subject-code".content = 'PATIENT_STREET';
+			SET refInvNote.Item[26]."invoice-note-text".content = COALESCE(refInvoice.patient.street, '');
+			
+			SET refInvNote.Item[27]."invoice-note-subject-code".content = 'PATIENT_STREET_NUMBER';
+			SET refInvNote.Item[27]."invoice-note-text".content = COALESCE(refInvoice.patient.street_number, '');
+			
+			SET refInvNote.Item[28]."invoice-note-subject-code".content = 'PATIENT_COMPLEMENT';
+			SET refInvNote.Item[28]."invoice-note-text".content = COALESCE(refInvoice.patient.complement, '');
+			
+			SET refInvNote.Item[29]."invoice-note-subject-code".content = 'PATIENT_PO_BOX';
+			SET refInvNote.Item[29]."invoice-note-text".content = COALESCE(refInvoice.patient.po_box, '');
+			
+			SET refInvNote.Item[30]."invoice-note-subject-code".content = 'PATIENT_POSTAL_CODE';
+			SET refInvNote.Item[30]."invoice-note-text".content = COALESCE(refInvoice.patient.postal_code, '');
+			
+			SET refInvNote.Item[31]."invoice-note-subject-code".content = 'PATIENT_CITY';
+			SET refInvNote.Item[31]."invoice-note-text".content = COALESCE(refInvoice.patient.city, '');
+			
+			SET refInvNote.Item[32]."invoice-note-subject-code".content = 'PATIENT_CANTON_ID';
+			SET refInvNote.Item[32]."invoice-note-text".content = COALESCE(refInvoice.patient.canton_id, '');
+			
+			SET refInvNote.Item[33]."invoice-note-subject-code".content = 'PATIENT_COUNTRY_CODE';
+			SET refInvNote.Item[33]."invoice-note-text".content = COALESCE(refInvoice.patient.country_code, '');
+			
+			SET refInvNote.Item[34]."invoice-note-subject-code".content = 'PATIENT_COUNTRY_NAME';
+			SET refInvNote.Item[34]."invoice-note-text".content = COALESCE(refInvoice.patient.country_name, '');
+			
+			SET refInvNote.Item[35]."invoice-note-subject-code".content = 'PATIENT_INSURANCE_NAME';
+			SET refInvNote.Item[35]."invoice-note-text".content = COALESCE(refInvoice.patient.insurance_name, '');
+			
+			SET refInvNote.Item[36]."invoice-note-subject-code".content = 'INTERVENTION_ID';
+			SET refInvNote.Item[36]."invoice-note-text".content = COALESCE(refInvoice.intervention.id, '');
+			
+			SET refInvNote.Item[37]."invoice-note-subject-code".content = 'INTERVENTION_KILOMETERS';
+			SET refInvNote.Item[37]."invoice-note-text".content = COALESCE(refInvoice.intervention.kilometers, '');
+			
+			SET refInvNote.Item[38]."invoice-note-subject-code".content = 'PATIENT_NACA_ID';
+			SET refInvNote.Item[38]."invoice-note-text".content = COALESCE(refInvoice.patient.naca_id, '');
+			
+			SET refInvNote.Item[39]."invoice-note-subject-code".content = 'INTERVENTION_ORGANIZATION_ID';
+			SET refInvNote.Item[39]."invoice-note-text".content = COALESCE(refInvoice.intervention.organization_id, '');
+			
+			SET refInvNote.Item[40]."invoice-note-subject-code".content = 'INTERVENTION_ORGANIZATION_NAME';
+			SET refInvNote.Item[40]."invoice-note-text".content = COALESCE(refInvoice.intervention.organization_name, '');
+			
+			SET refInvNote.Item[41]."invoice-note-subject-code".content = 'INTERVENTION_BASE_ID';
+			SET refInvNote.Item[41]."invoice-note-text".content = COALESCE(refInvoice.intervention.base_id, '');
+			
+			SET refInvNote.Item[42]."invoice-note-subject-code".content = 'INTERVENTION_BASE_NAME';
+			SET refInvNote.Item[42]."invoice-note-text".content = COALESCE(refInvoice.intervention.base_name, '');
+			
+			SET refInvNote.Item[43]."invoice-note-subject-code".content = 'PARTNER_TYPE_ID';
+			SET refInvNote.Item[43]."invoice-note-text".content = COALESCE(refInvoice.debtor.type_id, '');
+			
+			SET refInvNote.Item[44]."invoice-note-subject-code".content = 'PARTNER_TYPE_NAME';
+			SET refInvNote.Item[44]."invoice-note-text".content = COALESCE(refInvoice.debtor.type_name, '');
+			
+			SET refInvNote.Item[45]."invoice-note-subject-code".content = 'PARTNER_GENDER_ID';
+			SET refInvNote.Item[45]."invoice-note-text".content = COALESCE(refInvoice.debtor.gender_id, '');
+			
+			SET refInvNote.Item[46]."invoice-note-subject-code".content = 'PARTNER_GENDER';
+			SET refInvNote.Item[46]."invoice-note-text".content = COALESCE(refInvoice.debtor.gender_name, '');
+			
+			SET refInvNote.Item[47]."invoice-note-subject-code".content = 'INTERVENTION_ALARMED_BY_ID';
+			SET refInvNote.Item[47]."invoice-note-text".content = COALESCE(refInvoice.intervention.alarmed_by_id, '');
+			
+			SET refInvNote.Item[48]."invoice-note-subject-code".content = 'INTERVENTION_ALARMED_BY_NAME';
+			SET refInvNote.Item[48]."invoice-note-text".content = COALESCE(refInvoice.intervention.alarmed_by_name, '');
+
+			SET refInvNote.Item[49]."invoice-note-subject-code".content = 'REFERENCE';
+			SET refInvNote.Item[49]."invoice-note-text".content = COALESCE(refInvoice.reference, '');
+
+			SET refInvNote.Item[50]."invoice-note-subject-code".content = 'COMMENTS';
+			SET refInvNote.Item[50]."invoice-note-text".content = COALESCE(refInvoice.comments, '');
+
+			SET refInvNote.Item[51]."invoice-note-subject-code".content = 'PATIENT_LEGAL_REPRESENTATIVE_ID';
+			SET refInvNote.Item[51]."invoice-note-text".content = COALESCE(refInvoice.patient.legal_representative_id, '');
+
+			SET refInvNote.Item[52]."invoice-note-subject-code".content = 'PATIENT_LEGAL_REPRESENTATIVE_NAME';
+			SET refInvNote.Item[52]."invoice-note-text".content = COALESCE(refInvoice.patient.legal_representative_name, '');
+
+			-- Buyer details
+			IF refInvoice.debtor.type_id = 2
+			THEN
+				SET refItem.buyer."buyer-trading-name".content = COALESCE(refInvoice.debtor.name, '');
 			END IF;
-			IF(listOfTravelersIDITRef.youngerThan18 = 1) THEN
-				SET travelersRef."younger-18-years" = TRUE;
+			
+			-- Buyer name (lastname|firstname if both present)
+			IF refInvoice.debtor.type_id = 1
+			THEN
+				SET refItem.buyer."buyer-name".content =
+				CASE 
+			        WHEN refInvoice.debtor.lastname IS NOT NULL AND refInvoice.debtor.firstname IS NOT NULL THEN 
+			        	COALESCE(refInvoice.debtor.lastname, '') || '|' || COALESCE(refInvoice.debtor.firstname, '')
+			        WHEN refInvoice.debtor.lastname IS NOT NULL THEN 
+			        	COALESCE(refInvoice.debtor.lastname, '') || '|'
+			   		WHEN refInvoice.debtor.firstname IS NOT NULL THEN 
+			         	'|' || COALESCE(refInvoice.debtor.firstname, '')
+			    	ELSE ''
+			  	END;
 			END IF;
-		END FOR;
-		
-		--Event block
-		DECLARE eventRef,locationRef REFERENCE TO OutputRoot.JSON.Data;
-		CREATE LASTCHILD OF outRef AS eventRef TYPE Name NAME 'event';
-		SET eventRef."functional-id"         = inRef.eventTypeId;				
-		SET eventRef."primary-cause-of-loss" = inRef.claimCauseOfLossVO.desc;
-		SET eventRef.type					 = inRef.eventType.desc;
-		SET eventRef."ext-code"				 = inRef.eventType.extCode;
-		SET eventRef.description			 = inRef.claimEventDescription;
-		SET eventRef.date					 = SUBSTRING(inRef.claimEventDate BEFORE 'T');
-		
-		--Event.location block
-		CREATE LASTCHILD OF eventRef AS locationRef TYPE Name NAME 'location';
-		SET locationRef."functional-id" = inRef.claimEventLocationIBO.locationType.id;
-		SET locationRef."technical-id"	= inRef.claimEventLocationIBO.id;
-		SET locationRef."type-id"	    = inRef.claimEventLocationIBO.locationType.id;
-		SET locationRef."type-desc"		= inRef.claimEventLocationIBO.locationType.desc;
-		SET locationRef."street-name"   = inRef.claimEventLocationIBO.addressIBO."streetName";
-		SET locationRef."house-numer"   = inRef.claimEventLocationIBO.addressIBO.houseNr;
-		SET locationRef.city		    = inRef.claimEventLocationIBO.addressIBO.cityName;
-		SET locationRef."zip-code" 		= inRef.claimEventLocationIBO.addressIBO.zipCode;	
-		SET locationRef.country		    = inRef.claimEventLocationIBO.countryVO.desc;
-		SET locationRef."country-code"  = inRef.claimEventLocationIBO.addressIBO.country.extCode;		
-		SET locationRef."pob-nr"	    = inRef.claimEventLocationIBO.addressIBO.pob;	
-		
-		--group-claim		
-		DECLARE groupClaimRef,catastropheRef,locationCatastropheRef REFERENCE TO OutputRoot.JSON.Data;		
-		FOR claimGroupsRef AS inRef.claimGroups.Item[] DO 
-			CREATE LASTCHILD OF outRef.(JSON.Array)"group-claim" AS groupClaimRef NAME 'Item';
-			SET groupClaimRef.id 		   = claimGroupsRef.id;
-			SET groupClaimRef."ext-number" = claimGroupsRef.claimGroupExternalNumber;
-			SET groupClaimRef.description  = claimGroupsRef.claimGroupDescription;
-			SET groupClaimRef."type-id"	   = claimGroupsRef.claimGroupType.id;
-			SET groupClaimRef."type-desc"  = claimGroupsRef.claimGroupType.desc;
-		END	FOR;
-		
-		--group-claim/Catastrophe
-		DECLARE claimCatastropheRef ROW inRef.claimCatastrophe;
-		IF EXISTS(claimCatastropheRef.*[]) THEN
-			CREATE LASTCHILD OF groupClaimRef AS catastropheRef TYPE Name NAME 'catastrophe';
-			SET catastropheRef.id 			= claimCatastropheRef.id;				
-			SET catastropheRef."ext-number" = claimCatastropheRef.catastropheExternalNumber;
-			SET catastropheRef.description  = claimCatastropheRef.catastropheDescription;
-			SET catastropheRef."start-date" = SUBSTRING(claimCatastropheRef.startDate BEFORE 'T');
-			SET catastropheRef."end-date"  	= SUBSTRING(claimCatastropheRef.endDate BEFORE 'T');
-			SET catastropheRef."type-id"    = claimCatastropheRef.catastropheType.id;
-			SET catastropheRef."type-desc"  = claimCatastropheRef.catastropheType.desc;
-			FOR catastropheCountryRef AS claimCatastropheRef.catastropheListOfCountries.Item[] DO
-				CREATE LASTCHILD OF catastropheRef.(JSON.Array)location AS locationCatastropheRef NAME 'Item';
-				SET locationCatastropheRef."type-id"       = catastropheCountryRef.id;
-				SET locationCatastropheRef."type-ext-code" = catastropheCountryRef.extCode;
-				SET locationCatastropheRef."type-desc"     = catastropheCountryRef.desc;
-			END FOR;	
-		END IF;
-		
-		--claim-contacts 			
-		FOR relatedClaimContactsRef AS inRef.relatedClaimContacts.Item[] DO
-			CREATE LASTCHILD OF outRef.(JSON.Array)"claim-contacts" AS claimContactsRef NAME 'Item';
-				SET claimContactsRef."functional-id" = relatedClaimContactsRef.contactExtNumber;
-				SET claimContactsRef."technical-id"  = cast(relatedClaimContactsRef.id AS INT DEFAULT NULL);			
-				SET claimContactsRef."personal-id" 	 = relatedClaimContactsRef.contactExtNumber;
-				SET claimContactsRef."role-desc" 	 = relatedClaimContactsRef.claimContactRoleVO.desc; 
-				SET claimContactsRef.role   		 = relatedClaimContactsRef.claimContactRoleVO.extCode;
-				SET claimContactsRef.type   		 = relatedClaimContactsRef.claimContactRoleVO.id;
-		END FOR; 
-		
-		--claimed-cover
-		DECLARE claimedCoverRef,claimedDamagesRef REFERENCE TO OutputRoot.JSON.Data; 
-		FOR claimantIBOsRef AS inRef.claimantIBOs.Item[] DO
-			FOR damagedObjectsRef AS claimantIBOsRef.damagedObjects.Item[] DO
-				DECLARE damagedObjectsRefUnique ROW;
-				
-				 FOR damagesRef AS damagedObjectsRef.damages.Item[] DO
-					
-					IF NOT EXISTS(damagesRef.damageCover[]) THEN
-						SET damagedObjectsRefUnique.result[] = SELECT * FROM damagedObjectsRef.damages.Item[] AS t WHERE NOT EXISTS(t.damageCover[]);
-					ELSE
-						SET damagedObjectsRefUnique.result[] = SELECT * FROM damagedObjectsRef.damages.Item[] AS t WHERE t.damageCover.id = damagesRef.damageCover.id;
-					END IF;
-					IF NOT EXISTS(Environment.Variables.ClaimedCoverCreated.{cast(COALESCE(damagedObjectsRefUnique.result.damageCover.id,'11111') AS CHAR)}[]) THEN
-						SET Environment.Variables.ClaimedCoverCreated.{cast(COALESCE(damagedObjectsRefUnique.result.damageCover.id,'11111') AS CHAR)} = TRUE;
-						CREATE LASTCHILD OF outRef.(JSON.Array)"claimed-cover" AS claimedCoverRef NAME 'Item';
-						FOR damagesRef AS damagedObjectsRefUnique.result[] DO
-					   	
-					   	   	SET claimedCoverRef."functional-id"		= damagesRef.damageCover.id;
-					   	   	SET claimedCoverRef."technical-id"		= damagedObjectsRef.id;
-					   	   	SET claimedCoverRef.id 					= damagesRef.damageCover.id;
-					   		SET claimedCoverRef."cover-description" = damagesRef.damageCover.desc;				   		
-					   		SET claimedCoverRef."update-version"   	= damagedObjectsRef.updateVersion;
-							SET claimedCoverRef.status   			= damagedObjectsRef.damagedObjectStatus.desc;
-							SET claimedCoverRef."status-reason"     = damagedObjectsRef.damagedObjectStatusReason.desc;
-							SET claimedCoverRef."state-id"   	    = damagedObjectsRef.damagedObjectState.id;
-							SET claimedCoverRef."state-reason"	    = damagedObjectsRef.damagedObjectState.desc;
-							SET claimedCoverRef."cover-deductible"  = CAST(CAST(damagesRef.claimedCoverDeductible AS FLOAT) AS CHARACTER FORMAT pattern);	
-							SET claimedCoverRef."insured-amount"	= CAST(CAST(damagesRef.claimedCoverAggregatedInsuranceAmount AS FLOAT) AS CHARACTER FORMAT pattern);							
-														
-					   		--claimed-cover.claimed-damages	
-					   		CREATE FIELD claimedCoverRef."claimed-damages" AS claimedDamagesRef IDENTITY(JSON.Array)"claimed-damages";							
-							CREATE LASTCHILD OF claimedCoverRef."claimed-damages" AS claimedDamagesRef NAME 'Item';					  
-							SET claimedDamagesRef."functional-id"		                     = damagesRef.damageCode.id;
-							SET claimedDamagesRef."technical-id"		                     = damagesRef.id; 
-					   	    SET claimedDamagesRef.id   					                     = damagesRef.id;
-							SET claimedDamagesRef.extCode   			                     = damagesRef.damageCode.extCode;
-							SET claimedDamagesRef.description			                     = damagesRef.damageCode.desc;
-							SET claimedDamagesRef."status-id"			                     = damagesRef.damageStatus.id;
-							SET claimedDamagesRef."status-desc"			                     = damagesRef.damageStatus.desc;
-							SET claimedDamagesRef."state-id"			                     = damagesRef.damageState.id;
-							SET claimedDamagesRef."state-desc"			                     = damagesRef.damageState.desc;							
-							SET claimedDamagesRef."update-version"		                     = damagesRef.updateVersion;
-							SET claimedDamagesRef."insured-amount"		                     = CAST(CAST(damagesRef.claimedCoverInsuranceAmountPerEvent AS FLOAT) AS CHARACTER FORMAT pattern);
-							SET claimedDamagesRef."total-approved-claim-payment-amount"      = CAST(CAST(damagesRef.totalApprovedClaimPaymentsAmountPerDamage AS FLOAT) AS CHARACTER FORMAT pattern);
-							SET claimedDamagesRef."total-approved-claim-payment-gross-amount" = FormatAmount(COALESCE(CAST(damagesRef.totalApprovedClaimPaymentsAmountPerDamage AS DECIMAL), 0) + GetRetainedDeductibleForDamage(damagesRef));
-							SET claimedDamagesRef."total-unapproved-claim-payment-amount"    = CAST(CAST(damagesRef.totalUnapprovedClaimPaymentsAmountPerDamage AS FLOAT) AS CHARACTER FORMAT pattern);
-							SET claimedDamagesRef."total-approved-recovery-request-amount"   = CAST(CAST(damagesRef.totalApprovedRecoveryRequestsAmountPerDamage AS FLOAT) AS CHARACTER FORMAT pattern);
-							SET claimedDamagesRef."total-unapproved-recovery-request-amount" = CAST(CAST(damagesRef.totalUnapprovedRecoveryRequestsAmountPerDamage AS FLOAT) AS CHARACTER FORMAT pattern);
-							
-							DECLARE damagedObjectsDetailsRef REFERENCE TO OutputRoot.JSON.Data;	
-							CREATE LASTCHILD OF claimedDamagesRef AS damagedObjectsDetailsRef NAME 'damaged-objects-details';						 
-							--claimed-cover.claimed-damages.damaged-objects-details
-							IF EXISTS(damagedObjectsRef.damagedItems.Item[]) THEN						   						  
-							    FOR damagedItemsIDITRef AS damagedObjectsRef.damagedItems.Item[] DO
-							        CREATE LASTCHILD OF damagedObjectsDetailsRef.(JSON.Array)"damage-items" AS damagedItemsRef NAME 'Item';
-							   		SET damagedItemsRef."functional-id"  = damagedItemsIDITRef.itemType.id;
-							   		SET damagedItemsRef."technical-id"   = damagedItemsIDITRef.id;
-							   		SET damagedItemsRef.id				 = damagedItemsIDITRef.itemType.id;
-									SET damagedItemsRef.description		 = damagedItemsIDITRef.itemType.desc;
-									SET damagedItemsRef.remarks			 = damagedItemsIDITRef.itemType.remarks;
-									SET damagedItemsRef."total-loss"     = damagedItemsIDITRef.totalLoss;
-									SET damagedItemsRef."purchase-value" = CAST(CAST(damagedItemsIDITRef.purchaseValue AS FLOAT) AS CHARACTER FORMAT pattern);		
-									SET damagedItemsRef."ext-code"		 = damagedItemsIDITRef.itemType.extCode;
-									SET damagedItemsRef."is-active"		 = damagedItemsIDITRef.isActive;																						   		
-							   		MOVE damagedItemsIDITRef NEXTSIBLING;
-							    END FOR;						   		
-							END IF;
-						 	CASE productCode
-							 	WHEN '103' THEN 
-							 		-- call cdw();
-							 		FOR accidentCircumstancesQuestionnaireRef AS damagedObjectsRef.accidentCircumstancesQuestionnaire.Item[] DO
-								 		DECLARE questionnaireLineIBOs ROW;
-								 		SET questionnaireLineIBOs.result[] =  SELECT * 
-								 		                                      FROM accidentCircumstancesQuestionnaireRef.questionnaireLineIBOs.Item[] AS questionnaireLineIBOs 
-								 		                                      WHERE questionnaireLineIBOs.questionnaireLineVO.id = 1000005 OR
-								 		                                            questionnaireLineIBOs.questionnaireLineVO.id = 1000006 OR
-								 		                                            questionnaireLineIBOs.questionnaireLineVO.id = 1000008;
-								 		DECLARE cdwRef REFERENCE TO OutputRoot;
-								 		FOR questionnaireLineIBOsIditRef AS questionnaireLineIBOs.result[] DO
-								 			IF NOT EXISTS(damagedObjectsDetailsRef.CDW[]) THEN
-								 				CREATE LASTCHILD OF damagedObjectsDetailsRef AS cdwRef NAME 'CDW';
-								 			END IF;
-								 			SET cdwRef."technical-id" = questionnaireLineIBOsIditRef.id;
-							 				IF (questionnaireLineIBOsIditRef.questionnaireLineVO.id = '1000005') THEN
-						                		SET cdwRef."vehicle-type-one"	= questionnaireLineIBOsIditRef.answerIdValue;
-							 				END IF;
-							 				IF (questionnaireLineIBOsIditRef.questionnaireLineVO.id = '1000006') THEN
-						                		SET cdwRef."damage-type-one"	= questionnaireLineIBOsIditRef.answerIdValue;
-							 				END IF;
-							 				IF (questionnaireLineIBOsIditRef.questionnaireLineVO.id = '1000008') THEN
-						                		SET cdwRef."vehicle-type-two"	= questionnaireLineIBOsIditRef.answerIdValue;					 				
-							 				END IF;
-								 		END FOR;
-							 		END FOR;
-							 		-- call luggage();
-									 --DECLARE luggageRef REFERENCE TO OutputRoot;
-									 --CREATE LASTCHILD OF damagedObjectsDetailsRef AS luggageRef NAME 'luggage' value null;
-							 	WHEN '105' THEN 
-							 		-- call bike();
-							 		DECLARE bikeRef REFERENCE TO OutputRoot.JSON.Data;
-							 		FOR bikeIDITRef AS inRef.insuredBikeDetails.Item[] DO
-								 		CREATE LASTCHILD OF damagedObjectsDetailsRef.(JSON.Array)bike AS bikeRef NAME 'Item';
-								 		SET bikeRef.type				= bikeIDITRef.bikeType.desc;
-								 		SET bikeRef."type-ext-code"		= bikeIDITRef.bikeType.extCode;
-								 		SET bikeRef.brand				= bikeIDITRef.bikeBrand.desc;
-								 		SET bikeRef.color				= bikeIDITRef.bikeColor.extCode;
-								 		SET bikeRef."color-description"	= bikeIDITRef.bikeColor.desc;
-								 		SET bikeRef.frame				= bikeIDITRef.frame;	
-								 		SET bikeRef."25km-more"			= bikeIDITRef.reachesOver25KMperHour;	
-								 		SET bikeRef.plate				= bikeIDITRef.plate;
-								 		SET bikeRef."purchase-date"		= SUBSTRING(bikeIDITRef.purchaseDate BEFORE 'T');	
-								 		SET bikeRef."first-reg-date"	= SUBSTRING(bikeIDITRef.firstRegistrationDate BEFORE 'T');	
-								 		SET bikeRef."purchase-value"	= CAST(CAST(bikeIDITRef.bikeValue AS FLOAT) AS CHARACTER FORMAT pattern);
-							 		END FOR;						 									 									 								 		
-							 	WHEN '102' THEN 
-							 		-- call camping-material();	
-									 --DECLARE campingMaterialRef REFERENCE TO OutputRoot;
-									 --CREATE LASTCHILD OF damagedObjectsDetailsRef AS campingMaterialRef NAME 'camping-material' value null;
-							 		
-							 	END CASE;
-							--reserve
-							DECLARE reserveRef REFERENCE TO OutputRoot.JSON.Data;
-							DECLARE reimbursementRef REFERENCE TO OutputRoot.JSON.Data;
-							DECLARE recoveryRef REFERENCE TO OutputRoot.JSON.Data;
-							DECLARE reasonRef REFERENCE TO OutputRoot.JSON.Data;
-							FOR reserveIVORef AS damagesRef.reserveIVO.Item[] DO
-								--NIPO-6178, suite à implementation changer la langue, le mapping avec description ne marche plus,  il faut remplacer par id.
-								IF reserveIVORef.reserveTypeVO.id = 10001  THEN	-- 10001 'PAYMENT', Si le reserveTypeVO est payment, il faut créer le block reserve et reimbursement								
-									CREATE LASTCHILD OF claimedDamagesRef.(JSON.Array)reserve AS reserveRef NAME 'Item';
-									SET reserveRef."total-amount" = CAST(CAST(reserveIVORef.totalReserveAmount AS FLOAT) AS CHARACTER FORMAT pattern);
-									SET reserveRef.reason		  = reserveIVORef.claimReserveReasonVO.desc;
-									SET reserveRef.type			  = reserveIVORef.reserveTypeVO.desc;
-									SET reserveRef.currency		  = reserveIVORef.currencyVO.extCode;
-									DECLARE reservePaymentDetailsRef REFERENCE TO OutputRoot;
-									CREATE LASTCHILD OF reserveRef.(JSON.Array)"payment-details" AS reservePaymentDetailsRef NAME 'Item';
-									FOR reserveLineIVOsRef AS reserveIVORef.reserveLineIVOs.Item[] DO
-										SET reservePaymentDetailsRef.id					 = reserveLineIVOsRef.id;
-										SET reservePaymentDetailsRef."invoice-line-id"	 = reserveLineIVOsRef.invoiceLineVO.id;
-										SET reservePaymentDetailsRef."invoice-line-desc" = reserveLineIVOsRef.invoiceLineVO.desc;
-										SET reservePaymentDetailsRef.amount				 = CAST(CAST(reserveLineIVOsRef.amount AS FLOAT) AS CHARACTER FORMAT pattern);
-										SET reservePaymentDetailsRef."type-ext-code" 	 = reserveLineIVOsRef.creditDebitVO.extCode;
-										SET reservePaymentDetailsRef."prev-amount"		 = CAST(CAST(reserveLineIVOsRef.prevAmount AS FLOAT) AS CHARACTER FORMAT pattern);
-									END FOR;
-								END IF;	
-							END FOR;							
-							DECLARE rembourserPaymentDetailsRef REFERENCE TO OutputRoot.JSON.Data;
-							DECLARE recoveryPaymentDetailsRef REFERENCE TO OutputRoot.JSON.Data;							
-							FOR claimTransactionIVORef AS damagesRef.claimTransactionIVO.Item[] DO
-							    --reimbursement
-							    IF  claimTransactionIVORef.paymentTypeVO.id = 10001  THEN -- 10001 'PAYMENT'																											
-									CREATE LASTCHILD OF claimedDamagesRef.(JSON.Array)reimbursement AS reimbursementRef NAME 'Item';
-									SET reimbursementRef."estimated-amount" 			= CAST(damagesRef.estimatedDamageAmount AS DECIMAL);
-									    IF claimTransactionIVORef.statusVO.id = 2  THEN  -- 2 'APPROVED'
-											SET reimbursementRef."approved-amount"			= CAST(CAST(claimTransactionIVORef.totalTransactionAmount AS FLOAT) AS CHARACTER FORMAT pattern);
-									    END IF;
-									    IF  claimTransactionIVORef.statusVO.id = 1 --'PENDING'
-									    	OR claimTransactionIVORef.statusVO.id = 10001 -- 'PAYMENT TO APPROVE'
-									    	OR claimTransactionIVORef.statusVO.id = 3 --'REJECTED'
-									    	OR claimTransactionIVORef.statusVO.id = 10022 -- 'PENDING APPROVAL' 
-									    	OR claimTransactionIVORef.statusVO.id = 1000006 -- 'Ex-gratia payment to approve'
-									   	THEN
-											SET reimbursementRef."unapproved-amount"		= CAST(CAST(claimTransactionIVORef.totalTransactionAmount AS FLOAT) AS CHARACTER FORMAT pattern);
-									    END IF;
-										SET reimbursementRef.currency						= claimTransactionIVORef.currencyVO.extCode;
-									--rembourser payment-detail																						
-									FOR claimTransactionLineIVOsRef AS claimTransactionIVORef.claimTransactionLineIVOs.Item[] DO	
-										CREATE LASTCHILD OF reimbursementRef.(JSON.Array)"payment-details" AS rembourserPaymentDetailsRef NAME 'Item';																																							        								
-										SET rembourserPaymentDetailsRef.id					= claimTransactionLineIVOsRef.id;
-										SET rembourserPaymentDetailsRef."invoice-line-id"	= claimTransactionLineIVOsRef.invoiceLineVO.id;
-										SET rembourserPaymentDetailsRef."invoice-line-desc"	= claimTransactionLineIVOsRef.invoiceLineVO.desc;
-										SET rembourserPaymentDetailsRef.amount				= CAST(CAST(claimTransactionLineIVOsRef.amount AS FLOAT) AS CHARACTER FORMAT pattern);
-										SET rembourserPaymentDetailsRef."value-date"		= SUBSTRING(claimTransactionIVORef.valueDate BEFORE 'T');
-										SET rembourserPaymentDetailsRef."type-ext-code" 	= claimTransactionLineIVOsRef.creditDebitVO.extCode;
-										SET rembourserPaymentDetailsRef."payment-method"	= claimTransactionIVORef.claimPaymentMethodVO.extCode;
-										SET rembourserPaymentDetailsRef."iban-number"		= claimTransactionIVORef.ibanNumber;
-									END FOR;
-							    END IF;																				
-								--recovery
-								IF  claimTransactionIVORef.paymentTypeVO.id = 10002 THEN  --10002 'RECOVERY'
-									CREATE LASTCHILD OF claimedDamagesRef.(JSON.Array)recovery AS recoveryRef NAME 'Item';
-									SET recoveryRef."total-amount" 			        = CAST(CAST(claimTransactionIVORef.totalTransactionAmount AS FLOAT) AS CHARACTER FORMAT pattern);
-									FOR claimTransactionLineIVOsRef AS claimTransactionIVORef.claimTransactionLineIVOs.Item[] DO
-										CREATE LASTCHILD OF recoveryRef.(JSON.Array)reason AS reasonRef NAME 'Item';									
-										SET reasonRef							    = claimTransactionLineIVOsRef.creditDebitVO.extCode;
-									END FOR;
-									SET recoveryRef.type							= claimTransactionIVORef.paymentTypeVO.desc;	
-									SET recoveryRef.currency						= claimTransactionIVORef.currencyVO.extCode;
-								-- recovery payment-detail																									
-									FOR claimTransactionLineIVOsRef AS claimTransactionIVORef.claimTransactionLineIVOs.Item[] DO	
-										CREATE LASTCHILD OF recoveryRef.(JSON.Array)"payment-details" AS recoveryPaymentDetailsRef NAME 'Item';																			        								
-										SET recoveryPaymentDetailsRef.id				  = claimTransactionLineIVOsRef.id;
-										SET recoveryPaymentDetailsRef."invoice-line-id"	  = claimTransactionLineIVOsRef.invoiceLineVO.id;
-										SET recoveryPaymentDetailsRef."invoice-line-desc" = claimTransactionLineIVOsRef.invoiceLineVO.desc;
-										SET recoveryPaymentDetailsRef.amount			  = CAST(CAST(claimTransactionLineIVOsRef.amount AS FLOAT) AS CHARACTER FORMAT pattern);
-										SET recoveryPaymentDetailsRef."type-ext-code" 	  = claimTransactionLineIVOsRef.creditDebitVO.extCode;
-										SET recoveryPaymentDetailsRef."payment-method"	  = claimTransactionIVORef.claimPaymentMethodVO.extCode;
-										SET recoveryPaymentDetailsRef."iban-number"		  = claimTransactionIVORef.ibanNumber;
-									END FOR;									
-								END IF;
-							END FOR;		
-						END FOR;
-					   
-					END IF;
-					--NIPO-5484
-					--WARNING: claimedCoverRef is still assigned inside the damages loop below.
-					--If IDIT starts returning multiple damages for the same cover/damaged object, the last iteration wins.
-					--Current production payloads contain one damage only, so behaviour is unchanged for now.
-					SET claimedCoverRef."cover-deductible" = CAST(CAST(damagesRef.claimedCoverDeductible AS FLOAT) AS CHARACTER FORMAT pattern);
-					SET claimedCoverRef."insured-amount"   = CAST(CAST(damagesRef.claimedCoverAggregatedInsuranceAmount AS FLOAT) AS CHARACTER FORMAT pattern);
-				 END FOR;
-			END FOR;
-		END FOR;
-		
-		--claim-service-providers
-		DECLARE serviceProviderRef REFERENCE TO OutputRoot.JSON.Data;
-		FOR serviceProvidersIDITRef AS inRef.serviceProviders.Item[] DO
-			CREATE LASTCHILD OF outRef.(JSON.Array)"claim-service-providers" AS serviceProviderRef NAME 'Item';
-			SET serviceProviderRef."personal-id" = serviceProvidersIDITRef.contactExtNumber;
-			SET serviceProviderRef."type-id"	 = serviceProvidersIDITRef.serviceProviderTypeVO.id;						
-			SET serviceProviderRef."ext-code" 	 = serviceProvidersIDITRef.serviceProviderTypeVO.extCode;
-			SET serviceProviderRef.description   = serviceProvidersIDITRef.serviceProviderTypeVO.desc;
-		END FOR;
-	   
-	    RETURN TRUE;
-	END;
+			-- Buyer postal address
+			-- Address line 1 (street|street_number if both present)
+			SET refItem.buyer."buyer-postal-address"."address-line-1".content =
+				CASE 
+			      	WHEN refInvoice.debtor.street IS NOT NULL AND refInvoice.debtor.street_number IS NOT NULL THEN 
+			      		COALESCE(refInvoice.debtor.street, '') || '|' || COALESCE(refInvoice.debtor.street_number, '')
+			      	WHEN refInvoice.debtor.street IS NOT NULL THEN 
+			      		COALESCE(refInvoice.debtor.street, '')
+			      	WHEN refInvoice.debtor.street_number IS NOT NULL THEN 
+			      		COALESCE(refInvoice.debtor.street_number, '')
+			  		ELSE ''
+			  	END;
+			
+			-- Address line 2
+			SET refItem.buyer."buyer-postal-address"."address-line-2".content = COALESCE(refInvoice.debtor.complement, '');	
+			-- Address line 3
+			SET refItem.buyer."buyer-postal-address"."address-line-3".content = COALESCE(refInvoice.debtor.po_box, '');		
+			-- Post code
+			SET refItem.buyer."buyer-postal-address"."post-code".content = COALESCE(refInvoice.debtor.postal_code, '');		
+			-- City
+			SET refItem.buyer."buyer-postal-address".city.content = COALESCE(refInvoice.debtor.city, '');
 	
-	CREATE FUNCTION GetRetainedDeductibleForDamagedObject(IN damagedObjectRef REFERENCE) RETURNS DECIMAL
-	BEGIN
-		DECLARE retainedDeductibleAmount DECIMAL 0;
-		
-		FOR damagesRef AS damagedObjectRef.damages.Item[] DO
-			SET retainedDeductibleAmount = retainedDeductibleAmount + GetRetainedDeductibleForDamage(damagesRef);
-		END FOR;
-		
-		RETURN retainedDeductibleAmount;
-	END;
-	
-	CREATE FUNCTION GetRetainedDeductibleForDamage(IN damageRef REFERENCE) RETURNS DECIMAL
-	BEGIN
-		DECLARE deductibleDebitAmount DECIMAL 0;
-		DECLARE deductibleCounterBookingAmount DECIMAL 0;
-		
-		FOR claimTransactionIVORef AS damageRef.claimTransactionIVO.Item[] DO
-			IF claimTransactionIVORef.paymentTypeVO.id = 10001
-			   AND claimTransactionIVORef.statusVO.id = 2 THEN
-				FOR claimTransactionLineIVOsRef AS claimTransactionIVORef.claimTransactionLineIVOs.Item[] DO
-					DECLARE invoiceLineExtCode CHARACTER COALESCE(claimTransactionLineIVOsRef.invoiceLineVO.extCode, '');
-					DECLARE invoiceLineAmount DECIMAL ABS(COALESCE(CAST(claimTransactionLineIVOsRef.amount AS DECIMAL), 0));
-					
-					CASE invoiceLineExtCode
-						WHEN '500008' THEN
-							SET deductibleDebitAmount = deductibleDebitAmount + invoiceLineAmount;
-						WHEN '500110' THEN
-							SET deductibleCounterBookingAmount = deductibleCounterBookingAmount + invoiceLineAmount;
-					END CASE;
-				END FOR;
-			END IF;
-		END FOR;
-		
-		IF deductibleDebitAmount > deductibleCounterBookingAmount THEN
-			RETURN deductibleDebitAmount - deductibleCounterBookingAmount;
-		ELSE
-			RETURN 0;
-		END IF;
-	END;
-	
-	CREATE FUNCTION FormatAmount(IN amountValue DECIMAL) RETURNS CHARACTER
-	BEGIN
-		RETURN CAST(CAST(COALESCE(amountValue, 0) AS FLOAT) AS CHARACTER FORMAT '##0.00');
+			-- Country code
+			SET refItem.buyer."buyer-postal-address"."country-code".content = COALESCE(refInvoice.debtor.country_code, '');	
+					    
+			 -- Create the "invoice-line" array
+			CREATE FIELD refItem."invoice-line" TYPE JSON.Array;		
+			DECLARE articleRef REFERENCE TO refInvoice.articles.Item[1];
+			DECLARE i INTEGER 1;
+			
+			-- Loop through the articles in the input JSON
+			WHILE LASTMOVE(articleRef) DO
+				SET refItem."invoice-line".Item[i]."item-information"."item-description".content = COALESCE(articleRef.line_2, '');
+			   
+			    -- Add "item-name" object inside "item-information"
+			    SET refItem."invoice-line".Item[i]."item-information"."item-name".content = COALESCE(articleRef.line_1, '');
+			
+			    -- Add "item-sellers-identifier" array inside "item-information"
+			    CREATE FIELD refItem."invoice-line".Item[i]."item-information"."item-sellers-identifier" TYPE JSON.Array;
+			    SET refItem."invoice-line".Item[i]."item-information"."item-sellers-identifier".Item[1]."content" = COALESCE(articleRef.code, '');
+			    SET refItem."invoice-line".Item[i]."item-information"."item-sellers-identifier".Item[1]."scheme-identifier" = 'ARTICLE_CODE';
+			
+			    -- Add "invoiced-quantity" object
+			    SET refItem."invoice-line".Item[i]."invoiced-quantity".content = COALESCE(CAST(CAST(articleRef.quantity AS DECIMAL) AS CHARACTER FORMAT '##0.00'), '');
+			
+			    -- Add "price-details" object
+			    SET refItem."invoice-line".Item[i]."price-details"."item-net-price".content = COALESCE(CAST(articleRef.unit_price AS CHARACTER), '');
+			
+			    -- Add "invoiced-line-net-amount" object
+			    SET refItem."invoice-line".Item[i]."invoiced-line-net-amount".content = COALESCE(CAST(articleRef.price AS CHARACTER), '');
+			
+			    -- Add "invoiced-quantity-unit-of-measure-code" object
+			    SET refItem."invoice-line".Item[i]."invoiced-quantity-unit-of-measure-code".content = COALESCE(CAST(articleRef.unit_name AS CHARACTER), '');
+			    
+			    MOVE articleRef NEXTSIBLING;
+			    SET i = i + 1;
+			END WHILE;
+			
+			SET I = I + 1;
+		END WHILE;
+
+		RETURN TRUE;
 	END;
 END MODULE;
 --FC--
 
+--FN-- finance-accounting-integration-invoices-policy-project/apps/finance-accounting-integration-invoices-policy-project/common.policyxml --FN--
+--FC--
+<?xml version="1.0" encoding="UTF-8"?>
+<policies>
+  <policy policyType="UserDefined" policyName="common" policyTemplate="UserDefined">
+    <campingcar_camping_invoice_target>sapfi</campingcar_camping_invoice_target>
+    <campingcar_camping_invoice_application>finance-accounting-integration-technical-invoices-sapfi</campingcar_camping_invoice_application>
+    <campingcar_camping_invoice_endpoint>invoice</campingcar_camping_invoice_endpoint>
+    <campingcar_camping_invoice_timeout>55</campingcar_camping_invoice_timeout>
+    <campingcar_camping_invoice_call>callableAsync</campingcar_camping_invoice_call>
+    <idit_idit_claims_invoice_target>sapfi-claims</idit_idit_claims_invoice_target>
+    <idit_idit_claims_invoice_application>finance-accounting-integration-technical-invoices-sapfi-claims</idit_idit_claims_invoice_application>
+    <idit_idit_claims_invoice_endpoint>invoice</idit_idit_claims_invoice_endpoint>
+    <idit_idit_claims_invoice_timeout>55</idit_idit_claims_invoice_timeout>
+    <idit_idit_claims_invoice_call>callableAsync</idit_idit_claims_invoice_call>
+    <iditcloud_idit_claims_invoice_target>sapfi-claims</iditcloud_idit_claims_invoice_target>
+    <iditcloud_idit_claims_invoice_application>finance-accounting-integration-technical-invoices-sapfi-claims</iditcloud_idit_claims_invoice_application>
+    <iditcloud_idit_claims_invoice_endpoint>invoice</iditcloud_idit_claims_invoice_endpoint>
+    <iditcloud_idit_claims_invoice_timeout>55</iditcloud_idit_claims_invoice_timeout>
+    <iditcloud_idit_claims_invoice_call>callableAsync</iditcloud_idit_claims_invoice_call>
+    <sapfi_camping_invoice_ack_target>cc</sapfi_camping_invoice_ack_target>
+    <sapfi_camping_invoice_ack_application>finance-accounting-integration-technical-invoices-cc</sapfi_camping_invoice_ack_application>
+    <sapfi_camping_invoice_ack_endpoint>invoice</sapfi_camping_invoice_ack_endpoint>
+    <sapfi_camping_invoice_ack_timeout>55</sapfi_camping_invoice_ack_timeout>
+    <sapfi_camping_invoice_ack_call>callableAsync</sapfi_camping_invoice_ack_call>
+    <sapfi_idit_invoice_claims_ack_ko_target>idit</sapfi_idit_invoice_claims_ack_ko_target>
+    <sapfi_idit_invoice_claims_ack_ko_application>finance-accounting-integration-technical-invoices-idit</sapfi_idit_invoice_claims_ack_ko_application>
+    <sapfi_idit_invoice_claims_ack_ko_endpoint>invoice</sapfi_idit_invoice_claims_ack_ko_endpoint>
+    <sapfi_idit_invoice_claims_ack_ko_timeout>55</sapfi_idit_invoice_claims_ack_ko_timeout>
+    <sapfi_idit_invoice_claims_ack_ko_call>callableAsync</sapfi_idit_invoice_claims_ack_ko_call>
+    <sapfi_idit_invoice_claims_ack_ok_target>idit</sapfi_idit_invoice_claims_ack_ok_target>
+    <sapfi_idit_invoice_claims_ack_ok_application>finance-accounting-integration-technical-invoices-idit</sapfi_idit_invoice_claims_ack_ok_application>
+    <sapfi_idit_invoice_claims_ack_ok_endpoint>invoice</sapfi_idit_invoice_claims_ack_ok_endpoint>
+    <sapfi_idit_invoice_claims_ack_ok_timeout>55</sapfi_idit_invoice_claims_ack_ok_timeout>
+    <sapfi_idit_invoice_claims_ack_ok_call>callableAsync</sapfi_idit_invoice_claims_ack_ok_call>
+    <vtom_asv_intervention_customer_billing_target>financial-documents</vtom_asv_intervention_customer_billing_target>
+    <vtom_asv_intervention_customer_billing_application>finance-accounting-integration-technical-invoices-financial-documents</vtom_asv_intervention_customer_billing_application>
+    <vtom_asv_intervention_customer_billing_endpoint>sapnative</vtom_asv_intervention_customer_billing_endpoint>
+    <vtom_asv_intervention_customer_billing_timeout>55</vtom_asv_intervention_customer_billing_timeout>
+    <vtom_asv_intervention_customer_billing_call>httpAsync</vtom_asv_intervention_customer_billing_call>
+    <vtom_sarge_intervention_customer_billing_target>financial-documents</vtom_sarge_intervention_customer_billing_target>
+    <vtom_sarge_intervention_customer_billing_application>finance-accounting-integration-technical-invoices-financial-documents</vtom_sarge_intervention_customer_billing_application>
+    <vtom_sarge_intervention_customer_billing_endpoint>sapnative</vtom_sarge_intervention_customer_billing_endpoint>
+    <vtom_sarge_intervention_customer_billing_timeout>55</vtom_sarge_intervention_customer_billing_timeout>
+    <vtom_sarge_intervention_customer_billing_call>httpAsync</vtom_sarge_intervention_customer_billing_call>
+    <vtom_sarvd_intervention_customer_billing_target>financial-documents</vtom_sarvd_intervention_customer_billing_target>
+    <vtom_sarvd_intervention_customer_billing_application>finance-accounting-integration-technical-invoices-financial-documents</vtom_sarvd_intervention_customer_billing_application>
+    <vtom_sarvd_intervention_customer_billing_endpoint>sapnative</vtom_sarvd_intervention_customer_billing_endpoint>
+    <vtom_sarvd_intervention_customer_billing_timeout>55</vtom_sarvd_intervention_customer_billing_timeout>
+    <vtom_sarvd_intervention_customer_billing_call>httpAsync</vtom_sarvd_intervention_customer_billing_call>
+    <vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
+    <vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
+    <vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
+    <vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
+    <vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
+    <sfcas_assistance_case_payable_documents_async_target>financial-documents</sfcas_assistance_case_payable_documents_async_target>
+    <sfcas_assistance_case_payable_documents_async_application>finance-accounting-integration-technical-invoices-financial-documents-v2-payable-documents</sfcas_assistance_case_payable_documents_async_application>
+    <sfcas_assistance_case_payable_documents_async_endpoint>sapnative</sfcas_assistance_case_payable_documents_async_endpoint>
+    <sfcas_assistance_case_payable_documents_async_timeout>55</sfcas_assistance_case_payable_documents_async_timeout>
+    <sfcas_assistance_case_payable_documents_async_call>httpAsync</sfcas_assistance_case_payable_documents_async_call>
+    <sfcas_assistance_case_receivable_documents_async_target>financial-documents</sfcas_assistance_case_receivable_documents_async_target>
+    <sfcas_assistance_case_receivable_documents_async_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</sfcas_assistance_case_receivable_documents_async_application>
+    <sfcas_assistance_case_receivable_documents_async_endpoint>sapnative</sfcas_assistance_case_receivable_documents_async_endpoint>
+    <sfcas_assistance_case_receivable_documents_async_timeout>55</sfcas_assistance_case_receivable_documents_async_timeout>
+    <sfcas_assistance_case_receivable_documents_async_call>httpAsync</sfcas_assistance_case_receivable_documents_async_call>
+    <sapfi_assistance_case_payable_documents_ack_target>sfcas</sapfi_assistance_case_payable_documents_ack_target>
+	<sapfi_assistance_case_payable_documents_ack_application>services-integration-finance-accounting-assistance-payable-documents</sapfi_assistance_case_payable_documents_ack_application>
+	<sapfi_assistance_case_payable_documents_ack_endpoint>services</sapfi_assistance_case_payable_documents_ack_endpoint>
+	<sapfi_assistance_case_payable_documents_ack_timeout>55</sapfi_assistance_case_payable_documents_ack_timeout>
+	<sapfi_assistance_case_payable_documents_ack_call>httpAsync</sapfi_assistance_case_payable_documents_ack_call>
+	<sapfi_assistance_case_receivable_documents_ack_target>sfcas</sapfi_assistance_case_receivable_documents_ack_target>
+	<sapfi_assistance_case_receivable_documents_ack_application>services-integration-finance-accounting-assistance-receivable-documents</sapfi_assistance_case_receivable_documents_ack_application>
+	<sapfi_assistance_case_receivable_documents_ack_endpoint>services</sapfi_assistance_case_receivable_documents_ack_endpoint>
+	<sapfi_assistance_case_receivable_documents_ack_timeout>55</sapfi_assistance_case_receivable_documents_ack_timeout>
+	<sapfi_assistance_case_receivable_documents_ack_call>httpAsync</sapfi_assistance_case_receivable_documents_ack_call>
+  </policy>
+</policies>
+--FC--
+
 ---COMMENT---
-I updated insurance-claims-integration-technical-idit/apps/insurance_claims_integration_technical_idit/mappingResponseIditGetClaimByClaimId.esql for the second task.
+I added the new SANSYS trigger operations and the routing tuple needed for NIPO-9498.
 
-What changed:
-- Added BOM field total-approved-claim-payment-gross-amount at:
-  - claim root level, next to total-approved-claim-payment-amount
-  - claimed-damages item level, next to total-approved-claim-payment-amount
-- Implemented retained deductible calculation from approved PAYMENT claimTransactionIVO lines only:
-  - deductible lines: invoiceLineVO.extCode = 500008
-  - counter-booking lines: invoiceLineVO.extCode = 500110
-  - sign-safe logic: retained = max(0, sum(abs(500008)) - sum(abs(500110)))
-  - gross = net + retained
-- Added a warning comment near the existing NIPO-5484 overwrite logic to document the current "last damage wins" behavior if multi-damage payloads appear later.
+Changed:
+- Added `/sansys-files-injection-trigger` and `/sansys-files-purge-trigger` to the ACE OpenAPI file.
+- Registered both new operations in `restapi.descriptor`.
+- Extended the generated REST dispatcher flow to include both new operations.
+- Created:
+  - `postSansys_files_injection_trigger.subflow`
+  - `postSansys_files_purge_trigger.subflow`
+  - `sansys/PrepareHTTPRequest.esql`
+- Added the 5 required routing properties to `finance-accounting-integration-invoices-policy-project/common.policyxml`:
+  - `vtom_ambulance_transport_billing_target`
+  - `vtom_ambulance_transport_billing_application`
+  - `vtom_ambulance_transport_billing_endpoint`
+  - `vtom_ambulance_transport_billing_timeout`
+  - `vtom_ambulance_transport_billing_call`
 
-Assumptions made:
-- I aligned the gross computation with approved payments only, because the target field is total-approved-claim-payment-gross-amount and the net source is the approved amount.
-- Because the requested level was slightly ambiguous and current production has one damage per object, I exposed the new gross amount both:
-  - at claim root level, to mirror the existing root total-approved-claim-payment-amount
-  - at claimed-damages level, where downstream mappings already navigate for neighboring damage data
-- I did not expose invoiceLineVO.extCode in the output BOM because it was only required to compute the new gross field.
+Assumptions and notes:
+- I followed the existing ingestion-operation skeleton used by ASV/SARGE/SARVD.
+- For the new Sansys request mapping, I assumed the emitted `process-control.specification-identifier` must be `AMBULANCE_TRANSPORT_BILLING` so the new routing tuple resolves correctly.
+- I assumed the SFTP security identity should follow the established naming convention and used `SANSYSAceSftpIdentity`.
+- I left the existing REST schema version and existing path response structures unchanged, because you asked to follow the current ACE schema style rather than fully re-aligning it to the upstream original schema.
+- I did not modify `finance-integration-policies-endpoints/AceEndPointsPolicy.policyxml` because the required path `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents` already exists in the supplied sources.
+- I did not introduce a `SANSYS.policyxml`, per the task note that the caller remains `VTOM`.
+- I kept the routing policy change additive only; in `common.policyxml` I added only the 5 new tuple properties and did not alter existing VTOM Attrib tuples.
 
-Limitation / incomplete part:
-- I could not implement the first task in support-content-mgt-integration-claims-business-events / BuildXMLDocument.esql because that repository/file content was not provided in the supplied source set. So I made the safe partial change that was possible in the provided project only.
+One uncertainty:
+- No explicit Sansys payload-mapping specification was provided beyond “similar to ASV/Sarge/SarVd”, so the new `sansys/PrepareHTTPRequest.esql` was implemented as the closest existing pattern with the required neutral process-control value. If Sansys requires extra fields specific to the v2 financial-documents contract, that would need a follow-up adjustment.
 ---COMMENT---

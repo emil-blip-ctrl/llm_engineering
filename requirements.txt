@@ -9,6 +9,7 @@ scikit-learn
 matplotlib
 torch
 transformers
+peft
 tqdm
 openai
 gradio

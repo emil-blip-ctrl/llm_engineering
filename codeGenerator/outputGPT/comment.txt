@@ -1,23 +1,28 @@
-I updated insurance-claims-integration-technical-idit/apps/insurance_claims_integration_technical_idit/mappingResponseIditGetClaimByClaimId.esql for the second task.
+I added the new SANSYS trigger operations and the routing tuple needed for NIPO-9498.
 
-What changed:
-- Added BOM field total-approved-claim-payment-gross-amount at:
-  - claim root level, next to total-approved-claim-payment-amount
-  - claimed-damages item level, next to total-approved-claim-payment-amount
-- Implemented retained deductible calculation from approved PAYMENT claimTransactionIVO lines only:
-  - deductible lines: invoiceLineVO.extCode = 500008
-  - counter-booking lines: invoiceLineVO.extCode = 500110
-  - sign-safe logic: retained = max(0, sum(abs(500008)) - sum(abs(500110)))
-  - gross = net + retained
-- Added a warning comment near the existing NIPO-5484 overwrite logic to document the current "last damage wins" behavior if multi-damage payloads appear later.
+Changed:
+- Added `/sansys-files-injection-trigger` and `/sansys-files-purge-trigger` to the ACE OpenAPI file.
+- Registered both new operations in `restapi.descriptor`.
+- Extended the generated REST dispatcher flow to include both new operations.
+- Created:
+  - `postSansys_files_injection_trigger.subflow`
+  - `postSansys_files_purge_trigger.subflow`
+  - `sansys/PrepareHTTPRequest.esql`
+- Added the 5 required routing properties to `finance-accounting-integration-invoices-policy-project/common.policyxml`:
+  - `vtom_ambulance_transport_billing_target`
+  - `vtom_ambulance_transport_billing_application`
+  - `vtom_ambulance_transport_billing_endpoint`
+  - `vtom_ambulance_transport_billing_timeout`
+  - `vtom_ambulance_transport_billing_call`
 
-Assumptions made:
-- I aligned the gross computation with approved payments only, because the target field is total-approved-claim-payment-gross-amount and the net source is the approved amount.
-- Because the requested level was slightly ambiguous and current production has one damage per object, I exposed the new gross amount both:
-  - at claim root level, to mirror the existing root total-approved-claim-payment-amount
-  - at claimed-damages level, where downstream mappings already navigate for neighboring damage data
-- I did not expose invoiceLineVO.extCode in the output BOM because it was only required to compute the new gross field.
+Assumptions and notes:
+- I followed the existing ingestion-operation skeleton used by ASV/SARGE/SARVD.
+- For the new Sansys request mapping, I assumed the emitted `process-control.specification-identifier` must be `AMBULANCE_TRANSPORT_BILLING` so the new routing tuple resolves correctly.
+- I assumed the SFTP security identity should follow the established naming convention and used `SANSYSAceSftpIdentity`.
+- I left the existing REST schema version and existing path response structures unchanged, because you asked to follow the current ACE schema style rather than fully re-aligning it to the upstream original schema.
+- I did not modify `finance-integration-policies-endpoints/AceEndPointsPolicy.policyxml` because the required path `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents` already exists in the supplied sources.
+- I did not introduce a `SANSYS.policyxml`, per the task note that the caller remains `VTOM`.
+- I kept the routing policy change additive only; in `common.policyxml` I added only the 5 new tuple properties and did not alter existing VTOM Attrib tuples.
 
-Limitation / incomplete part:
-- I could not implement the first task in support-content-mgt-integration-claims-business-events / BuildXMLDocument.esql because that repository/file content was not provided in the supplied source set. 
-So I made the safe partial change that was possible in the provided project only.
+One uncertainty:
+- No explicit Sansys payload-mapping specification was provided beyond “similar to ASV/Sarge/SarVd”, so the new `sansys/PrepareHTTPRequest.esql` was implemented as the closest existing pattern with the required neutral process-control value. If Sansys requires extra fields specific to the v2 financial-documents contract, that would need a follow-up adjustment.
