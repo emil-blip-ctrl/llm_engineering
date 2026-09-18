@@ -1,0 +1,8 @@
+Updated the invoice accounting update logic in `updateSAPPayment_updateRequestPayments.esql` for the “SAP status not empty” case to match your new requirement:
+
+- If SAP status is not empty **and** Salesforce status is **Posted**:  
+  the update now includes `Status = 'In progress'` in addition to `Id`, `IntegrationMessage__c`, and `IntegrationCode__c`.
+- If SAP status is not empty **and** Salesforce status is **not Posted**:  
+  the update remains `Id`, `IntegrationMessage__c`, and `IntegrationCode__c` only.
+
+I implemented this with minimal impact by keeping the existing error template and conditionally adding `tempo.Status = 'In progress'` only for posted records. No policy/template files were changed.

@@ -1,0 +1,38 @@
+CREATE COMPUTE MODULE SansysResponsePassthrough
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE enc INTEGER COALESCE(InputRoot.Properties.Encoding, 546);
+		DECLARE charSet INTEGER COALESCE(InputRoot.Properties.CodedCharSetId, 1208);
+
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot.Properties = InputRoot.Properties;
+
+		IF EXISTS(InputRoot.JSON[]) THEN
+			SET OutputRoot.JSON = InputRoot.JSON;
+		ELSEIF EXISTS(InputRoot.BLOB.BLOB[]) THEN
+			CREATE LASTCHILD OF OutputRoot DOMAIN('JSON') PARSE(InputRoot.BLOB.BLOB CCSID charSet ENCODING enc);
+		ELSE
+			SET OutputRoot = InputRoot;
+		END IF;
+
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode =
+			COALESCE(CAST(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" AS INTEGER DEFAULT NULL), 202);
+
+		IF EXISTS(OutputRoot.JSON.Data.meta.submissionId[]) THEN
+			SET Environment.Variables.TCSLog.context."business-identifiers".submissionId = OutputRoot.JSON.Data.meta.submissionId;
+		END IF;
+
+		IF EXISTS(OutputRoot.JSON.Data.data.status[]) THEN
+			SET Environment.Variables.TCSLog.context."business-identifiers".status = OutputRoot.JSON.Data.data.status;
+		END IF;
+
+		IF EXISTS(OutputRoot.JSON.Data.data.receivedCount[]) THEN
+			SET Environment.Variables.TCSLog.context."business-identifiers".receivedCount = OutputRoot.JSON.Data.data.receivedCount;
+		END IF;
+
+		DELETE FIELD Environment.Variables.TCSLog.context."business-identifiers"."INVOICE_ID";
+		DELETE FIELD Environment.Variables.TCSLog.context."business-identifiers"."FIP_NUMBER";
+
+		RETURN TRUE;
+	END;
+END MODULE;

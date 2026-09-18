@@ -1,0 +1,895 @@
+openapi: 3.0.1
+info:
+  title: Ambulance Invoices Integration Trigger
+  x-ibm-name: finance-accounting-api-invoices-ingestion
+  version: 2.2.0
+  description: |
+    **Finance & Accounting API: Invoice Integration Trigger**
+
+    This API facilitates file-based integration workflows between external systems and SAP for finance and accounting purposes.
+ 
+     ### Documentation
+    - [Invoice and Payments Financial Data Flows](https://tcsgroup.atlassian.net/wiki/x/HgvwAg)
+    - [API Documentation](https://tcsgroup.atlassian.net/wiki/x/MIAmJ)
+    - [Initial API Story](https://tcsgroup.atlassian.net/browse/NIPO-6628)
+
+  contact:
+    name: 05_IT_Applications_Solutions
+    email: 05_IT_Applications_Solutions@tcs.ch
+
+x-change-log:
+  - date: 2025-09-03
+    author: HUENI Victor
+    from: 1.0.0
+    to: 2.0.0
+    description: |
+      Breaking changes : All the response body changes
+      Change the flow from async to sync with a multi items response
+      Add example in the response of the ingestion
+      Add GET /health operation
+    ticket: https://tcsgroup.atlassian.net/browse/NIPO-7290
+  - date: 2025-09-22
+    author: HUENI Victor
+    from: 2.0.0
+    to: 2.1.0
+    description: |
+      Added two new operations:
+      - POST /sarge-files-injection-trigger (copy of /asv-files-injection-trigger)
+      - POST /sarge-files-purge-trigger (copy of /asv-files-purge-trigger)
+    ticket: https://tcsgroup.atlassian.net/browse/NIPO-7289
+  - date: 2025-09-25
+    author: HUENI Victor
+    from: 2.1.0
+    to: 2.2.0
+    description: |
+      Added two new operations:
+      - POST /sarvd-files-injection-trigger (copy of /asv-files-injection-trigger)
+      - POST /sarvd-files-purge-trigger (copy of /asv-files-purge-trigger)
+    ticket: https://tcsgroup.atlassian.net/browse/NIPO-7376
+
+externalDocs:
+  description: SP TCS multi-business invoice financial data flows
+  url: https://tcsgroup.atlassian.net/wiki/x/HgvwAg
+  
+servers:
+  - url: /finance-accounting/v2/invoice-ingestion
+paths:
+  /asv-files-injection-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionResponse'
+              examples:
+                SuccessfulProcessing:
+                  $ref: '#/components/examples/SuccessfulProcessing'
+                FailedProcessing:
+                  $ref: '#/components/examples/FailedProcessing'
+                PartialFailureProcessing:
+                  $ref: '#/components/examples/PartialFailureProcessing'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+              examples:
+                EmptyProcessing:
+                  $ref: '#/components/examples/EmptyProcessing'
+                TechnicalIssueOnTheFlow:
+                  $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /asv-files-purge-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarge-files-injection-trigger:
+      post:
+        tags:
+          - SARGE Attrib
+        description: Post a notification to start files injection flow
+        responses:
+          '200':
+            description: File ingestion triggered successfully.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/IngestionResponse'
+                examples:
+                  SuccessfulProcessing:
+                    $ref: '#/components/examples/SuccessfulProcessing'
+                  FailedProcessing:
+                    $ref: '#/components/examples/FailedProcessing'
+                  PartialFailureProcessing:
+                    $ref: '#/components/examples/PartialFailureProcessing'
+          '400':
+            description: Bad Request.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '401':
+            description: Unauthorized.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '403':
+            description: Forbidden.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '404':
+            description: Not Found.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '422':
+            description: Unprocessable Entity.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '429':
+            description: Too Many Requests.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '500':
+            description: Internal Server Error.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+                examples:
+                  EmptyProcessing:
+                    $ref: '#/components/examples/EmptyProcessing'
+                  TechnicalIssueOnTheFlow:
+                    $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+          '502':
+            description: Bad Gateway.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '503':
+            description: Service Unavailable.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+  /sarge-files-purge-trigger:
+    post:
+      tags:
+        - SARGE Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'  
+  /sarvd-files-injection-trigger:
+    post:
+        tags:
+          - SAR VD Attrib
+        description: Post a notification to start files injection flow
+        responses:
+          '200':
+            description: File ingestion triggered successfully.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/IngestionResponse'
+                examples:
+                  SuccessfulProcessing:
+                    $ref: '#/components/examples/SuccessfulProcessing'
+                  FailedProcessing:
+                    $ref: '#/components/examples/FailedProcessing'
+                  PartialFailureProcessing:
+                    $ref: '#/components/examples/PartialFailureProcessing'
+          '400':
+            description: Bad Request.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '401':
+            description: Unauthorized.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '403':
+            description: Forbidden.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '404':
+            description: Not Found.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '422':
+            description: Unprocessable Entity.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '429':
+            description: Too Many Requests.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '500':
+            description: Internal Server Error.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+                examples:
+                  EmptyProcessing:
+                    $ref: '#/components/examples/EmptyProcessing'
+                  TechnicalIssueOnTheFlow:
+                    $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+          '502':
+            description: Bad Gateway.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+          '503':
+            description: Service Unavailable.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServiceError'
+  /sarvd-files-purge-trigger:
+    post:
+      tags:
+        - SAR VD Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-injection-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionResponse'
+              examples:
+                SuccessfulProcessing:
+                  $ref: '#/components/examples/SuccessfulProcessing'
+                FailedProcessing:
+                  $ref: '#/components/examples/FailedProcessing'
+                PartialFailureProcessing:
+                  $ref: '#/components/examples/PartialFailureProcessing'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+              examples:
+                EmptyProcessing:
+                  $ref: '#/components/examples/EmptyProcessing'
+                TechnicalIssueOnTheFlow:
+                  $ref: '#/components/examples/TechnicalIssueOnTheFlow'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-purge-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /health:
+    get:
+      summary: Pings the target receiver to check the connection
+      operationId: get-health
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthType'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+components:
+  schemas:
+    ServiceError:
+      title: ServiceError
+      type: object
+      description: Object returned when errors occurred
+      properties:
+        httpCode:
+          type: string
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+
+    IngestionResponse:
+      title: IngestionResponse
+      type: object
+      description: Detailed response for invoice ingestion, including per-invoice results.
+      properties:
+        status:
+          type: string
+          description: Overall status of the ingestion process.
+          enum: [success, partial_success, failure]
+          example: partial_success
+        summary:
+          type: object
+          description: Summary of the ingestion results.
+          properties:
+            processed:
+              type: integer
+              example: 5
+            successful:
+              type: integer
+              example: 3
+            failed:
+              type: integer
+              example: 2
+          required:
+            - processed
+            - successful
+            - failed
+        results:
+          type: array
+          description: List of individual invoice processing results.
+          items:
+            type: object
+            properties:
+              reference:
+                type: string
+                description: FIP number associated with the invoice.
+                example: "123"
+              status:
+                type: string
+                description: Status of the invoice processing.
+                enum: [success, failure]
+                example: success
+              message:
+                type: string
+                description: Message describing the result.
+                example: Invoice processed successfully.
+            required:
+              - reference
+              - status
+              - message
+      required:
+        - status
+        - summary
+        - results
+
+    PurgeResponse:
+      title: PurgeResponse
+      type: object
+      description: Response returned when the Purge is successfully triggered.
+      properties:
+        httpCode:
+          type: integer
+          example: 202
+        httpMessage:
+          type: string
+          example: "Accepted"
+        moreInformation:
+          type: string
+          example: "ASV File Purge triggered properly"
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+        
+    HealthType:
+      type: object
+      properties:
+        status:
+          type: string
+          description: status of the health check
+          enum: [pass, error]
+        api:
+          type: string
+          description: api/app name of the component
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Check'
+    Check:
+      type: object
+      description: 'describe a component check (MQ, DataBase, BackEnd etc..)'
+      properties:
+        component:
+          type: string
+          description: 'name of the tested component (MQ, Baloise, Toni, etc..)'
+        status:
+          type: string
+          description: status of the tested component
+          enum: [pass, error, warn]
+        details:
+          type: string
+          description: details
+
+  examples:
+    EmptyProcessing:
+      summary: No invoices processed
+      value:
+        httpCode: '500'
+        httpMessage: 'Internal server error'
+        moreInformation: 'Error reading file. File is missing, file is empty or file is bad formated(JSON)'
+    TechnicalIssueOnTheFlow:
+      summary: Either ACE app / SAP is having tehcnical issue
+      value:
+        httpCode: '500'
+        httpMessage: 'Internal server error'
+        moreInformation: 'Error calling SAP. Invoices moved to error file'
+    FailedProcessing:
+      summary: All invoices failed
+      value:
+        status: failure
+        summary:
+          processed: 2
+          successful: 0
+          failed: 2
+        results: 
+          - reference: '123'
+            status: failure
+            message: Invoice not processed.
+          - reference: '456'
+            status: failure
+            message: Invoice not processed.
+    SuccessfulProcessing:
+      summary: All invoices processed successfully
+      value:
+        status: success
+        summary:
+          processed: 2
+          successful: 2
+          failed: 0
+        results: 
+          - reference: '123'
+            status: success
+            message: Invoice processed successfully.
+          - reference: '456'
+            status: success
+            message: Invoice processed successfully.
+    PartialFailureProcessing:
+      summary: Some invoices failed
+      value:
+        status: partial_success
+        summary:
+          processed: 5
+          successful: 3
+          failed: 2
+        results:
+        - reference: '123'
+          status: success
+          message: Invoice processed successfully.
+        - reference: '456'
+          status: success
+          message: Invoice processed successfully.
+        - reference: '789'
+          status: failure
+          message: 'Validation error: missing tax code.'
+        - reference: '101112'
+          status: success
+          message: Invoice processed successfully.
+        - reference: '131415'
+          status: failure
+          message: Internal server error during BAPI execution.

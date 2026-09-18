@@ -1,0 +1,28 @@
+I made two groups of changes because your request combined:
+1) adding the new SANSYS trigger operations in the ingestion app, and
+2) implementing the NIPO-9498 routing tuple in the shared policy project.
+
+Changed/generated files:
+- Added `/sansys-files-injection-trigger` and `/sansys-files-purge-trigger` to the ingestion OpenAPI descriptor file.
+- Updated `restapi.descriptor` and generated main REST msgflow to register the 2 new Sansys operations.
+- Added new subflows:
+  - `postSansys_files_injection_trigger.subflow`
+  - `postSansys_files_purge_trigger.subflow`
+- Added new Sansys request mapping ESQL:
+  - `sansys/PrepareHTTPRequest.esql`
+- Added a Sansys-specific process-file preparation module in `PrepareAndProcessFile.esql` so Sansys targets the v2 receivable-documents route path:
+  - `path-finance-accounting-integration-invoice-v2-receivable-documents`
+- Added `SansysResponsePassthrough.esql` to normalize the v2 route app HTTP response back to the REST caller.
+- Added the exact 5 new routing properties required by NIPO-9498 to `finance-accounting-integration-invoices-policy-project/common.policyxml`.
+
+Important assumptions / limitations:
+- I assumed the actual inbound `X-Origin-Caller-Code` remains `VTOM`, exactly as described in the task. The added policy tuple uses the `vtom_ambulance_transport_billing_*` prefix.
+- I assumed the SFTP identity naming for the new file nodes is `SANSYSAceSftpIdentity`, following the existing project naming pattern (`ASVAceSftpIdentity`, `SARGEAceSftpIdentity`, `SARVDAceSftpIdentity`). This identity/policy value was not explicitly provided in the source.
+- I assumed the Sansys trigger should call the v2 receivable-documents routing endpoint, based on NIPO-9498, so I introduced `PrepareProcessFileSansys`.
+- Because no dedicated Sansys input mapping contract was supplied, I followed the existing ASV/SARGE/SARVD skeleton and reused that payload style, while additionally stamping the company-neutral v2 routing key in `processControl.specificationIdentifier` with `AMBULANCE_TRANSPORT_BILLING`.
+- I did not change `finance-integration-policies-endpoints/AceEndPointsPolicy` because the required path already exists in the provided source:
+  - `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents`
+- I did not add any `SANSYS.policyxml`, per the task.
+- I kept the existing OpenAPI version/changelog metadata unchanged because the authoritative release metadata for the current repo file was not fully provided, and you mentioned the schema is only used for generation.
+
+If you want, I can also produce a second pass that refactors the Sansys injection flow to match a stricter v2 payload contract, but that would require the exact Sansys mapped request body expected by the v2 technical flow.

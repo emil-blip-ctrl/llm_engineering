@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:restapiDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.restapi" definitionType="openapi_3" definitionFile="finance-accounting-api-invoice 2.1.0.yml" implementation="gen/finance_accounting_integration_invoices_ingestion.msgflow" https="true" definitionWithExtRef="false" faultFormat="JSON">
+    <references>
+        <sharedLibraryReference>
+            <libraryName>common-integration-shlib-encapsulate-calls</libraryName>
+        </sharedLibraryReference>
+        <sharedLibraryReference>
+            <libraryName>SHLIB_PoliciesReader</libraryName>
+        </sharedLibraryReference>
+    </references>
+    <ns2:operations>
+        <ns2:operation name="get-health" implementation="get_health.subflow"/>
+        <ns2:operation name="postAsv-files-injection-trigger" implementation="postAsv_files_injection_trigger.subflow"/>
+        <ns2:operation name="postAsv-files-purge-trigger" implementation="postAsv_files_purge_trigger.subflow"/>
+        <ns2:operation name="postSarge-files-injection-trigger" implementation="postSarge_files_injection_trigger.subflow"/>
+        <ns2:operation name="postSarge-files-purge-trigger" implementation="postSarge_files_purge_trigger.subflow"/>
+        <ns2:operation name="postSarvd-files-injection-trigger" implementation="postSarvd_files_injection_trigger.subflow"/>
+        <ns2:operation name="postSarvd-files-purge-trigger" implementation="postSarvd_files_purge_trigger.subflow"/>
+        <ns2:operation name="postSansys-files-injection-trigger" implementation="postSansys_files_injection_trigger.subflow"/>
+        <ns2:operation name="postSansys-files-purge-trigger" implementation="postSansys_files_purge_trigger.subflow"/>
+    </ns2:operations>
+    <ns2:errorHandlers/>
+</ns2:restapiDescriptor>

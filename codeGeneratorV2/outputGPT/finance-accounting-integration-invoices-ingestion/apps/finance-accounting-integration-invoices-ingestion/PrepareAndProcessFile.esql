@@ -1,0 +1,314 @@
+CREATE COMPUTE MODULE PrepareProcessFile
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		-- extract policy values
+		DECLARE "ace-host-finance" CHARACTER Shlib_PoliciesReader.gestionPolicy('{common-integration-policies-endpoints}:AceEndpointsPolicy',  'ace-host-finance');
+		
+		SET Environment.Variables.Policy.RequestURL_invoice = "ace-host-finance" || Shlib_PoliciesReader.getPolicyProperty('{finance-integration-policies-endpoints}:AceEndPointsPolicy', 'path-finance-accounting-integration-invoice');
+		
+		CREATE FIELD Environment.Variables.Policy."finance-integration-policies-endpoints".SftpEndPointsPolicy;
+		DECLARE RefSftpEndPointsPolicy REFERENCE TO Environment.Variables.Policy."finance-integration-policies-endpoints".SftpEndPointsPolicy;
+		call Shlib_PoliciesReader.getAllPolicyProperties('finance-integration-policies-endpoints','SftpEndPointsPolicy',RefSftpEndPointsPolicy);
+		if EXISTS(RefSftpEndPointsPolicy.error[]) then
+			THROW USER EXCEPTION VALUES('''{finance-integration-policies-endpoints''}:SftpEndPointsPolicy not found'); 
+		elseif not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_DONE_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_DONE_DIRECTORY not found'); 
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_ERROR_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_ERROR_DIRECTORY not found');
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_SAVE_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_SAVE_DIRECTORY not found');
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_INPUT_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_INPUT_DIRECTORY not found');
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_LOCAL_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_LOCAL_DIRECTORY not found');
+		end if;
+		SET OutputLocalEnvironment.Destination.File.Directory = RefSftpEndPointsPolicy.post_injection_INVOICE_LOCAL_DIRECTORY ;
+		SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory = RefSftpEndPointsPolicy.post_injection_INVOICE_INPUT_DIRECTORY;
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE PrepareProcessFileSansys
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		-- extract policy values
+		DECLARE "ace-host-finance" CHARACTER Shlib_PoliciesReader.gestionPolicy('{common-integration-policies-endpoints}:AceEndpointsPolicy',  'ace-host-finance');
+		
+		SET Environment.Variables.Policy.RequestURL_invoice = "ace-host-finance" || Shlib_PoliciesReader.getPolicyProperty('{finance-integration-policies-endpoints}:AceEndPointsPolicy', 'path-finance-accounting-integration-invoice-v2-receivable-documents');
+		
+		CREATE FIELD Environment.Variables.Policy."finance-integration-policies-endpoints".SftpEndPointsPolicy;
+		DECLARE RefSftpEndPointsPolicy REFERENCE TO Environment.Variables.Policy."finance-integration-policies-endpoints".SftpEndPointsPolicy;
+		call Shlib_PoliciesReader.getAllPolicyProperties('finance-integration-policies-endpoints','SftpEndPointsPolicy',RefSftpEndPointsPolicy);
+		if EXISTS(RefSftpEndPointsPolicy.error[]) then
+			THROW USER EXCEPTION VALUES('''{finance-integration-policies-endpoints''}:SftpEndPointsPolicy not found'); 
+		elseif not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_DONE_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_DONE_DIRECTORY not found'); 
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_ERROR_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_ERROR_DIRECTORY not found');
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_SAVE_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_SAVE_DIRECTORY not found');
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_INPUT_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_INPUT_DIRECTORY not found');
+		elseif	  not EXISTS(RefSftpEndPointsPolicy.post_injection_INVOICE_LOCAL_DIRECTORY[]) then
+			THROW USER EXCEPTION VALUES('property post_injection_INVOICE_LOCAL_DIRECTORY not found');
+		end if;
+		SET OutputLocalEnvironment.Destination.File.Directory = RefSftpEndPointsPolicy.post_injection_INVOICE_LOCAL_DIRECTORY ;
+		SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory = RefSftpEndPointsPolicy.post_injection_INVOICE_INPUT_DIRECTORY;
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE PrepareSaveFile
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE currentTimestamp CHARACTER CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMdd_HHmmss');
+		SET OutputLocalEnvironment.Destination.File.Name =  currentTimestamp || '_' || InputLocalEnvironment.File.Read.Name;
+		DECLARE RefSftpEndPointsPolicy REFERENCE TO Environment.Variables.Policy."finance-integration-policies-endpoints".SftpEndPointsPolicy;
+		
+		SET OutputLocalEnvironment.Destination.File.Directory = RefSftpEndPointsPolicy.post_injection_INVOICE_LOCAL_DIRECTORY ;
+		SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory = RefSftpEndPointsPolicy.post_injection_INVOICE_SAVE_DIRECTORY;
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE post_injection_tcs_invoice_split_validation
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- ERROR HANDLE will execute the code inside in case of any error
+		DECLARE EXIT HANDLER FOR SQLSTATE VALUE ''
+        BEGIN
+        	SET Environment.invalidFile = TRUE;
+        	PROPAGATE TO TERMINAL 'out3' DELETE NONE;
+            RETURN FALSE ;
+        END;
+		
+		
+		IF EXISTS(InputRoot.JSON.Data.invoices.Item[]) = FALSE THEN
+			SET Environment.invalidFile = TRUE;
+			PROPAGATE TO TERMINAL 'out3' DELETE NONE;
+			RETURN FALSE;
+		END IF;
+		
+		SET OutputRoot = InputRoot;
+		DECLARE inputRef REFERENCE TO InputRoot.JSON.Data.invoices;
+		DECLARE I INTEGER 1;
+		DECLARE invoiceCount INTEGER;
+		DECLARE validationErrorCount INTEGER 0;
+		
+		-- Get the number of invoices
+		SET invoiceCount = CARDINALITY(inputRef.[]);
+		DECLARE RefSftpEndPointsPolicy REFERENCE TO Environment.Variables.Policy."finance-integration-policies-endpoints".SftpEndPointsPolicy;
+		-- Loop through all invoices
+		WHILE I <= invoiceCount DO
+
+			DECLARE jsonDoc REFERENCE TO inputRef.[I];
+			DECLARE articleList REFERENCE TO jsonDoc.articles;
+			DECLARE debtorRef REFERENCE TO jsonDoc.debtor;
+			DECLARE patientRef REFERENCE TO jsonDoc.patient;
+			DECLARE interventionRef REFERENCE TO jsonDoc.intervention;
+			DECLARE validationFailed BOOLEAN FALSE;
+			
+			Validation:	LOOP 
+				IF FIELDNAME(jsonDoc.id) IS NULL OR
+				   FIELDNAME(jsonDoc.date) IS NULL OR
+				   FIELDNAME(jsonDoc.total_price) IS NULL OR
+				   FIELDNAME(jsonDoc.intervention) IS NULL OR
+				   FIELDNAME(jsonDoc.articles) IS NULL OR
+				   FIELDNAME(jsonDoc.patient) IS NULL THEN
+					SET validationFailed = TRUE;
+					LEAVE Validation;
+				END IF;
+
+				IF COALESCE(jsonDoc.document_type, '') = '2' AND COALESCE(jsonDoc.invoice_id, '') = ''
+				THEN
+					SET validationFailed = TRUE;
+					LEAVE Validation;
+				END IF;
+
+				IF FIELDNAME(interventionRef) IS NOT NULL THEN
+					IF FIELDNAME(interventionRef.id) IS NULL OR
+					   FIELDNAME(interventionRef.type) IS NULL OR
+					   FIELDNAME(interventionRef.organization_id) IS NULL OR
+					   FIELDNAME(interventionRef.organization_name) IS NULL OR
+					   FIELDNAME(interventionRef.base_id) IS NULL OR
+					   FIELDNAME(interventionRef.base_name) IS NULL THEN
+						SET validationFailed = TRUE;
+						LEAVE Validation;
+					END IF;
+				END IF;
+				
+				IF FIELDNAME(patientRef) IS NOT NULL THEN
+					IF FIELDNAME(patientRef.fip_number) IS NULL OR
+					   FIELDNAME(patientRef.category_id) IS NULL OR
+					   FIELDNAME(patientRef.category_name) IS NULL THEN
+						SET validationFailed = TRUE;
+						LEAVE Validation;
+					END IF;
+				END IF;
+				
+				IF FIELDNAME(debtorRef) IS NOT NULL THEN
+					IF FIELDNAME(debtorRef.type_id) IS NULL OR
+					   FIELDNAME(debtorRef.type_name) IS NULL THEN
+						SET validationFailed = TRUE;
+						LEAVE Validation;
+					END IF;
+				END IF;
+								
+				IF FIELDNAME(articleList) IS NOT NULL THEN
+					MOVE articleList FIRSTCHILD;
+					WHILE LASTMOVE(articleList) DO
+						IF FIELDNAME(articleList.line_1) IS NULL THEN
+							SET validationFailed = TRUE;
+							LEAVE Validation;
+						END IF;
+						MOVE articleList NEXTSIBLING;
+					END WHILE;
+				END IF;
+				LEAVE Validation;
+			END LOOP Validation;
+		
+			IF validationFailed THEN
+				DELETE FIELD OutputRoot.JSON.Data.invoices.[I - validationErrorCount];
+				SET validationErrorCount = validationErrorCount + 1;
+				IF EXISTS(Environment.Variables.ValidationFailedJson[]) = FALSE THEN
+					CREATE LASTCHILD OF Environment.Variables.ValidationFailedJson DOMAIN('JSON');
+					CREATE FIELD Environment.Variables.ValidationFailedJson.JSON.Data.(JSON.Array)invoices;
+				END IF;
+				SET Environment.Variables.ValidationFailedJson.JSON.Data.invoices.Item[validationErrorCount] = jsonDoc;
+			ELSE
+				--ADD business-id
+				SET Environment.Variables.TCSLog.context."business-identifiers"."INVOICE_ID" = COALESCE(Environment.Variables.TCSLog.context."business-identifiers"."INVOICE_ID", '') 
+																								|| '|' || CAST(jsonDoc.id AS CHARACTER);
+				SET Environment.Variables.TCSLog.context."business-identifiers"."FIP_NUMBER" = COALESCE(Environment.Variables.TCSLog.context."business-identifiers"."FIP_NUMBER", '') 
+																								|| '|' || CAST(patientRef.fip_number AS CHARACTER);
+				SET Environment.Variables.TCSLog.context."business-identifiers"."INVOICE_REFERENCE" = COALESCE(Environment.Variables.TCSLog.context."business-identifiers"."INVOICE_REFERENCE", '') 
+																								|| '|' || CAST(jsonDoc.invoice_id AS CHARACTER);
+				SET Environment.Variables.TCSLog.context."business-identifiers"."DOCUMENT_TYPE" = COALESCE(Environment.Variables.TCSLog.context."business-identifiers"."DOCUMENT_TYPE", '') 
+																								|| '|' || CAST(jsonDoc.document_type AS CHARACTER);
+			END IF;
+			
+			SET I = I + 1;
+		END WHILE;		
+		
+		-- Checks if all invoices are invalid Send valid messages to routing
+		IF EXISTS(OutputRoot.JSON.Data.invoices.Item[1].id[]) = false THEN
+			PROPAGATE TO TERMINAL 'out4' DELETE NONE;
+		ELSE 
+			PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		END IF;
+		
+		-- If SAP call fails move all invoices fip to array
+		IF Environment.sapCallFail = 'true' THEN
+			FOR outInvoice AS OutputRoot.JSON.Data.invoices.Item[] DO
+				CREATE LASTCHILD OF Environment.failedInvoices NAME 'fipNumber' VALUE outInvoice.patient.fip_number;
+			END FOR;
+		END IF;
+		
+		-- Deletes unsuccessful invoices from SAP response
+		DECLARE sapRejectedInvoicesCount INTEGER CARDINALITY(Environment.failedInvoices.fipNumber[]);
+		DECLARE outInvoicesCount INTEGER CARDINALITY(OutputRoot.JSON.Data.invoices.Item[]);
+		DECLARE i INTEGER 1;
+		IF sapRejectedInvoicesCount > 0 THEN	
+			WHILE i <= outInvoicesCount DO
+				DECLARE outInvoice REFERENCE TO OutputRoot.JSON.Data.invoices.Item[i];
+			 	FOR fipNumber AS Environment.failedInvoices.fipNumber[] DO
+					IF outInvoice.patient.fip_number = fipNumber THEN
+						IF EXISTS(Environment.Variables.ValidationFailedJson[]) = FALSE THEN
+							CREATE LASTCHILD OF Environment.Variables.ValidationFailedJson DOMAIN('JSON');
+							CREATE FIELD Environment.Variables.ValidationFailedJson.JSON.Data.(JSON.Array)invoices;
+						END IF;
+						CREATE LASTCHILD OF Environment.Variables.ValidationFailedJson.JSON.Data.invoices FROM outInvoice;
+						DELETE FIELD outInvoice;
+						SET i = i - 1;
+						SET outInvoicesCount = outInvoicesCount - 1;
+					END IF;
+				END FOR;
+				SET i = i + 1;
+			END WHILE;
+		END IF;
+
+		
+		--Send Report Finish validation
+		SET Environment.Variables.ValidInvoicesCount = invoiceCount - validationErrorCount - sapRejectedInvoicesCount;
+		SET Environment.Variables.InvalidInvoicesCount = validationErrorCount;
+		SET Environment.Variables.SapRejectedInvoicesCount = sapRejectedInvoicesCount;
+		SET Environment.Variables.InvoiceCount = invoiceCount;
+		PROPAGATE TO TERMINAL 'out' DELETE NONE;
+		
+		--Write files if Validation error
+		IF validationErrorCount > 0 OR sapRejectedInvoicesCount > 0 THEN
+			SET OutputRoot = NULL;
+			CREATE LASTCHILD OF OutputRoot DOMAIN('JSON');
+			CREATE FIELD OutputRoot.JSON.Data.invoices IDENTITY (JSON.Array)invoices;
+			SET OutputRoot.JSON.Data.invoices = Environment.Variables.ValidationFailedJson.JSON.Data.invoices;
+			DECLARE currentTimestamp CHARACTER CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMdd_HHmmss');
+			SET Environment.Variables.TCSLog.context."error-code" = 400;
+			SET OutputLocalEnvironment.Destination.File.Name = currentTimestamp || '_validation_failed_invoices.json';
+			SET OutputLocalEnvironment.Destination.File.Directory = RefSftpEndPointsPolicy.post_injection_INVOICE_LOCAL_DIRECTORY ;
+			SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory = RefSftpEndPointsPolicy.post_injection_INVOICE_ERROR_DIRECTORY;
+			PROPAGATE TO TERMINAL 'out2';
+		END IF;
+		RETURN FALSE;
+	END;
+END MODULE;
+
+/*
+* Module allows to create HTTP response 
+*
+* Parameters:
+*
+* RETURNS: NOTHING
+*
+*/
+CREATE COMPUTE MODULE PrepareOutFiles
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		--Write files if Validation error
+		DECLARE ValidInvoicesCount INTEGER Environment.Variables.ValidInvoicesCount;
+		DECLARE InvalidInvoicesCount INTEGER Environment.Variables.InvalidInvoicesCount;
+		DECLARE RejectedInvoicesCount INTEGER Environment.Variables.SapRejectedInvoicesCount;
+		DECLARE TotalInvoicesCount INTEGER Environment.Variables.InvoiceCount;
+		DECLARE RefSftpEndPointsPolicy REFERENCE TO Environment.Variables.Policy."finance-integration-policies-endpoints".SftpEndPointsPolicy;
+		
+		IF ValidInvoicesCount > 0 THEN
+			DECLARE currentTimestamp CHARACTER CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMdd_HHmmss');
+			SET OutputLocalEnvironment.Destination.File.Name = currentTimestamp ||'_invoices.json';
+			SET OutputLocalEnvironment.Destination.File.Directory = RefSftpEndPointsPolicy.post_injection_INVOICE_LOCAL_DIRECTORY ;
+			SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory =RefSftpEndPointsPolicy.post_injection_INVOICE_DONE_DIRECTORY;
+			PROPAGATE TO TERMINAL 'out';
+		END IF;
+		
+		--Generate Report
+		DECLARE EventMessage, ingestionStatus CHARACTER;
+		SET Environment.Variables.TCSLog.context."business-identifiers" = NULL;
+		IF TotalInvoicesCount = ValidInvoicesCount THEN
+			SET EventMessage = 'SUP: One File processed successully';
+			SET ingestionStatus = 'Success';	
+			SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		ELSEIF TotalInvoicesCount = InvalidInvoicesCount + RejectedInvoicesCount THEN
+			SET EventMessage = 'SUP: One File failed to be processed entirely';
+			SET ingestionStatus = 'Failure';	
+			SET Environment.Variables.TCSLog.context.severity = 'ERR';
+		ELSE 
+			SET EventMessage = 'SUP: One File processed with errors';
+			SET ingestionStatus = 'Partial Success';
+			SET Environment.Variables.TCSLog.context.severity = 'WARN';
+		END IF;	
+			
+		SET Environment.Variables.TCSLog.context."business-identifiers"."INGESTION_STATUS" = ingestionStatus;
+		SET Environment.Variables.TCSLog.context."business-identifiers"."TOTAL_PROCESSED_INVOICES" = TotalInvoicesCount;
+		SET Environment.Variables.TCSLog.context."business-identifiers"."TOTAL_SUCCESFULLY_PROCESSED_INVOICES" = ValidInvoicesCount;
+		SET Environment.Variables.TCSLog.context."business-identifiers"."TOTAL_WRONG_INPUT_FORMAT_ERRORS" = InvalidInvoicesCount;
+		SET Environment.Variables.TCSLog.context."business-identifiers"."TOTAL_REJECTION_ERRORS" = RejectedInvoicesCount;
+		SET Environment.Variables.EventMessage = EventMessage;
+		PROPAGATE TO TERMINAL 'out2';
+		RETURN FALSE;
+	END;
+END MODULE;

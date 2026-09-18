@@ -1,0 +1,864 @@
+I am giving you a service which already has similar operation ASV/SarGe/SarVd and etc. You need to analyse the service and its dependencies.
+The idea is that we are adding new operation which is similar to the ones we have now. You need to follow the project structure ans scelenton 
+and create the new operation. You will see that there might be some properties which need to be set for the new operation but just stick to the 
+syntax that we already have for the other operations. For the purpose you will need to update the rest schema too. 
+The rest schema is used only to generate the operation, it has no other meaning, no validation now syntax following no nothing.
+I am giving you the original schema from which this one is created. Just see the original, see what we have now and add the new operation following 
+what we have in the ACE rest schema now:   
+
+openapi: 3.0.1
+info:
+  title: Ambulance Invoices Integration Trigger
+  x-ibm-name: finance-accounting-api-invoices-ingestion
+  version: 2.3.2
+  description: |
+    **Finance & Accounting API: Invoice Integration Trigger**
+
+    This API facilitates file-based integration workflows between external systems and SAP for finance and accounting purposes.
+
+     ### Documentation
+    - [Invoice and Payments Financial Data Flows](https://tcsgroup.atlassian.net/wiki/x/HgvwAg)
+    - [API Documentation](https://tcsgroup.atlassian.net/wiki/x/MIAmJ)
+    - [Initial API Story](https://tcsgroup.atlassian.net/browse/NIPO-6628)
+  contact:
+    name: 05_IT_Applications_Solutions
+    email: 05_IT_Applications_Solutions@tcs.ch
+externalDocs:
+  description: SP TCS multi-business invoice financial data flows
+  url: https://tcsgroup.atlassian.net/wiki/x/HgvwAg
+servers:
+  - url: /finance-accounting/v2/invoice-ingestion
+paths:
+  /asv-files-injection-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /asv-files-purge-trigger:
+    post:
+      tags:
+        - ASV Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarge-files-injection-trigger:
+    post:
+      tags:
+        - SARGE Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarge-files-purge-trigger:
+    post:
+      tags:
+        - SARGE Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarvd-files-injection-trigger:
+    post:
+      tags:
+        - SAR VD Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sarvd-files-purge-trigger:
+    post:
+      tags:
+        - SAR VD Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-injection-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files injection flow
+      responses:
+        '200':
+          description: No file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+              example:
+                meta:
+                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
+                  timestamp: 2025-01-02T15:36:52Z
+                data:
+                  status: NO_FILE
+                  receivedCount: 0
+                  message: ""
+        '202':
+          description: File ingestion triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '422':
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /sansys-files-purge-trigger:
+    post:
+      tags:
+        - SANSYS Attrib
+      description: Post a notification to start files purge flow
+      responses:
+        '202':
+          description: File purge triggered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too Many Requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not Implemented.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad Gateway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service Unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+  /health:
+    get:
+      summary: Pings the target receiver to check the connection
+      operationId: get-health
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthType'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '501':
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: Bad gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+components:
+  schemas:
+    ServiceError:
+      title: ServiceError
+      type: object
+      description: Object returned when errors occurred
+      properties:
+        httpCode:
+          type: string
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+    BulkFinancialSubmissionResponse:
+      title: BulkFinancialSubmissionResponse
+      type: object
+      description: Response returned after submitting financial documents in bulk to SAP.
+      properties:
+        meta:
+          type: object
+          properties:
+            submissionId:
+              type: string
+              example: "9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5"
+            timestamp:
+              type: string
+              description: ISO-8601 UTC timestamp
+              example: "2025-01-02T15:36:52Z"
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [ACCEPTED, ERROR, NO_FILE]
+              example: ACCEPTED
+            receivedCount:
+              type: integer
+              description: Number of financial documents received by SAP.
+              example: 10
+            message:
+              type: string
+              description: Additional info or error message.
+              example: ""
+      required:
+        - meta
+        - data
+    PurgeResponse:
+      title: PurgeResponse
+      type: object
+      description: Response returned when the Purge is successfully triggered.
+      properties:
+        httpCode:
+          type: integer
+          example: 202
+        httpMessage:
+          type: string
+          example: Accepted
+        moreInformation:
+          type: string
+          example: ASV File Purge triggered properly
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+    HealthType:
+      type: object
+      properties:
+        status:
+          type: string
+          description: status of the health check
+          enum:
+            - pass
+            - error
+        api:
+          type: string
+          description: api/app name of the component
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Check'
+    Check:
+      type: object
+      description: describe a component check (MQ, DataBase, BackEnd etc..)
+      properties:
+        component:
+          type: string
+          description: name of the tested component (MQ, Baloise, Toni, etc..)
+        status:
+          type: string
+          description: status of the tested component
+          enum:
+            - pass
+            - error
+            - warn
+        details:
+          type: string
+          description: details
+
+
+I have explained besically what is the idea of the changes, but we have a task given with description of what exactly should be done.
+I will give you the task and you need to figure out the changes yourself that are written there. You will be given all the service 
+dependencies so will need to make chenges there too, because I read the task. What I told you about the operation should be done 
+but it was not described in this task, so this is why I started with that. Here you have the task itself.
+
+# US NIPO\-9498 Sansys \- Routing \- Invoice Ingestion to Financial Document V2
+
+**Ticket:** [NIPO-9498](https://tcsgroup.atlassian.net/browse/NIPO-9498) · **Owner:** Integration engineer · **Status:** design complete — ready for build
+
+**Design references:** [ADR-0001](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265776280) (tenancy vs functional layer), [ADR-0009](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2266333273) (company-neutral process\_control)
+
+**Scope:** only the routing policy-property tuple in `finance-accounting-integration-invoices-policy-project`. The `process_control` value is emitted by [NIPO-9422](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2232615118/US+NIPO-9422+Sansys+-+File+to+Invoice+Ingestion); SAP dispatch is [SAPS-2744](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2265776241/US+SAPS-2744+AIF+producer_app+carriage); `producer_app` stamping is [NIPO-9499](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233008237/US+NIPO-9499+Sansys+-+Financial+Document+V2+to+S_FIN_DOC).
+
+## Why
+
+The ACE routing layer resolves every outbound target by looking up policy properties named `{sender_id}_{process_control}_{attr}` — a data-driven lookup, not a code branch. There are two parallel routing apps sharing the same policy project: v1 (`finance-accounting-integration-invoices`, kebab-case, today's Attrib path) and v2 (`finance-accounting-integration-invoices-v2`, camelCase). Sansys's EOM v2 mapper output only resolves cleanly through **v2**, so this story adds one new property tuple for Sansys traffic — no code change to any shared app.
+
+Key mechanics (identical in both apps):
+
+- `sender_id` = the inbound `X-Origin-Caller-Code` header — the **caller** of the ACE entry point, not the source app. VTOM drives the Sansys trigger, so the caller is `VTOM` (same as the live Attrib rows).
+- Routing key = `lower(sender_id || '_' || process_control || '_' || attr)`, with 5 attributes per tuple: `_target`, `_application`, `_endpoint`, `_timeout`, `_call`.
+- Naming trap: `_endpoint` is a **host** alias and `_application` is a **path** alias — the reverse of what the names suggest.
+
+## What
+
+- One new policy-property tuple `vtom_ambulance_transport_billing_{target,application,endpoint,timeout,call}` — **one tuple for all 6 companies** (`process_control` is company-neutral; per-company visibility lives in the AIF hierarchy, not in routing).
+- No `SANSYS.policyxml` — the caller stays `VTOM`, whose (empty, mandatory) policy file already exists.
+- Attrib's 3 existing tuples untouched.
+
+**Definition of done:** the `common.policyxml` diff shows exactly 5 new properties and no other row touched; a test call with `X-Origin-Caller-Code: VTOM` and `process_control = AMBULANCE_TRANSPORT_BILLING` resolves to the v2 technical app without a `422`.
+
+## How — dev tasks
+
+| # | Task | Object / file | Note |
+| --- | --- | --- | --- |
+| 1 | Add the 5-property tuple below | `common.policyxml` | Additive; mirrors the SFCAS v2 receivable tuple's shape. |
+| 2 | Confirm with the ACE team the actual `X-Origin-Caller-Code` the Sansys trigger presents | — | One question. Everything assumes `VTOM`; if wrong, the tuple's sender prefix changes. |
+| 3 | Verify `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents` exists in `finance-integration-policies-endpoints : AceEndPointsPolicy` | external policy project | The SFCAS row implies it exists, but that path has never provably run end-to-end — verify, don't assume. |
+
+Proposed rows (task 1):
+
+```xml
+<!-- Sansys ambulance ingestion → v2 receivable-documents (SSC-331 / NIPO-9498).
+     One tuple for all 6 companies: process_control is company-neutral. -->
+<vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
+<vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
+<vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
+<vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
+<vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
+```
+
+| Property | Value | Why |
+| --- | --- | --- |
+| `_target` | `financial-documents` | Same target family as the Attrib ambulance and SFCAS v2 rows. |
+| `_application` | `…-financial-documents-v2-receivable-documents` | The **v2** technical app — not the v1 app the Attrib rows use. |
+| `_endpoint` | `sapnative` | Host alias; identical across every ambulance + SFCAS v2 row. |
+| `_timeout` | `55` | Every row in the file uses 55. |
+| `_call` | `httpAsync` | Same as the ambulance and SFCAS v2 rows. |
+
+## Blocked by
+
+- [NIPO-9422](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2232615118/US+NIPO-9422+Sansys+-+File+to+Invoice+Ingestion) must actually call the v2 routing app (its task 14) for this tuple to be reached. The tuple itself can be added independently.
+
+## How to test
+
+| Check | How | Env |
+| --- | --- | --- |
+| Routing tuple works, one for all 6 companies | `common.policyxml` diff shows exactly the 5 new properties; test call with `X-Origin-Caller-Code: VTOM` resolves without `422` | QA |
+| Attrib untouched | The 3 `vtom_<company>_intervention_customer_billing_*` tuples are byte-identical before/after | QA |
+| v2 end-to-end | NIPO-9422's mapper output, POSTed to the v2 routing app, resolves `process_control` without `422 ACEFONC0021` | QA |
+
+**Regression:** v1 (the CAS/IDIT/Camping routing app) is untouched — Sansys uses a different app, no shared-ESQL change, no regression pass needed there.
