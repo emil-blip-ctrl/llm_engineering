@@ -1,28 +1,51 @@
-I made two groups of changes because your request combined:
-1) adding the new SANSYS trigger operations in the ingestion app, and
-2) implementing the NIPO-9498 routing tuple in the shared policy project.
+Implemented the phase-1 routing rules in the facade with ordered first-match behavior and environment-driven activation flags.
 
-Changed/generated files:
-- Added `/sansys-files-injection-trigger` and `/sansys-files-purge-trigger` to the ingestion OpenAPI descriptor file.
-- Updated `restapi.descriptor` and generated main REST msgflow to register the 2 new Sansys operations.
-- Added new subflows:
-  - `postSansys_files_injection_trigger.subflow`
-  - `postSansys_files_purge_trigger.subflow`
-- Added new Sansys request mapping ESQL:
-  - `sansys/PrepareHTTPRequest.esql`
-- Added a Sansys-specific process-file preparation module in `PrepareAndProcessFile.esql` so Sansys targets the v2 receivable-documents route path:
-  - `path-finance-accounting-integration-invoice-v2-receivable-documents`
-- Added `SansysResponsePassthrough.esql` to normalize the v2 route app HTTP response back to the REST caller.
-- Added the exact 5 new routing properties required by NIPO-9498 to `finance-accounting-integration-invoices-policy-project/common.policyxml`.
+Changed:
+- Added new shared compute module:
+  - `common/prepareNoContentResponse_Compute.esql`
+  - Prepares an empty HTTP response with status `204`.
+- Updated routing/filter ESQL:
+  - `create_case_IsAssys_Filter.esql`
+  - `createUpdate_service_IsAssys_Filter.esql`
+  - `update_case_IsAssys_Filter.esql`
+  - `MessageFilter_FilterFSMMessage.esql`
+- Updated subflows to support “exit process / log error and exit process” without invoking a backend:
+  - `create_case.subflow`
+  - `create_service.subflow`
+  - `update_service.subflow`
+  - `update_case.subflow`
+- Updated policy project to add and populate `assys-activated` and to align `sfcas-activated` values:
+  - `SfcasCredentialsPolicy.policyxml`
+  - `properties/DEV.properties`
+  - `properties/QA.properties`
+  - `properties/ACP.properties`
+  - `properties/PRD.properties`
 
-Important assumptions / limitations:
-- I assumed the actual inbound `X-Origin-Caller-Code` remains `VTOM`, exactly as described in the task. The added policy tuple uses the `vtom_ambulance_transport_billing_*` prefix.
-- I assumed the SFTP identity naming for the new file nodes is `SANSYSAceSftpIdentity`, following the existing project naming pattern (`ASVAceSftpIdentity`, `SARGEAceSftpIdentity`, `SARVDAceSftpIdentity`). This identity/policy value was not explicitly provided in the source.
-- I assumed the Sansys trigger should call the v2 receivable-documents routing endpoint, based on NIPO-9498, so I introduced `PrepareProcessFileSansys`.
-- Because no dedicated Sansys input mapping contract was supplied, I followed the existing ASV/SARGE/SARVD skeleton and reused that payload style, while additionally stamping the company-neutral v2 routing key in `processControl.specificationIdentifier` with `AMBULANCE_TRANSPORT_BILLING`.
-- I did not change `finance-integration-policies-endpoints/AceEndPointsPolicy` because the required path already exists in the provided source:
-  - `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents`
-- I did not add any `SANSYS.policyxml`, per the task.
-- I kept the existing OpenAPI version/changelog metadata unchanged because the authoritative release metadata for the current repo file was not fully provided, and you mentioned the schema is only used for generation.
+Behavior implemented:
+- Rule order is evaluated with `IF / ELSEIF` so processing stops at the first true rule.
+- All string comparisons are case-insensitive via `UPPER(TRIM(...))`.
+- Routing decisions are logged into `Environment.Variables.TCSLog.context`:
+  - routing-endpoint
+  - routing-rule
+  - routing-action
+  - routing-detail
+  - routing-target
+  - routing-case-id / routing-consumer-* where relevant
+- Post Case supports:
+  - policy-based Assys/SFCAS redirection
+  - SPARX exit
+  - ContextList rules for DIRCALL / RSATCS, DIRCALL / RSAB2B, ONLINEASSY, B2B consumer list, MLOG
+  - default Assys
+- Put Case / Post Service / Put Service supports:
+  - policy-based Assys/SFCAS redirection
+  - SPARX + 9-digit case-id exit
+  - DRAPP + 9-digit case-id logged error exit
+  - 9-digit case-id => Assys
+  - non-9-digit case-id => SFCAS
+  - default Assys
 
-If you want, I can also produce a second pass that refactors the Sansys injection flow to match a stricter v2 payload contract, but that would require the exact Sansys mapped request body expected by the v2 technical flow.
+Assumptions / limitations:
+- I assumed the DRAPP rule row in the story contains a typo and should use `DRAPP` instead of `SPARX`. I implemented `DRAPP`.
+- “exit process” and “log an error and exit process” were ambiguous from an HTTP contract perspective. I implemented both as an immediate `204 No Content` response and, for the DRAPP case, logged it with `severity = ERROR` in the monitoring context.
+- For Post Case, I preserved the existing FSM-specific Assys path selection by keeping `MessageFilter_FilterFSMMessage`; I only made it robust for both `$.case.ContextList[]` and the older `$.ContextList[]` shape.
+- I did not change the generated REST msgflow or OpenAPI descriptor because the operation structure remains unchanged.

@@ -1,0 +1,35 @@
+CREATE FILTER MODULE MessageFilter_FilterFSMMessage
+	-- Return TRUE if the request must use the FSM callable path (blank or MLOG consumer name).
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE caseContextRef REFERENCE TO Root.JSON.Data."case".ContextList;
+		DECLARE contextRef REFERENCE TO Root.JSON.Data.ContextList;
+
+		IF CheckContextList(caseContextRef) THEN
+			RETURN TRUE;
+		END IF;
+
+		RETURN CheckContextList(contextRef);
+	END;
+
+	CREATE FUNCTION CheckContextList(IN contextListRef REFERENCE) RETURNS BOOLEAN
+	BEGIN
+		IF EXISTS(contextListRef.Item[1]) THEN
+			FOR contextElement AS contextListRef.Item[] DO
+				IF NormalizeValue(contextElement.ContextElementTypeKey) = 'X-CONSUMER-NAME'
+					AND (NormalizeValue(COALESCE(contextElement.ContextElementValue, contextElement.ContextElement, '')) = ''
+						OR NormalizeValue(COALESCE(contextElement.ContextElementValue, contextElement.ContextElement, '')) = 'MLOG') THEN
+					RETURN TRUE;
+				END IF;
+			END FOR;
+		END IF;
+
+		RETURN FALSE;
+	END;
+
+	CREATE FUNCTION NormalizeValue(IN inputValue CHARACTER) RETURNS CHARACTER
+	BEGIN
+		RETURN UPPER(TRIM(COALESCE(inputValue, '')));
+	END;
+
+END MODULE;

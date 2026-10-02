@@ -1,0 +1,78 @@
+PATH Shlib_PoliciesReader;
+
+CREATE FILTER MODULE update_case_IsAssys_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sfcasActivated CHARACTER NormalizeValue(gestionPolicy('{services-integration-policies-credentials-sfcas}:SfcasCredentialsPolicy', 'sfcas-activated'));
+		DECLARE assysActivated CHARACTER NormalizeValue(gestionPolicy('{services-integration-policies-credentials-sfcas}:SfcasCredentialsPolicy', 'assys-activated'));
+		DECLARE originCallerCode CHARACTER NormalizeValue(Environment.Variables."X-Origin-Caller-Code");
+		DECLARE caseId CHARACTER TRIM(COALESCE(LocalEnvironment.REST.Input.Parameters."case-id", ''));
+		DECLARE isReferenceCaseId BOOLEAN common.checkIdReferenceCaseFormat(caseId);
+
+		CALL ResetRoutingContext();
+
+		IF sfcasActivated = 'FALSE' THEN
+			CALL ApplyDecision('ASSYS', 'PUT_CASE_RULE_1', 'Redirect to Assys', 'sfcas-activated is FALSE.', caseId, FALSE);
+		ELSEIF assysActivated = 'FALSE' THEN
+			CALL ApplyDecision('SFCAS', 'PUT_CASE_RULE_2', 'Redirect to SFCAS', 'assys-activated is FALSE.', caseId, FALSE);
+		ELSEIF originCallerCode = 'SPARX' AND isReferenceCaseId THEN
+			CALL ApplyDecision('EXIT', 'PUT_CASE_RULE_9', 'Exit process', 'SPARX 9 digits case-id is handled by Boomi.', caseId, FALSE);
+		ELSEIF originCallerCode = 'DRAPP' AND isReferenceCaseId THEN
+			CALL ApplyDecision('ERROR_EXIT', 'PUT_CASE_RULE_10', 'Log an error and exit process', 'DRAPP 9 digits case-id must use Boomi to communicate with Assys.', caseId, TRUE);
+		ELSEIF isReferenceCaseId THEN
+			CALL ApplyDecision('ASSYS', 'PUT_CASE_RULE_11', 'Redirect to Assys', 'case-id is a 9 digits reference.', caseId, FALSE);
+		ELSEIF NOT isReferenceCaseId THEN
+			CALL ApplyDecision('SFCAS', 'PUT_CASE_RULE_12', 'Redirect to SFCAS', 'case-id is not a 9 digits reference.', caseId, FALSE);
+		ELSE
+			CALL ApplyDecision('ASSYS', 'PUT_CASE_RULE_13', 'Redirect to Assys', 'Default routing to Assys.', caseId, FALSE);
+		END IF;
+
+		RETURN Environment.Variables.RoutingDecision = 'ASSYS';
+	END;
+
+	CREATE PROCEDURE ResetRoutingContext()
+	BEGIN
+		DELETE FIELD Environment.Variables.RoutingDecision;
+		DELETE FIELD Environment.Variables.TCSLog.context."routing-endpoint";
+		DELETE FIELD Environment.Variables.TCSLog.context."routing-rule";
+		DELETE FIELD Environment.Variables.TCSLog.context."routing-action";
+		DELETE FIELD Environment.Variables.TCSLog.context."routing-detail";
+		DELETE FIELD Environment.Variables.TCSLog.context."routing-target";
+		DELETE FIELD Environment.Variables.TCSLog.context."routing-case-id";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+	END;
+
+	CREATE PROCEDURE ApplyDecision(
+		IN decision CHARACTER,
+		IN ruleId CHARACTER,
+		IN action CHARACTER,
+		IN detail CHARACTER,
+		IN caseId CHARACTER,
+		IN isError BOOLEAN)
+	BEGIN
+		SET Environment.Variables.RoutingDecision = decision;
+		SET Environment.Variables.TCSLog.context."routing-endpoint" = 'PUT_CASE';
+		SET Environment.Variables.TCSLog.context."routing-rule" = ruleId;
+		SET Environment.Variables.TCSLog.context."routing-action" = action;
+		SET Environment.Variables.TCSLog.context."routing-detail" = detail;
+		SET Environment.Variables.TCSLog.context."routing-target" = decision;
+		SET Environment.Variables.TCSLog.context."routing-case-id" = caseId;
+
+		IF isError THEN
+			SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+			SET Environment.Variables.TCSLog.context."error-code" = 'ROUTING_ERROR';
+			SET Environment.Variables.TCSLog.context."error-message" = detail;
+		ELSE
+			SET Environment.Variables.TCSLog.context.severity = 'INFO';
+			DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+			DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		END IF;
+	END;
+
+	CREATE FUNCTION NormalizeValue(IN inputValue CHARACTER) RETURNS CHARACTER
+	BEGIN
+		RETURN UPPER(TRIM(COALESCE(inputValue, '')));
+	END;
+END MODULE;
