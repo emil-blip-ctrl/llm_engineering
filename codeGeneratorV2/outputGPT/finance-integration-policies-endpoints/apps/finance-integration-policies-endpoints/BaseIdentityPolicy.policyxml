@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policies>
+  <policy policyType="UserDefined" policyName="BaseIdentityPolicy" policyTemplate="UserDefined">
+    <!-- Complete the remaining Sansys producer_app/base_id mappings from the identity map before rollout. -->
+    <sansysmit_c7b01f98-70b1-457c-bd1a-95bf1ffeb548_bukrs>1070</sansysmit_c7b01f98-70b1-457c-bd1a-95bf1ffeb548_bukrs>
+  </policy>
+</policies>

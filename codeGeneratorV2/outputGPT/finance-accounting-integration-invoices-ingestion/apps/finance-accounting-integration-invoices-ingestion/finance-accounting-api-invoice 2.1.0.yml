@@ -723,57 +723,40 @@ components:
     IngestionResponse:
       title: IngestionResponse
       type: object
-      description: Detailed response for invoice ingestion, including per-invoice results.
+      description: Response returned when the ingestion trigger has been evaluated.
       properties:
-        status:
-          type: string
-          description: Overall status of the ingestion process.
-          enum: [success, partial_success, failure]
-          example: partial_success
-        summary:
+        meta:
           type: object
-          description: Summary of the ingestion results.
           properties:
-            processed:
-              type: integer
-              example: 5
-            successful:
+            submissionId:
+              type: string
+              example: "4a9a3b64-8a14-4a31-9b47-6f38f4c57a7c"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-09-25T14:48:00"
+          required:
+            - submissionId
+            - timestamp
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              example: COMPLETED
+            receivedCount:
               type: integer
               example: 3
-            failed:
-              type: integer
-              example: 2
+            message:
+              type: string
+              example: Batch file ingestion completed.
           required:
-            - processed
-            - successful
-            - failed
-        results:
-          type: array
-          description: List of individual invoice processing results.
-          items:
-            type: object
-            properties:
-              reference:
-                type: string
-                description: FIP number associated with the invoice.
-                example: "123"
-              status:
-                type: string
-                description: Status of the invoice processing.
-                enum: [success, failure]
-                example: success
-              message:
-                type: string
-                description: Message describing the result.
-                example: Invoice processed successfully.
-            required:
-              - reference
-              - status
-              - message
+            - status
+            - receivedCount
+            - message
       required:
-        - status
-        - summary
-        - results
+        - meta
+        - data
 
     PurgeResponse:
       title: PurgeResponse
@@ -840,56 +823,32 @@ components:
         httpMessage: 'Internal server error'
         moreInformation: 'Error calling SAP. Invoices moved to error file'
     FailedProcessing:
-      summary: All invoices failed
+      summary: Ingestion completed with technical failures
       value:
-        status: failure
-        summary:
-          processed: 2
-          successful: 0
-          failed: 2
-        results: 
-          - reference: '123'
-            status: failure
-            message: Invoice not processed.
-          - reference: '456'
-            status: failure
-            message: Invoice not processed.
+        meta:
+          submissionId: '4a9a3b64-8a14-4a31-9b47-6f38f4c57a7c'
+          timestamp: '2025-09-25T14:48:00'
+        data:
+          status: FAILED
+          receivedCount: 2
+          message: Invoices moved to error file.
     SuccessfulProcessing:
-      summary: All invoices processed successfully
+      summary: Ingestion completed
       value:
-        status: success
-        summary:
-          processed: 2
-          successful: 2
-          failed: 0
-        results: 
-          - reference: '123'
-            status: success
-            message: Invoice processed successfully.
-          - reference: '456'
-            status: success
-            message: Invoice processed successfully.
+        meta:
+          submissionId: '4a9a3b64-8a14-4a31-9b47-6f38f4c57a7c'
+          timestamp: '2025-09-25T14:48:00'
+        data:
+          status: COMPLETED
+          receivedCount: 2
+          message: Batch file ingestion completed.
     PartialFailureProcessing:
-      summary: Some invoices failed
+      summary: Ingestion completed with warnings
       value:
-        status: partial_success
-        summary:
-          processed: 5
-          successful: 3
-          failed: 2
-        results:
-        - reference: '123'
-          status: success
-          message: Invoice processed successfully.
-        - reference: '456'
-          status: success
-          message: Invoice processed successfully.
-        - reference: '789'
-          status: failure
-          message: 'Validation error: missing tax code.'
-        - reference: '101112'
-          status: success
-          message: Invoice processed successfully.
-        - reference: '131415'
-          status: failure
-          message: Internal server error during BAPI execution.
+        meta:
+          submissionId: '4a9a3b64-8a14-4a31-9b47-6f38f4c57a7c'
+          timestamp: '2025-09-25T14:48:00'
+        data:
+          status: PARTIAL_SUCCESS
+          receivedCount: 5
+          message: Batch file ingestion completed with some invoices written to the error folder.

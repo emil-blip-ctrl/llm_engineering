@@ -1,0 +1,50 @@
+BROKER SCHEMA sansys
+
+DECLARE SANSYS_BATCH_MAX_ITERATIONS EXTERNAL INTEGER 1000;
+
+CREATE COMPUTE MODULE InitializeSansysBatchContext
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		SET Environment.Variables.IngestionSource = 'SANSYS';
+		SET Environment.Variables.BatchMode = TRUE;
+		SET Environment.Variables.BatchProcessedFileCount = 0;
+		SET Environment.Variables.BatchLoopLimitReached = FALSE;
+		
+		SET Environment.invalidFile = FALSE;
+		SET Environment.sapCallFail = NULL;
+		DELETE FIELD Environment.failedInvoices;
+		DELETE FIELD Environment.Variables.ValidationFailedJson;
+		
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MarkSansysFileProcessed
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET Environment.Variables.BatchProcessedFileCount = COALESCE(Environment.Variables.BatchProcessedFileCount, 0) + 1;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE ContinueSansysBatchLoop
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		IF COALESCE(Environment.Variables.BatchProcessedFileCount, 0) >= SANSYS_BATCH_MAX_ITERATIONS THEN
+			SET Environment.Variables.BatchLoopLimitReached = TRUE;
+			SET OutputLocalEnvironment.File.Read.NoMatchReason = 'NoFile';
+			PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+			RETURN FALSE;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

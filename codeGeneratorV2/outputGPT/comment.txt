@@ -1,28 +1,75 @@
-I made two groups of changes because your request combined:
-1) adding the new SANSYS trigger operations in the ingestion app, and
-2) implementing the NIPO-9498 routing tuple in the shared policy project.
+Summary:
+- Reworked the SANSYS injection flow into a batch-oriented trigger flow.
+- Added a new Sansys EOM v2 camelCase mapper and Sansys batch control ESQL.
+- Added source-trigger-based validation branching so SANSYS no longer requires `fip_number` and now requires `TRANSPORT_NUMBER`.
+- Repointed SANSYS outbound URL resolution to the v2 receivable-documents endpoint property.
+- Added the new Ace endpoint property and introduced a new BaseIdentityPolicy scaffold.
+- Updated the OpenAPI response schema to the current `meta/data` response style.
 
-Changed/generated files:
-- Added `/sansys-files-injection-trigger` and `/sansys-files-purge-trigger` to the ingestion OpenAPI descriptor file.
-- Updated `restapi.descriptor` and generated main REST msgflow to register the 2 new Sansys operations.
-- Added new subflows:
-  - `postSansys_files_injection_trigger.subflow`
-  - `postSansys_files_purge_trigger.subflow`
-- Added new Sansys request mapping ESQL:
-  - `sansys/PrepareHTTPRequest.esql`
-- Added a Sansys-specific process-file preparation module in `PrepareAndProcessFile.esql` so Sansys targets the v2 receivable-documents route path:
-  - `path-finance-accounting-integration-invoice-v2-receivable-documents`
-- Added `SansysResponsePassthrough.esql` to normalize the v2 route app HTTP response back to the REST caller.
-- Added the exact 5 new routing properties required by NIPO-9498 to `finance-accounting-integration-invoices-policy-project/common.policyxml`.
+What changed and why:
+1. `postSansys_files_injection_trigger.subflow`
+   - Added Sansys batch initialization.
+   - Added file-count tracking and a queue-free loop back to re-read the folder until `noMatch`.
+   - Kept `ProcessFile.noMatch -> emptyOrMissingFileError` for empty-folder / end-of-batch response.
+   - Switched the SANSYS request mapping node to a new v2 mapper.
+   - Updated the downstream monitored call to `finance-accounting-integration-invoices-v2` / `POST /receivable-documents`.
+   - Prevented per-file HTTP replies; only the final batch completion path now replies.
 
-Important assumptions / limitations:
-- I assumed the actual inbound `X-Origin-Caller-Code` remains `VTOM`, exactly as described in the task. The added policy tuple uses the `vtom_ambulance_transport_billing_*` prefix.
-- I assumed the SFTP identity naming for the new file nodes is `SANSYSAceSftpIdentity`, following the existing project naming pattern (`ASVAceSftpIdentity`, `SARGEAceSftpIdentity`, `SARVDAceSftpIdentity`). This identity/policy value was not explicitly provided in the source.
-- I assumed the Sansys trigger should call the v2 receivable-documents routing endpoint, based on NIPO-9498, so I introduced `PrepareProcessFileSansys`.
-- Because no dedicated Sansys input mapping contract was supplied, I followed the existing ASV/SARGE/SARVD skeleton and reused that payload style, while additionally stamping the company-neutral v2 routing key in `processControl.specificationIdentifier` with `AMBULANCE_TRANSPORT_BILLING`.
-- I did not change `finance-integration-policies-endpoints/AceEndPointsPolicy` because the required path already exists in the provided source:
-  - `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents`
-- I did not add any `SANSYS.policyxml`, per the task.
-- I kept the existing OpenAPI version/changelog metadata unchanged because the authoritative release metadata for the current repo file was not fully provided, and you mentioned the schema is only used for generation.
+2. `PrepareAndProcessFile.esql`
+   - Added trigger-based URL selection for SANSYS vs existing Attrib flows.
+   - Added SANSYS validation rules:
+     - no `fip_number` requirement
+     - `category_id` / `category_name` still required
+     - `TRANSPORT_NUMBER` required from references
+   - Replaced SANSYS logging business identifier from `FIP_NUMBER` to `TRANSPORT_NUMBER`.
+   - Reset per-file transient Environment content so batch iterations do not leak state.
+   - Added a new internal terminal `out5` used only by the SANSYS batch loop.
+   - Adjusted SAP-failure invoice matching logic so SANSYS uses transport-number-based identifiers instead of `fip_number`.
 
-If you want, I can also produce a second pass that refactors the Sansys injection flow to match a stricter v2 payload contract, but that would require the exact Sansys mapped request body expected by the v2 technical flow.
+3. `sansys/PrepareReceivableDocumentRequest.esql`
+   - New mapper producing camelCase EOM v2 payloads.
+   - Hardcoded `processControl.specificationIdentifier = AMBULANCE_TRANSPORT_BILLING`.
+   - Emits:
+     - `invoiceNumber[INVOICE_ID]`
+     - `invoiceNumber[TRANSPORT_NUMBER]`
+     - `seller.sellerIdentifier[COMPANY_CODE]`
+     - `buyer.buyerIdentifier[SANSYS]`
+     - updated invoiceNote codes including `INVOICE_REFERENCE`, `INTERVENTION_CASE_NUMBER`, `PATIENT_ID`
+   - Keeps local timestamp strings unchanged.
+   - Uses policy-driven `bukrs` lookup from `base_id`.
+   - On missing mapping sets `Environment.Variables.ErrorRefApp = ACEFONC0023` and stops the request branch loudly.
+
+4. `sansys/BatchControl.esql`
+   - New helper modules for:
+     - initializing batch context
+     - counting processed files
+     - stopping the loop after a configurable iteration cap
+
+5. `emptyOrMissingFileError.esql`
+   - Added a SANSYS batch completion branch:
+     - zero files -> existing `NO_FILE`
+     - one or more files -> final batch response with `meta/data`
+
+6. Policy project changes
+   - `AceEndPointsPolicy.policyxml`: added `path-finance-accounting-integration-invoices-v2-receivable-documents`
+   - `BaseIdentityPolicy.policyxml`: added a new user-defined policy file for `producer_app + base_id -> bukrs`
+
+7. OpenAPI file
+   - Updated `IngestionResponse` from the old `status/summary/results` structure to the current `meta/data` structure.
+
+Assumptions / limitations / uncertainties:
+- I did not change the ASV / SARGE / SARVD injection flows or their mappers.
+- I kept the existing SANSYS SFTP identity `SANSYSAceSftpIdentity` because it is already a dedicated non-ASV identity in the current flow.
+- The full base-identity lookup table was not provided in the repository snapshot. I only added the policy mechanism and one explicit example mapping from the request:
+  - `sansysmit_c7b01f98-70b1-457c-bd1a-95bf1ffeb548_bukrs = 1070`
+  The remaining mappings must be completed from the external identity map before rollout.
+- The exact final batch HTTP status semantics were not specified for non-empty folders. I returned a generic `200` batch completion response in `meta/data` form.
+- The final batch response `receivedCount` is implemented as processed file count, not invoice count, because the request focused on folder-drain behavior and did not define a batch response aggregation contract.
+- The exact input reference structure was not fully shown; I implemented reference lookup tolerant to:
+  - `scheme-identifier`
+  - `scheme_identifier`
+  - `schemeIdentifier`
+- For unknown `base_id`, I implemented a loud failure path with `ACEFONC0023`, but because the existing flow is file-oriented, that currently fails the request branch for the file rather than surgically removing only the single bad invoice inside the mapper branch.
+- I updated the OpenAPI schema file, but the wider service still contains legacy response-building modules in other branches; the documentation now reflects the current `meta/data` style requested, not every historical edge response in the repository.
+
+If you want, the next safe step would be to provide the full 12 resolved Sansys `base_id -> bukrs` mappings so the new `BaseIdentityPolicy` can be completed for QA/importable deployment.

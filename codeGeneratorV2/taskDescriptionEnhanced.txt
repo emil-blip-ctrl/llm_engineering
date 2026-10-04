@@ -1,934 +1,258 @@
-ORIGINAL REQUEST: I am giving you a service which already has similar operation ASV/SarGe/SarVd and etc. You need to analyse the service and its dependencies.
-The idea is that we are adding new operation which is similar to the ones we have now. You need to follow the project structure ans scelenton 
-and create the new operation. You will see that there might be some properties which need to be set for the new operation but just stick to the 
-syntax that we already have for the other operations. For the purpose you will need to update the rest schema too. 
-The rest schema is used only to generate the operation, it has no other meaning, no validation now syntax following no nothing.
-I am giving you the original schema from which this one is created. Just see the original, see what we have now and add the new operation following 
-what we have in the ACE rest schema now:   
-
-openapi: 3.0.1
-info:
-  title: Ambulance Invoices Integration Trigger
-  x-ibm-name: finance-accounting-api-invoices-ingestion
-  version: 2.3.2
-  description: |
-    **Finance & Accounting API: Invoice Integration Trigger**
-
-    This API facilitates file-based integration workflows between external systems and SAP for finance and accounting purposes.
-
-     ### Documentation
-    - [Invoice and Payments Financial Data Flows](https://tcsgroup.atlassian.net/wiki/x/HgvwAg)
-    - [API Documentation](https://tcsgroup.atlassian.net/wiki/x/MIAmJ)
-    - [Initial API Story](https://tcsgroup.atlassian.net/browse/NIPO-6628)
-  contact:
-    name: 05_IT_Applications_Solutions
-    email: 05_IT_Applications_Solutions@tcs.ch
-externalDocs:
-  description: SP TCS multi-business invoice financial data flows
-  url: https://tcsgroup.atlassian.net/wiki/x/HgvwAg
-servers:
-  - url: /finance-accounting/v2/invoice-ingestion
-paths:
-  /asv-files-injection-trigger:
-    post:
-      tags:
-        - ASV Attrib
-      description: Post a notification to start files injection flow
-      responses:
-        '200':
-          description: No file.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-              example:
-                meta:
-                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
-                  timestamp: 2025-01-02T15:36:52Z
-                data:
-                  status: NO_FILE
-                  receivedCount: 0
-                  message: ""
-        '202':
-          description: File ingestion triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '422':
-          description: Unprocessable Entity.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /asv-files-purge-trigger:
-    post:
-      tags:
-        - ASV Attrib
-      description: Post a notification to start files purge flow
-      responses:
-        '202':
-          description: File purge triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PurgeResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '501':
-          description: Not Implemented.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /sarge-files-injection-trigger:
-    post:
-      tags:
-        - SARGE Attrib
-      description: Post a notification to start files injection flow
-      responses:
-        '200':
-          description: No file.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-              example:
-                meta:
-                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
-                  timestamp: 2025-01-02T15:36:52Z
-                data:
-                  status: NO_FILE
-                  receivedCount: 0
-                  message: ""
-        '202':
-          description: File ingestion triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '422':
-          description: Unprocessable Entity.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /sarge-files-purge-trigger:
-    post:
-      tags:
-        - SARGE Attrib
-      description: Post a notification to start files purge flow
-      responses:
-        '202':
-          description: File ingestion triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PurgeResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '501':
-          description: Not Implemented.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /sarvd-files-injection-trigger:
-    post:
-      tags:
-        - SAR VD Attrib
-      description: Post a notification to start files injection flow
-      responses:
-        '200':
-          description: No file.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-              example:
-                meta:
-                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
-                  timestamp: 2025-01-02T15:36:52Z
-                data:
-                  status: NO_FILE
-                  receivedCount: 0
-                  message: ""
-        '202':
-          description: File ingestion triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '422':
-          description: Unprocessable Entity.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /sarvd-files-purge-trigger:
-    post:
-      tags:
-        - SAR VD Attrib
-      description: Post a notification to start files purge flow
-      responses:
-        '202':
-          description: File purge triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PurgeResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '501':
-          description: Not Implemented.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /sansys-files-injection-trigger:
-    post:
-      tags:
-        - SANSYS Attrib
-      description: Post a notification to start files injection flow
-      responses:
-        '200':
-          description: No file.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-              example:
-                meta:
-                  submissionId: 9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5
-                  timestamp: 2025-01-02T15:36:52Z
-                data:
-                  status: NO_FILE
-                  receivedCount: 0
-                  message: ""
-        '202':
-          description: File ingestion triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BulkFinancialSubmissionResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '422':
-          description: Unprocessable Entity.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /sansys-files-purge-trigger:
-    post:
-      tags:
-        - SANSYS Attrib
-      description: Post a notification to start files purge flow
-      responses:
-        '202':
-          description: File purge triggered successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PurgeResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not Found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too Many Requests.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '501':
-          description: Not Implemented.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad Gateway.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service Unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-  /health:
-    get:
-      summary: Pings the target receiver to check the connection
-      operationId: get-health
-      responses:
-        '200':
-          description: Successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthType'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '429':
-          description: Too many requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '501':
-          description: Not implemented
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: Bad gateway
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '503':
-          description: Service unavailable
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-components:
-  schemas:
-    ServiceError:
-      title: ServiceError
-      type: object
-      description: Object returned when errors occurred
-      properties:
-        httpCode:
-          type: string
-        httpMessage:
-          type: string
-        moreInformation:
-          type: string
-      required:
-        - httpCode
-        - httpMessage
-        - moreInformation
-    BulkFinancialSubmissionResponse:
-      title: BulkFinancialSubmissionResponse
-      type: object
-      description: Response returned after submitting financial documents in bulk to SAP.
-      properties:
-        meta:
-          type: object
-          properties:
-            submissionId:
-              type: string
-              example: "9f8a37a3-bdc2-4b19-964e-92e03c4ed2a5"
-            timestamp:
-              type: string
-              description: ISO-8601 UTC timestamp
-              example: "2025-01-02T15:36:52Z"
-        data:
-          type: object
-          properties:
-            status:
-              type: string
-              enum: [ACCEPTED, ERROR, NO_FILE]
-              example: ACCEPTED
-            receivedCount:
-              type: integer
-              description: Number of financial documents received by SAP.
-              example: 10
-            message:
-              type: string
-              description: Additional info or error message.
-              example: ""
-      required:
-        - meta
-        - data
-    PurgeResponse:
-      title: PurgeResponse
-      type: object
-      description: Response returned when the Purge is successfully triggered.
-      properties:
-        httpCode:
-          type: integer
-          example: 202
-        httpMessage:
-          type: string
-          example: Accepted
-        moreInformation:
-          type: string
-          example: ASV File Purge triggered properly
-      required:
-        - httpCode
-        - httpMessage
-        - moreInformation
-    HealthType:
-      type: object
-      properties:
-        status:
-          type: string
-          description: status of the health check
-          enum:
-            - pass
-            - error
-        api:
-          type: string
-          description: api/app name of the component
-        timestamp:
-          type: string
-          format: date-time
-        checks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Check'
-    Check:
-      type: object
-      description: describe a component check (MQ, DataBase, BackEnd etc..)
-      properties:
-        component:
-          type: string
-          description: name of the tested component (MQ, Baloise, Toni, etc..)
-        status:
-          type: string
-          description: status of the tested component
-          enum:
-            - pass
-            - error
-            - warn
-        details:
-          type: string
-          description: details
+ORIGINAL REQUEST: I am giving you a description of a task. It should already has lots of details and technical explanaitions. It mainly needs to be changed on service. This service has multiple operations
+which are absolutely the same but with some slight differences. For this operation of the service there might be bigger changes from the others. You should review the task and 
+decide what should be done, if something is unclear, you should check the other operations to find similarities. This operation for SANSYS I have created it previously to be very similar to the
+others but I didn't have this task description before. So you should review the operation and the description and do any chenges described here.
 
 
-I have explained besically what is the idea of the changes, but we have a task given with description of what exactly should be done.
-I will give you the task and you need to figure out the changes yourself that are written there. You will be given all the service 
-dependencies so will need to make chenges there too, because I read the task. What I told you about the operation should be done 
-but it was not described in this task, so this is why I started with that. Here you have the task itself.
+# US NIPO\-9422 Sansys \- File to Invoice Ingestion
 
-# US NIPO\-9498 Sansys \- Routing \- Invoice Ingestion to Financial Document V2
+**Ticket:** [NIPO-9422](https://tcsgroup.atlassian.net/browse/NIPO-9422) · **Owner:** Integration engineer · **Status:** design complete — one residual verification (task 15)
 
-**Ticket:** [NIPO-9498](https://tcsgroup.atlassian.net/browse/NIPO-9498) · **Owner:** Integration engineer · **Status:** design complete — ready for build
+**Design references:** [ADR-0006](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267086883) (bukrs from base\_id), [ADR-0007](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267447304) (SFTP topology), [ADR-0008](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267185173) (identifier model), [ADR-0009](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2266333273) (neutral process\_control) ·
 
-**Design references:** [ADR-0001](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265776280) (tenancy vs functional layer), [ADR-0009](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2266333273) (company-neutral process\_control)
+ **Field map:** `Mapping_Sansys_to_EOM_to_SFinDoc_v1.0.0.xlsx`, sheet `SANSYS => EOM` · 
 
-**Scope:** only the routing policy-property tuple in `finance-accounting-integration-invoices-policy-project`. The `process_control` value is emitted by [NIPO-9422](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2232615118/US+NIPO-9422+Sansys+-+File+to+Invoice+Ingestion); SAP dispatch is [SAPS-2744](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2265776241/US+SAPS-2744+AIF+producer_app+carriage); `producer_app` stamping is [NIPO-9499](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233008237/US+NIPO-9499+Sansys+-+Financial+Document+V2+to+S_FIN_DOC).
+**Identiy map**  [https://touringclubsuisse-my.sharepoint.com/personal/victor\_hueni\_tcs\_ch/Documents/01 - Projet/BCI Sansys/INSA - Base name.xlsx?web=1](https://touringclubsuisse-my.sharepoint.com/personal/victor_hueni_tcs_ch/Documents/01%20-%20Projet/BCI%20Sansys/INSA%20-%20Base%20name.xlsx?web=1)
+
+**dentity:** [Cross Cuttings](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265907431)
 
 ## Why
 
-The ACE routing layer resolves every outbound target by looking up policy properties named `{sender_id}_{process_control}_{attr}` — a data-driven lookup, not a code branch. There are two parallel routing apps sharing the same policy project: v1 (`finance-accounting-integration-invoices`, kebab-case, today's Attrib path) and v2 (`finance-accounting-integration-invoices-v2`, camelCase). Sansys's EOM v2 mapper output only resolves cleanly through **v2**, so this story adds one new property tuple for Sansys traffic — no code change to any shared app.
+`finance-accounting-integration-invoices-ingestion` today has three near-identical per-company injection subflows (`postAsv_`/`postSarge_`/`postSarvd_files_injection_trigger.subflow`). Sansys needs **one generic subflow** serving all 6 companies (company travels in the payload, not in the flow name), and its mapper must emit **EOM v2 camelCase** rather than the v1 kebab-case shape the Attrib mappers produce.
 
-Key mechanics (identical in both apps):
+Three structural changes distinguish this from a copy-paste of the ASV subflow:
 
-- `sender_id` = the inbound `X-Origin-Caller-Code` header — the **caller** of the ACE entry point, not the source app. VTOM drives the Sansys trigger, so the caller is `VTOM` (same as the live Attrib rows).
-- Routing key = `lower(sender_id || '_' || process_control || '_' || attr)`, with 5 attributes per tuple: `_target`, `_application`, `_endpoint`, `_timeout`, `_call`.
-- Naming trap: `_endpoint` is a **host** alias and `_application` is a **path** alias — the reverse of what the names suggest.
+1. **Batch, not one-file-per-trigger.** The current `ComIbmFileRead` consumes one file per trigger invocation. This story replaces that with a whole-folder batch — and a queue is explicitly forbidden.
+2. **Validation must stop requiring** `fip_number`. Sansys never sends it. The relaxation must be keyed on **source/trigger**, not company — `TAG`/`TAV`/`ASV` dual-run both front-ends and Attrib must keep enforcing it.
+3. **Identity is derived, not received.** Sansys sends no `object_system`; `bukrs` is transcoded from `intervention.base_id` via the base-identity lookup (see [Cross Cuttings](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265907431)). `producer_app` is **not** handled here — it is a hardcoded constant in [NIPO-9499](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233008237/US+NIPO-9499+Sansys+-+Financial+Document+V2+to+S_FIN_DOC).
 
 ## What
 
-- One new policy-property tuple `vtom_ambulance_transport_billing_{target,application,endpoint,timeout,call}` — **one tuple for all 6 companies** (`process_control` is company-neutral; per-company visibility lives in the AIF hierarchy, not in routing).
-- No `SANSYS.policyxml` — the caller stays `VTOM`, whose (empty, mandatory) policy file already exists.
-- Attrib's 3 existing tuples untouched.
+- **One** generic `postSansys_files_injection_trigger.subflow` — not six.
+- A **whole-folder batch** read: one trigger drains every `*.json` in the Sansys `/input`, no message queue anywhere in the loop.
+- A generic Sansys mapper (`sansys/PrepareReceivableDocumentRequest.esql`) emitting EOM v2 camelCase per the `SANSYS => EOM` sheet — including both `invoiceNumber` entries (`INVOICE_ID` ← `id`, `TRANSPORT_NUMBER` ← `intervention.references[]`) and `processControl.specificationIdentifier = 'AMBULANCE_TRANSPORT_BILLING'`.
+- `bukrs` derived from `intervention.base_id`, carried as `seller.sellerIdentifier[].schemeIdentifier = 'COMPANY_CODE'`.
+- A Sansys-shaped validation variant: `fip_number` no longer required; `category_id`/`category_name` still required; `intervention.references[TRANSPORT_NUMBER]` newly required. Attrib's validation byte-identical to today.
+- `save/` on consumption, `done/`/`errors/` on outcome — same policy properties, per file.
+- The 3 Attrib subflows, their 3 mappers, and `/health` unchanged.
 
-**Definition of done:** the `common.policyxml` diff shows exactly 5 new properties and no other row touched; a test call with `X-Origin-Caller-Code: VTOM` and `process_control = AMBULANCE_TRANSPORT_BILLING` resolves to the v2 technical app without a `422`.
+**Definition of done:** one trigger against a Sansys `/input` holding *n* files leaves `/input` empty, *n* copies in `save/`, each file's valid invoices in a `done/` payload accepted by the downstream v2 posting path, invalid invoices in `errors/` — with the 3 Attrib flows provably untouched.
 
 ## How — dev tasks
 
-| # | Task | Object / file | Note |
+| **#** | **Task** | **Object / file** | **Note** |
 | --- | --- | --- | --- |
-| 1 | Add the 5-property tuple below | `common.policyxml` | Additive; mirrors the SFCAS v2 receivable tuple's shape. |
-| 2 | Confirm with the ACE team the actual `X-Origin-Caller-Code` the Sansys trigger presents | — | One question. Everything assumes `VTOM`; if wrong, the tuple's sender prefix changes. |
-| 3 | Verify `path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents` exists in `finance-integration-policies-endpoints : AceEndPointsPolicy` | external policy project | The SFCAS row implies it exists, but that path has never provably run end-to-end — verify, don't assume. |
+| 1 | Create `postSansys_files_injection_trigger.subflow` by cloning `postAsv_…`, then apply the tasks below | new subflow | Clone for node wiring + monitoring-event names only — it is not a per-company flow. |
+| 2 | Point the SFTP nodes at the Sansys credential identity | subflow FileRead/FileOutput, `fileFtpUser` | ⚠️ Sansys is a **separate credential on a shared folder** — do not reuse `ASVAttribSftpIdentity`. |
+| 3 | Replace the single `ComIbmFileRead` with an in-flow whole-folder batch loop (mechanism: dev's choice, see options below) | subflow node `ProcessFile` | ⚠️ No queue. The read is already destructive (delete-on-transfer + archive), so a loop drains the folder naturally. |
+| 4 | Keep `noMatch` → `emptyOrMissingFileError` as the loop exit and the empty-folder response | subflow `FCMConnection_9` | Produces the APIC `200 NO_FILE` (NIPO-9421). With a loop, `noMatch` means *end of batch*, not *error*, once ≥1 file was processed. |
+| 5 | Add a Sansys branch to the validation module: drop `fip_number`, keep `category_id`/`category_name`, add `intervention.references[TRANSPORT_NUMBER]` | `PrepareAndProcessFile.esql:116-123` | ⚠️ Guard on **source/trigger, not company** — a company-keyed guard would silently weaken live Attrib validation on the dual-run companies. |
+| 6 | Replace the `fip_number` TCSLog business-identifier with `TRANSPORT_NUMBER` in the Sansys branch | `PrepareAndProcessFile.esql:158-159` | `INVOICE_ID`/`INVOICE_REFERENCE`/`DOCUMENT_TYPE` stay as-is. |
+| 7 | Write the generic Sansys mapper: EOM v2 camelCase, all rows marked `Y` in the `SANSYS => EOM` sheet | new `sansys/PrepareReceivableDocumentRequest.esql` | Not a rename of `asv/PrepareHTTPRequest.esql` — every key changes case. See the v1→v2 delta below. |
+| 8 | `processControl.specificationIdentifier.Item[1].content = 'AMBULANCE_TRANSPORT_BILLING'` — one value, all 6 companies | same | Not derived from `intervention.type`, not per-company. No downstream enum enforces it. |
+| 9 | Transcode `intervention.base_id` → `bukrs` (base-identity lookup); emit as `seller.sellerIdentifier[].schemeIdentifier='COMPANY_CODE'`, `.content = bukrs`. Emit `buyer.buyerIdentifier[schemeIdentifier='SANSYS'].content = debtor.code`, hyphen-stripped**Implementation — policy-driven, not hardcoded:**  - add a new named policy (e.g. `BaseIdentityPolicy`) inside the already-referenced `finance-integration-policies-endpoints` policy project, keyed on `producer_app` + `base_id` — `{producer_app}_{base_id}_bukrs` (e.g. `sansysmit_c7b01f98-70b1-457c-bd1a-95bf1ffeb548_bukrs` = `1070`) -  read via `Shlib_PoliciesReader`. This is the same composite-key mechanism `common.policyxml` already runs for `{sender_id}_{process_control}_{attr}` routing (`invoice_routage.esql:55-59`).  - Keying on `producer_app` (not `base_id` alone) means Attrib can reuse the same policy post-v2-migration without a redesign. **On no match:** follow `invoice_routage.esql:45-53`'s pattern — set `Environment.Variables.ErrorRefApp` to a newly reserved, distinct code (e.g. `ACEFONC0023`, "unknown base\_id — no bukrs mapping") and `PROPAGATE TO TERMINAL 2`; do **not** use this app's existing bare `THROW USER EXCEPTION VALUES(...)` (`PrepareAndProcessFile.esql:16`), which carries no distinct code. | same | ⚠️ Unknown `base_id` must fail loudly with a distinct error code, never default to a company. 12 of 19 known bases resolve today — see *Blocked by*. producer\_app here is a hardcoded literal ('SANSYSMIT'), never the trigger's sender\_id/X-Origin-Caller-Code (<https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233204876)>  confirms that header resolves to VTOM for this trigger (VTOM is the caller/orchestrator, same as the live Attrib rows) |
+| 10 | Emit both `invoiceNumber` entries: `INVOICE_ID` ← `id`; `TRANSPORT_NUMBER` ← `intervention.references[@scheme-identifier="TRANSPORT_NUMBER"].identifier` | same | ⚠️ `TRANSPORT_NUMBER` gets its **own** scheme-identifier — do not reuse `PATIENT_FIP_NUMBER` as the v1 mapper does. |
+| 11 | Emit `invoiceNote[INVOICE_REFERENCE]` ← `reference`, `invoiceNote[INTERVENTION_CASE_NUMBER]` ← `references[CASE_NUMBER]`, `invoiceNote[PATIENT_ID]` ← `patient.id` | same | `reference` may be `null` — tolerate it (reconciliation display only, not a posting blocker). |
+| 12 | Tolerate every field the workbook marks absent/dropped: `fip_number`, `gender_*`, `naca_*`, `alarmed_by_*`, `alarm_time`, `without_transportation`, `civility*` | same | `COALESCE(…, '')` as the existing mappers do; never `THROW` on an absent Tier-C field. |
+| 13 | Pass `intervention.start_time`/`end_time` through as **local ISO-8601 with offset**, unconverted | same | Samples carry `+02:00`; do not normalise to UTC. |
+| 14 | Repoint the outbound call to `finance-accounting-integration-invoices-v2`'s `POST /receivable-documents` | `PrepareAndProcessFile.esql:10` (Sansys equivalent) | Target the **v2** routing app — it reads `process_control` camelCase natively. The policy tuple it resolves is [NIPO-9498](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233204876/US+NIPO-9498+Sansys+-+Routing+-+Invoice+Ingestion+to+Financial+Document+V2)'s. |
+| 15 | ⛔ Verify/create the policy property this app reads to build the task-14 URL — key `path-finance-accounting-integration-invoices-v2-receivable-documents`, value `/finance-accounting/v2/invoices/receivable-documents` | `finance-integration-policies-endpoints : AceEndPointsPolicy` | Not the same property as NIPO-9498's (that one is read one hop later). Unverified — if absent, task 14 cannot work at all. |
+| 16 | Add a `Sansys` monitoring-event set mirroring the `SUP:`/`FAIL:` event identities | subflow `monitorEvents` | Feeds error management; keep the prefix convention. |
+| 17 | Leave `postAsv_`/`postSarge_`/`postSarvd_*`, the 3 mappers, `purgeFile.esql` and `get_health.subflow` untouched | existing objects | Regression guard. |
+| 18 | Delete or update the stale embedded response schema `finance-accounting-api-invoice 2.1.0.yml` (still documents the old `IngestionResponse` shape) | this repo | The live ESQL already builds the newer `meta`/`data` shape; only the doc file lags. Pairs with the NIPO-9421 enum fix. |
 
-Proposed rows (task 1):
+**Batch-loop options (task 3 — dev's choice, all queue-free):**
 
-```xml
-<!-- Sansys ambulance ingestion → v2 receivable-documents (SSC-331 / NIPO-9498).
-     One tuple for all 6 companies: process_control is company-neutral. -->
-<vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
-<vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
-<vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
-<vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
-<vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
-```
-
-| Property | Value | Why |
+| **Option** | **How** | **Trade-off** |
 | --- | --- | --- |
-| `_target` | `financial-documents` | Same target family as the Attrib ambulance and SFCAS v2 rows. |
-| `_application` | `…-financial-documents-v2-receivable-documents` | The **v2** technical app — not the v1 app the Attrib rows use. |
-| `_endpoint` | `sapnative` | Host alias; identical across every ambulance + SFCAS v2 row. |
-| `_timeout` | `55` | Every row in the file uses 55. |
-| `_call` | `httpAsync` | Same as the ambulance and SFCAS v2 rows. |
+| **A — loop the destructive** `FileRead` (recommended) | Re-enter `FileRead` (`*.json`) until `noMatch`; each read archives + deletes its file | Smallest delta from today. Needs an iteration cap so a folder being written into cannot spin the flow. |
+| B — list, then loop | List the directory once, iterate names, `FileRead` each by exact name | Batch size known up front (truthful `receivedCount`); more moving parts. |
+| C — `FileInput` node | ACE polls the directory | **Rejected**: the trigger stops controlling when ingestion runs, breaking the VTOM cadence. |
+
+**v1 → v2 mapper delta (task 7)** — same semantics, different casing and identity source:
+
+| Concern | v1 (`asv/PrepareHTTPRequest.esql`) | v2 (Sansys, this story) |
+| --- | --- | --- |
+| Key casing | kebab-case (`"invoice-number"`) | camelCase (`invoiceNumber`) |
+| `process_control` | `'ASV_INTERVENTION_CUSTOMER_BILLING'`, hardcoded per company | `'AMBULANCE_TRANSPORT_BILLING'`, one value for all 6 |
+| Invoice identity #1 | `id` → `'INVOICE_ID'` | unchanged in meaning |
+| Invoice identity #2 | `patient.fip_number` → `'PATIENT_FIP_NUMBER'` | `intervention.references[TRANSPORT_NUMBER]` → `'TRANSPORT_NUMBER'` (own key) |
+| Company identity | `seller."seller-name" = 'ASV'`, literal | `seller.sellerIdentifier[COMPANY_CODE]` = `bukrs` looked up from `base_id` |
+| Business reference | `invoice-note` code `'REFERENCE'` | `invoiceNote[].invoiceNoteSubjectCode = 'INVOICE_REFERENCE'` |
+| New codes | — | `INTERVENTION_CASE_NUMBER`, `PATIENT_ID` |
+| Dropped codes | `PATIENT_NACA_ID`, `INTERVENTION_ALARMED_BY_*`, `PATIENT_GENDER_*`, `PARTNER_GENDER*` | omitted — Sansys never populates them |
+
+The \~50-entry `invoiceNote` array, the `invoiceLine` article loop, the `documentTotals` fill, the pipe-concatenated `buyerName`/`addressLine1`, and the `document_type` 1→380 / 2→381 mapping all carry over unchanged in logic — only the key casing changes.
 
 ## Blocked by
 
-- [NIPO-9422](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2232615118/US+NIPO-9422+Sansys+-+File+to+Invoice+Ingestion) must actually call the v2 routing app (its task 14) for this tuple to be reached. The tuple itself can be added independently.
+1. **Task 15** — the `AceEndPointsPolicy` path property is unverified; if absent it must be created before the outbound call can work.
+2. **Base coverage** — 7 of the 19 known Sansys bases match no in-scope company; build against the 12 resolved bases, ship behind the completed lookup table (rollout gate, not a build blocker).
+3. **TAA↔1076 base mapping unconfirmed** — SAP `T001` shows `bukrs` 1076's registered city as Genève, not Aargau. This mapping was inferred from canton-name matching and had never been checked against SAP master data until now (see [identity model §2](https://tcsgroup.atlassian.net/wiki/x/5wAPhw)). Confirm with SAP/Finance before building task 9 against this row — if wrong, Sansys invoices for TAA would post under the wrong company code.
 
 ## How to test
 
-| Check | How | Env |
+| **Check** | **How** | **Env** |
 | --- | --- | --- |
-| Routing tuple works, one for all 6 companies | `common.policyxml` diff shows exactly the 5 new properties; test call with `X-Origin-Caller-Code: VTOM` resolves without `422` | QA |
-| Attrib untouched | The 3 `vtom_<company>_intervention_customer_billing_*` tuples are byte-identical before/after | QA |
-| v2 end-to-end | NIPO-9422's mapper output, POSTed to the v2 routing app, resolves `process_control` without `422 ACEFONC0021` | QA |
-
-**Regression:** v1 (the CAS/IDIT/Camping routing app) is untouched — Sansys uses a different app, no shared-ESQL change, no regression pass needed there.
+| One trigger ingests all files | Drop 3 files, fire the trigger once: `/input` empty, 3 copies in `save/`, 3 outcomes | QA |
+| No queue in the loop | Code/flow review: no MQ node, no queue subflow, no `FileInput` polling node | QA (review) |
+| `save/`/`done/`/`errors/` split | Mixed batch (1 all-valid, 1 all-invalid, 1 partial): `save/` = 3, `done/` and `errors/` payloads match the split | QA |
+| Company derivation | Feed the `TAM` sample → output carries `schemeIdentifier COMPANY_CODE = 1075`; verifiable for the 12 resolved bases | QA |
+| Tolerated fields + timestamps | Feed both real samples: no validation failure from any dropped field; output `start_time` still ends `+02:00` | QA |
+| Attrib regression | Re-run one known-good Attrib file per dual-run company: the `fip_number` requirement still fires for Attrib, and the EOM payload is byte-identical to a pre-change capture | QA |
 
 
 ANALYZED REQUEST BY LLM:
 SUMMARY
-- Add a new routing policy-property tuple (5 properties) for Sansys "Ambulance Transport Billing" v2 to the shared common.policyxml so VTOM caller/resolution routes to the v2 receivable technical app.
+- Add a new generic Sansys file-injection subflow + mapper that batch-drains a Sansys /input folder, validates Sansys-specific rules, derives company (bukrs) by base-identity policy, emits EOM v2 (camelCase) payloads and posts them to the v2 receivable-documents endpoint; keep existing Attrib flows untouched.
 
 TARGET
-- finance-accounting-integration-invoices-policy-project -> common.policyxml
-- External policy to verify: finance-integration-policies-endpoints : AceEndPointsPolicy (path: path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents)
-- Runtime header used by ACE routing: X-Origin-Caller-Code (expected value: VTOM)
+- Service: finance-accounting-integration-invoices-ingestion
+- New/changed artifacts (explicit): postSansys_files_injection_trigger.subflow, sansys/PrepareReceivableDocumentRequest.esql, PrepareAndProcessFile.esql (validation + logging), finance-integration-policies-endpoints (new policy entries and/or properties), AceEndPointsPolicy property path-finance-accounting-integration-invoices-v2-receivable-documents, monitorEvents subflow, FileRead/FileOutput nodes (SFTP credential), repository doc finance-accounting-api-invoice 2.1.0.yml
+- Unchanged: postAsv_/postSarge_/postSarvd_* subflows and their 3 mappers, purgeFile.esql, get_health.subflow (regression guard)
+- If unclear: SFTP credential identity name for Sansys (see ASSUMPTIONS_OR_QUESTIONS)
 
 REQUIRED_CHANGES
-- Add exactly these five property entries to common.policyxml (additive change only; do not modify any existing rows; the diff must show exactly five new property rows):
+- 1) Create postSansys_files_injection_trigger.subflow by cloning the existing postAsv_… subflow (clone wiring + monitor-event names only). Object: new subflow postSansys_files_injection_trigger.subflow.
+  - Note: It must be one generic subflow serving all companies (company travels in payload, not in flow name).
 
-<vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
-<vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
-<vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
-<vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
-<vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
+- 2) Point SFTP nodes at the Sansys credential identity. Targets: subflow FileRead/FileOutput nodes, property fileFtpUser.
+  - Note: Sansys uses a separate credential on a shared folder — do not reuse ASVAttribSftpIdentity.
 
-- Ensure no other edits are made to common.policyxml (no whitespace-only edits, no comment additions) — the "Definition of done" requires the common.policyxml diff to show exactly these 5 new properties and nothing else.
-- Do NOT add or modify any SANSYS.policyxml — the caller remains VTOM and VTOM's (empty, mandatory) policy file already exists.
-- Leave the existing Attrib tuples (vtom_<company>_intervention_customer_billing_*) byte-identical (no changes).
-- Confirm (with ACE team) that the actual X-Origin-Caller-Code presented by the Sansys trigger is VTOM; if a different caller code is used, change the sender prefix in the property names to lower(<actual-caller>)_ambulance_transport_billing_{...} accordingly.
-- Verify that the endpoint application path referenced by the new property exists in the external endpoints policy project (AceEndPointsPolicy): path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents. If it does not exist, escalate / coordinate (do not create a different path silently).
+- 3) Replace the single ComIbmFileRead with an in-flow whole-folder batch loop. Location: subflow node ProcessFile (where current ComIbmFileRead is used).
+  - Mechanism: developer choice; recommended Option A — loop the destructive FileRead re-entering it until noMatch; include an iteration cap so a folder being written into cannot spin the flow.
+  - Hard constraint: no message queue anywhere (no MQ node, no queue subflow, no FileInput polling).
+
+- 4) Keep noMatch → emptyOrMissingFileError behavior as loop exit and empty-folder response. Location: subflow FCMConnection_9.
+  - With a batch loop: if ≥1 file processed, noMatch means end-of-batch (not an error). APIC 200 NO_FILE behavior NIPO-9421 preserved.
+
+- 5) Add a Sansys branch to the validation module: change PrepareAndProcessFile.esql lines 116-123.
+  - In the Sansys branch: do not require fip_number; require category_id and category_name; require intervention.references[TRANSPORT_NUMBER].
+  - Guard the branch on source/trigger (see ASSUMPTIONS_OR_QUESTIONS) — do not key on company.
+
+- 6) Replace the fip_number TCSLog business-identifier with TRANSPORT_NUMBER in the Sansys branch. Location: PrepareAndProcessFile.esql:158-159.
+  - Keep INVOICE_ID / INVOICE_REFERENCE / DOCUMENT_TYPE as-is.
+
+- 7) Add a new generic Sansys mapper file: sansys/PrepareReceivableDocumentRequest.esql.
+  - Emit EOM v2 camelCase per the Mapping_Sansys_to_EOM_to_SFinDoc_v1.0.0.xlsx sheet "SANSYS => EOM" (include all rows marked 'Y').
+  - Do not rename or reuse asv/PrepareHTTPRequest.esql — key casing and identity logic differ.
+
+- 8) Set processControl.specificationIdentifier.Item[1].content = 'AMBULANCE_TRANSPORT_BILLING' in the Sansys mapper (one fixed value for all 6 companies).
+  - Not derived from intervention.type; hardcoded to this single value.
+
+- 9) Implement bukrs derivation from intervention.base_id via a policy lookup:
+  - Add a new named policy (e.g. BaseIdentityPolicy) inside finance-integration-policies-endpoints. Keys must follow the composite-key pattern: {producer_app}_{base_id}_bukrs (example from spec: sansysmit_c7b01f98-70b1-457c-bd1a-95bf1ffeb548_bukrs = 1070).
+  - Read the policy via Shlib_PoliciesReader (reuse same composite-key mechanism used by invoice_routage.esql:55-59).
+  - producer_app for the lookup is the hardcoded literal 'SANSYSMIT' (spec states producer_app here is a hardcoded literal).
+  - On no match: follow invoice_routage.esql:45-53 pattern — set Environment.Variables.ErrorRefApp to the reserved code ACEFONC0023 ("unknown base_id — no bukrs mapping") and PROPAGATE TO TERMINAL 2. Do NOT use the existing bare THROW USER EXCEPTION VALUES(...) at PrepareAndProcessFile.esql:16 (because it carries no distinct code).
+  - Behavior: unknown base_id must fail loudly with distinct error code; never default to a company.
+
+- 10) Emit both invoiceNumber entries in the EOM v2 payload:
+  - INVOICE_ID ← id
+  - TRANSPORT_NUMBER ← intervention.references[@scheme-identifier="TRANSPORT_NUMBER"].identifier
+  - TRANSPORT_NUMBER must use its own scheme-identifier (do not reuse PATIENT_FIP_NUMBER).
+
+- 11) Emit invoiceNote entries:
+  - invoiceNote[INVOICE_REFERENCE] ← reference (tolerate null)
+  - invoiceNote[INTERVENTION_CASE_NUMBER] ← references[CASE_NUMBER]
+  - invoiceNote[PATIENT_ID] ← patient.id
+
+- 12) Tolerate absent/dropped Tier-C fields per workbook: fip_number, gender_*, naca_*, alarmed_by_*, alarm_time, without_transportation, civility*.
+  - Use COALESCE(..., '') as existing mappers do; never THROW on absent Tier-C fields.
+
+- 13) Pass intervention.start_time and intervention.end_time through unchanged as local ISO-8601 with offset (no UTC normalization).
+
+- 14) Repoint the outbound call to the v2 consumer: finance-accounting-integration-invoices-v2 POST /receivable-documents.
+  - Location: the Sansys equivalent of PrepareAndProcessFile.esql:10 (update outbound URL building and policy-lookup tuple).
+  - The routing policy tuple to be used is described in NIPO-9498.
+
+- 15) Verify/create the endpoint property the app reads to build the task-14 URL:
+  - Policy project: finance-integration-policies-endpoints : AceEndPointsPolicy
+  - Property key: path-finance-accounting-integration-invoices-v2-receivable-documents
+  - Expected value: /finance-accounting/v2/invoices/receivable-documents
+  - This property is unverified in the repo; create it if absent (task 14 depends on it).
+
+- 16) Add a Sansys monitoring-event set mirroring the SUP:/FAIL: event identities. Location: subflow monitorEvents.
+  - Follow existing SUP:/FAIL prefix convention for monitoring events; feed error management.
+
+- 17) Do NOT change the existing Attrib subflows, their mappers, purgeFile.esql, or get_health.subflow. Objects: postAsv_, postSarge_, postSarvd_*, the 3 mappers, purgeFile.esql, get_health.subflow.
+
+- 18) Delete or update stale embedded response schema finance-accounting-api-invoice 2.1.0.yml (it documents the old IngestionResponse shape). The live ESQL already builds the new meta/data shape; update the doc to match. Pair with NIPO-9421 enum fix.
+
+- Definition of done (implementer must verify):
+  - One trigger against Sansys /input with n files drains /input, leaves n copies in save/, and produces n outcome payloads: each file's valid invoices in a done/ payload accepted by the downstream v2 posting path; invalid invoices in errors/; Attrib flows provably unchanged.
 
 MAPPING_DETAILS
-- Source document / links:
-  - US NIPO-9498: https://tcsgroup.atlassian.net/browse/NIPO-9498
-  - ADR-0001 (tenancy vs functional layer): https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265776280
-  - ADR-0009 (company-neutral process_control): https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2266333273
-  - NIPO-9422 (process_control emission): https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2232615118/US+NIPO-9422+Sansys+-+File+to+Invoice+Ingestion
-  - SAPS-2744 (SAP dispatch): https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2265776241/US+SAPS-2744+AIF+producer_app+carriage
-  - NIPO-9499 (producer_app stamping): https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233008237/US+NIPO-9499+Sansys+-+Financial+Document+V2+to+S_FIN_DOC
-- Proposed rows (exact property names & values to add):
-  - vtom_ambulance_transport_billing_target = financial-documents
-  - vtom_ambulance_transport_billing_application = finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents
-  - vtom_ambulance_transport_billing_endpoint = sapnative
-  - vtom_ambulance_transport_billing_timeout = 55
-  - vtom_ambulance_transport_billing_call = httpAsync
-- Routing key construction reference:
-  - ACE routing resolves keys as lower(sender_id || '_' || process_control || '_' || attr)
-  - process_control used in tests: AMBULANCE_TRANSPORT_BILLING (company-neutral)
-  - property names therefore must be lower-case as provided (vtom_ambulance_transport_billing_*)
+- Source document/link:
+  - Field map: Mapping_Sansys_to_EOM_to_SFinDoc_v1.0.0.xlsx (sheet below).
+  - Identity map: https://touringclubsuisse-my.sharepoint.com/personal/victor_hueni_tcs_ch/Documents/01 - Projet/BCI Sansys/INSA - Base name.xlsx?web=1
+  - Cross Cuttings identity reference: https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265907431
+  - ADR references:
+    - ADR-0006 (bukrs from base_id): https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267086883
+    - ADR-0007 (SFTP topology): https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267447304
+    - ADR-0008 (identifier model): https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267185173
+    - ADR-0009 (neutral process_control): https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2266333273
+  - Routing policy tuple / consumer reference: NIPO-9498 (see https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233204876)
+
+- Sheets/tabs:
+  - Use sheet "SANSYS => EOM" inside Mapping_Sansys_to_EOM_to_SFinDoc_v1.0.0.xlsx.
+  - Include all rows/columns marked 'Y' for mapping into EOM v2.
+
+- Lines/columns/dictionary references (code anchors):
+  - PrepareAndProcessFile.esql:116-123 (add Sansys validation branch)
+  - PrepareAndProcessFile.esql:158-159 (TCSLog business identifier change)
+  - PrepareAndProcessFile.esql:16 (existing THROW USER EXCEPTION — do not reuse for unknown base_id)
+  - PrepareAndProcessFile.esql:10 (outbound URL / routing — update for v2)
+  - invoice_routage.esql:45-53 and invoice_routage.esql:55-59 (reference patterns for policy lookup and error handling via Shlib_PoliciesReader)
+
+- Fields/attributes to add / emit (exact names and JSON paths as requested in spec):
+  - processControl.specificationIdentifier.Item[1].content = 'AMBULANCE_TRANSPORT_BILLING'
+  - seller.sellerIdentifier[].schemeIdentifier = 'COMPANY_CODE'
+  - seller.sellerIdentifier[].content = bukrs (bukrs derived via BaseIdentityPolicy lookup from intervention.base_id)
+  - buyer.buyerIdentifier[schemeIdentifier='SANSYS'].content = debtor.code (hyphen-stripped)
+  - invoiceNumber entries:
+    - INVOICE_ID ← id
+    - TRANSPORT_NUMBER ← intervention.references[@scheme-identifier="TRANSPORT_NUMBER"].identifier
+  - invoiceNote entries:
+    - INVOICE_REFERENCE ← reference (tolerate null)
+    - INTERVENTION_CASE_NUMBER ← references[CASE_NUMBER]
+    - PATIENT_ID ← patient.id
+  - invoiceLine array, documentTotals, buyerName/addressLine1 logic, and document_type mapping (1→380, 2→381) — same logic as existing asv mapper, only key casing changes to camelCase
+  - Pass intervention.start_time / intervention.end_time as local ISO-8601 with offset (do not convert to UTC)
+  - Tolerate and COALESCE absent/dropped fields marked in workbook: fip_number, gender_*, naca_*, alarmed_by_*, alarm_time, without_transportation, civility*
 
 ASSUMPTIONS_OR_QUESTIONS
-- Assumed X-Origin-Caller-Code = "VTOM" (task 2). This must be confirmed with ACE team; if incorrect, the sender prefix in the five property names must be changed to lower(<actual-caller>).
-- Assumed location of the file to edit is finance-accounting-integration-invoices-policy-project/common.policyxml within the repo you will provide; if the file lives elsewhere in your repository layout, edit the canonical common.policyxml in the policy project.
-- The external endpoints policy project (finance-integration-policies-endpoints : AceEndPointsPolicy) is not within this repository; verification must be performed against that policy project. If the path "path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents" is absent, a separate change or coordination is required (do not invent or change endpoint names here).
-- The change is intentionally additive and must not alter existing vtoms or Attrib rows (regression criterion).
-- No REST/API changes are requested by US NIPO-9498 — scope is strictly the policy tuple. If you intended an OpenAPI/REST update as described earlier, that is out of scope for this ticket and must be raised separately.
+- Missing Sansys SFTP credential identity name (the spec says "Sansys is a separate credential on a shared folder — do not reuse ASVAttribSftpIdentity") — the exact identity string/property to use for fileFtpUser is not provided.
+- How to detect the "source/trigger" in code to guard the Sansys validation branch (PrepareAndProcessFile.esql:116-123)? The spec requires guarding on source/trigger rather than company; exact header/variable used in other flows (flow name, sender_id, X-Origin-Caller-Code, a process variable) must be confirmed or inferred from the repo.
+- Iteration cap for the FileRead loop: the spec requires an iteration cap so a folder being written into cannot spin the flow, but no numeric limit or property name is specified. Please provide default limit or instruct to add a configurable property.
+- Exact name for the new policy inside finance-integration-policies-endpoints (the spec suggests "BaseIdentityPolicy" as an example). Confirm policy filename/namespace and expected format for entries (key → bukrs).
+- Normalization/casing for the composite policy key producer_app: the spec gives the literal 'SANSYSMIT' but the example key uses lowercase 'sansysmit_..._bukrs'. Confirm whether policies are keyed case-sensitively and whether producer_app should be normalized to lowercase when building the policy key.
+- Verify existence of AceEndPointsPolicy property path-finance-accounting-integration-invoices-v2-receivable-documents in finance-integration-policies-endpoints (spec flags this as unverified). If absent, confirm policy authoring process and where/how new property should be stored (XML, JSON policy file).
+- Exact SUP:/FAIL: monitoring-event identity strings to mirror for Sansys (monitorEvents). The spec asks to "mirror the SUP:/FAIL: event identities" but exact values are not listed in the spec fragment.
+- Base coverage: 7 of 19 known Sansys bases have no mapping today; spec says build against 12 resolved bases and ship behind lookup table. Confirm rollout gating process / how to mark missing base_ids to fail with ACEFONC0023 until policy entries are added.
+- Should buyer.buyerIdentifier[schemeIdentifier='SANSYS'].content hyphen-stripping be implemented via simple string replace? Confirm expected normalization rules (strip '-' only).
 
 EXECUTOR_BRIEF
-- In the repo, open finance-accounting-integration-invoices-policy-project/common.policyxml.
-- Insert exactly the five property elements below (no other edits):
+- When you open the codebase:
+  1) Clone the ASV injection subflow to create postSansys_files_injection_trigger.subflow; keep only wiring and monitor-event name conventions from the clone.
+  2) Reconfigure the SFTP FileRead/FileOutput nodes in the new subflow to use the Sansys SFTP credential (do not reuse ASVAttribSftpIdentity) — ask for the exact identity if not present in the repo.
+  3) Replace the single-file ComIbmFileRead behavior with a destructive whole-folder batch loop (recommended: re-enter the destructive FileRead until noMatch). Implement a configurable iteration cap to avoid infinite spinning.
+  4) Modify PrepareAndProcessFile.esql:
+     - Add a Sansys validation branch at lines 116-123 (guarded on source/trigger). Drop fip_number, keep category_id/category_name, require intervention.references[TRANSPORT_NUMBER].
+     - Replace the TCSLog business-identifier for the Sansys branch at lines 158-159 to use TRANSPORT_NUMBER.
+     - Ensure error handling for unknown base_id uses Environment.Variables.ErrorRefApp = 'ACEFONC0023' and PROPAGATE TO TERMINAL 2 (do not reuse the THROW USER EXCEPTION at line 16).
+     - Repoint the outbound HTTP URL construction (esql:10 equivalent) to use the v2 endpoint property from AceEndPointsPolicy.
+  5) Add new mapper file sansys/PrepareReceivableDocumentRequest.esql that:
+     - Emits EOM v2 camelCase per Mapping_Sansys_to_EOM_to_SFinDoc_v1.0.0.xlsx sheet "SANSYS => EOM" (all rows marked 'Y').
+     - Emits both invoiceNumber entries (INVOICE_ID and TRANSPORT_NUMBER), invoiceNote entries per spec, seller/buyer identifiers as specified, processControl.specificationIdentifier.Item[1].content = 'AMBULANCE_TRANSPORT_BILLING', preserves invoiceLine and documentTotals logic with camelCase keys, tolerates dropped fields with COALESCE.
+     - Does not rename/reuse asv/PrepareHTTPRequest.esql — implement per v2 key casing and identity lookup.
+  6) Implement BaseIdentityPolicy (or equivalent) inside finance-integration-policies-endpoints and use Shlib_PoliciesReader to read {producer_app}_{base_id}_bukrs keys (producer_app literal = 'SANSYSMIT' unless repo conventions indicate otherwise). On missing mapping set ErrorRefApp=ACEFONC0023 and PROPAGATE TO TERMINAL 2.
+  7) Ensure outgoing POST is built from the AceEndPointsPolicy property path-finance-accounting-integration-invoices-v2-receivable-documents (create the property if missing; expected value /finance-accounting/v2/invoices/receivable-documents).
+  8) Add Sansys entries to monitorEvents subflow mirroring SUP:/FAIL: events, and wire them into the new subflow monitoring.
+  9) Ensure save/ done/ errors/ file outputs follow the same per-file policy properties as existing flows; the new batch must produce save/ (consumption), done/ (valid invoices payload), errors/ (invalid invoices payload).
+ 10) Do not change existing Attrib flows or their mappers; add unit/regression tests to confirm Attrib validation still requires fip_number and its EOM payloads are byte-identical to pre-change captures.
+ 11) Update or remove finance-accounting-api-invoice 2.1.0.yml to reflect the new meta/data response shape.
 
-<vtom_ambulance_transport_billing_target>financial-documents</vtom_ambulance_transport_billing_target>
-<vtom_ambulance_transport_billing_application>finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents</vtom_ambulance_transport_billing_application>
-<vtom_ambulance_transport_billing_endpoint>sapnative</vtom_ambulance_transport_billing_endpoint>
-<vtom_ambulance_transport_billing_timeout>55</vtom_ambulance_transport_billing_timeout>
-<vtom_ambulance_transport_billing_call>httpAsync</vtom_ambulance_transport_billing_call>
+- Use mapping spreadsheet "SANSYS => EOM" and the identity map link for field-level and base_id→bukrs mappings while implementing; consult invoice_routage.esql for policy-read patterns and error-handling idioms.
 
-- Ensure the change is additive and that the git diff contains exactly these five added lines and nothing else (no comments, no whitespace-only changes, no reorder).
-- Commit with a message referencing NIPO-9498 (example: "NIPO-9498: add vtom_ambulance_transport_billing_* routing tuple to common.policyxml") and push per repo workflow.
-- Run these verifications:
-  - Grep the policy file to confirm the five keys exist: grep for "vtom_ambulance_transport_billing_".
-  - Confirm existing vtom_<company>_intervention_customer_billing_* tuples are unchanged (byte-identical) compared to HEAD.
-  - Coordinate with ACE team to confirm X-Origin-Caller-Code used by Sansys trigger is VTOM (if not, update keys accordingly).
-  - Confirm in finance-integration-policies-endpoints (AceEndPointsPolicy) that the path "path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents" exists; if missing, raise/coordinate remediation.
-- Test runtime behavior in QA: call the v2 routing app with header "X-Origin-Caller-Code: VTOM" and with process_control = AMBULANCE_TRANSPORT_BILLING; the route should resolve to the v2 technical app (no ACEFONC0021 422).
+- After implementation, run the test checklist in "How to test" (drop multiple files, confirm /input drained, save/ done/ errors/ splits, no MQ nodes, company derivation validated for the 12 resolved bases, timezone preservation for timestamps, Attrib regression tests).

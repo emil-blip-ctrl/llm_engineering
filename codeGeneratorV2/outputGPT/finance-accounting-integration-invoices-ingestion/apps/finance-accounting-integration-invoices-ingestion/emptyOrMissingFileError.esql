@@ -1,0 +1,60 @@
+CREATE COMPUTE MODULE emptyOrMissingFileError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		IF COALESCE(Environment.Variables.BatchMode, FALSE) = TRUE
+		   AND COALESCE(Environment.Variables.IngestionSource, '') = 'SANSYS'
+		   AND InputLocalEnvironment.File.Read.NoMatchReason = 'NoFile'
+		   AND COALESCE(Environment.Variables.BatchProcessedFileCount, 0) > 0 THEN			
+			IF COALESCE(Environment.Variables.BatchLoopLimitReached, FALSE) THEN
+				SET Environment.Variables.TCSLog.context.severity = 'WARN';
+			ELSE
+				SET Environment.Variables.TCSLog.context.severity = 'INFO';
+			END IF;
+
+			SET OutputRoot.JSON.Data.meta.submissionId = COALESCE(NULLIF(Environment.Variables."X-Global-Transaction-Id", ''),COALESCE(NULLIF(Environment.Variables."X-Correlation-Id", ''),COALESCE(NULLIF(Environment.Variables.trackID, ''), UUIDASCHAR)));
+			SET OutputRoot.JSON.Data.meta.timestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss');
+			SET OutputRoot.JSON.Data.data.status = 'COMPLETED';
+			SET OutputRoot.JSON.Data.data.receivedCount = COALESCE(Environment.Variables.BatchProcessedFileCount, 0);
+			IF COALESCE(Environment.Variables.BatchLoopLimitReached, FALSE) THEN
+				SET OutputRoot.JSON.Data.data.message = 'Batch file ingestion stopped after reaching the maximum configured iteration count.';
+			ELSE
+				SET OutputRoot.JSON.Data.data.message = 'Batch file ingestion completed.';
+			END IF;
+
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 200;
+
+			RETURN TRUE;
+		END IF;
+		
+		IF InputLocalEnvironment.File.Read.NoMatchReason = 'NoFile' THEN			
+			SET Environment.Variables.TCSLog.context.severity = 'WARN';
+
+			SET OutputRoot.JSON.Data.meta.submissionId = COALESCE(NULLIF(Environment.Variables."X-Global-Transaction-Id", ''),COALESCE(NULLIF(Environment.Variables."X-Correlation-Id", ''),COALESCE(NULLIF(Environment.Variables.trackID, ''), UUIDASCHAR)));
+			SET OutputRoot.JSON.Data.meta.timestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss');
+			SET OutputRoot.JSON.Data.data.status = 'NO_FILE';
+			SET OutputRoot.JSON.Data.data.receivedCount = 0;
+			SET OutputRoot.JSON.Data.data.message = '';
+
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 200;
+
+			RETURN TRUE;
+		END IF;
+
+		IF Environment.invalidFile = TRUE THEN			
+			SET Environment.Variables.TCSLog.context.severity = 'ERR';
+
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 422;
+
+			DECLARE output REFERENCE TO OutputRoot.JSON.Data;
+			
+			SET OutputRoot.JSON.Data.httpCode = '422';
+			SET OutputRoot.JSON.Data.httpMessage = 'Unprocessable Entity';
+			SET OutputRoot.JSON.Data.moreInformation = 'Invalid file format or content. The payload could not be parsed.';
+			
+			RETURN TRUE;
+		END IF;
+	RETURN TRUE;
+	END;
+END MODULE;

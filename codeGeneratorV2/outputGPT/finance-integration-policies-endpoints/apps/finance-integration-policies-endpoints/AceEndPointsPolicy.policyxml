@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policies>
+  <policy policyType="UserDefined" policyName="AceEndPointsPolicy" policyTemplate="UserDefined">
+    <path-finance-accounting-integration-invoice>/finance-accounting/v1/invoices/invoice</path-finance-accounting-integration-invoice>
+    <path-finance-accounting-integration-invoice-v2-payable-documents>/finance-accounting/v2/invoices/payable-documents</path-finance-accounting-integration-invoice-v2-payable-documents>
+    <path-finance-accounting-integration-invoice-v2-receivable-documents>/finance-accounting/v2/invoices/receivable-documents</path-finance-accounting-integration-invoice-v2-receivable-documents>
+    <path-finance-accounting-integration-invoices-v2-receivable-documents>/finance-accounting/v2/invoices/receivable-documents</path-finance-accounting-integration-invoices-v2-receivable-documents>
+    <path-finance-accounting-integration-technical-invoices-financial-documents>/finance-accounting/v1/financial-documents/invoice</path-finance-accounting-integration-technical-invoices-financial-documents>
+    <path-services-integration-finance-accounting-assistance-payments>/services/v1/finance-accounting/payments/</path-services-integration-finance-accounting-assistance-payments>
+    <path-finance-accounting-integration-technical-invoices-financial-documents-v2-payable-documents>/finance-accounting/v2/financial-documents/payable-documents</path-finance-accounting-integration-technical-invoices-financial-documents-v2-payable-documents>
+    <path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents>/finance-accounting/v2/financial-documents/receivable-documents</path-finance-accounting-integration-technical-invoices-financial-documents-v2-receivable-documents>
+    <path-services-integration-finance-accounting-assistance-payable-documents>/services/v1/finance-accounting/invoices/payable-documents</path-services-integration-finance-accounting-assistance-payable-documents>
+    <path-services-integration-finance-accounting-assistance-receivable-documents>/services/v1/finance-accounting/invoices/receivable-documents</path-services-integration-finance-accounting-assistance-receivable-documents>
+  </policy>
+</policies>
