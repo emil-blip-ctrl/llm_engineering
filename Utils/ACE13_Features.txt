@@ -1,0 +1,17 @@
+13.0.4
+
+- ESQL OpenTelemetry functions
+- Context tree information in Trace nodes
+- Bearer token
+- Container Explorer view in the Toolkit
+- IBM zOS Connect Request node
+- HTTP Request node Retry properties tab
+- Changes to data caching
+- Internet Protocol version 6 (IPv6) support
+- JSONata Mapping node
+- Webhook callback URLs support for connectors
+- IBM App Connect Enterprise Toolkit enhancements
+  Managing credentials in a vault by using the IBM App Connect Enterprise Toolkit
+- Credential and vault commands
+- Migration commands
+- Default JRE - Java 17

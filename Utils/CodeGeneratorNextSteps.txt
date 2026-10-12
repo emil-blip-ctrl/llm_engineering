@@ -1,0 +1,6 @@
+-> Build ACE & MQ exam to evaluate the level of accuracy of those technologies by the different LLMs
+-> Build ACE RAG to enhance the answers by the CodeGenerator and provide higher quality output
+-> Build MQ RAG to enhance the answers by the CodeGenerator and provide higher quality output
+-> Enhance the CodeGenerator with mechanism to delete/rename files
+-> Create user interface of the CodeGenerator with chatbox and more useful stuff
+-> Add custom tools and calls to the CodeGenerator to escalate it to more to atonomous Agentic workflow

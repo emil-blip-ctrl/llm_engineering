@@ -1,0 +1,33 @@
+01 - Kvartira
+01 - Fitnes
+05 - Parking
+05 - Grajdanska
+05 - Zdravni
+11 - Canov
+11 - Dneven Red
+11 - Jechev
+11 - Youtube PR
+12 - Telefon CH
+16 - Telefon FR
+22 - Telefon BG
+22 - Zaem
+
+
+
+Kalkulaciq
+
+Telefoni - 20 
+	 + 40 
+         + 20
+		- 80
+Grajdanska    	- 80
+Hotel		- 1100
+Zdravni		- 200
+Benzin		- 150
+Qdene		- 600
+Zaem		- 300
+Abonamenti 	- 60
+Fitnes		- 80
+Podstrijka/vejdi- 80
+----------------------
+		- 2700

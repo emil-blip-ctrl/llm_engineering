@@ -1,0 +1,460 @@
+-------------------- DATE&TIME -------------------
+DECLARE MyDate DATE;
+SET MyDate = DATE '2000-02-29';
+
+DECLARE MyTime TIME;
+SET MyTime = TIME '11:49:23.656';  ---- FRACTION SECONDS OPTIONAL ----
+
+DECLARE MyGetGmttime GMTTIME;
+SET MyGetGmttime = GMTTIME '12:00:00';
+
+DECLARE MyTimeStamp TIMESTAMP;
+SET MyTimeStamp = TIMESTAMP '1999-12-31 23:59:59';  ---- USE LEADING ZEROS ----
+
+DECLARE currentDateTime TIMESTAMP;
+SET currentDateTime = CURRENT_TIMESTAMP;
+
+DECLARE MyGetGMTTimeStamp GMTTIMESTAMP;
+SET MyGetGMTTimeStamp = GMTTIMESTAMP '1999-12-31 23:59:59.999999';
+
+------------------------NUMBERS---------------------------------
+
+SET VAL = CAST('123456' AS DECIMAL(3,0))
+
+------------------------SET--------------------------------------
+<Order>
+    <Item id="123" quantity="10">Laptop</Item>
+</Order>
+
+DECLARE itemValue CHAR;
+SET itemValue = FIELDVALUE(InputRoot.XMLNSC.Order.Item);
+
+SET OutputRoot.JSON.Data.CountryName = COALESCE(CountryCodeCache.{FIELDVALUE(InputRoot.JSON.Data.CountryCode)},'Unknown');
+
+CREATE FIELD Environment.vars.var VALUE InputRoot.XMLNSC.Data.Items.(XMLNSC.Attribute)name ;
+CREATE FIELD Environment.vars.var VALUE FIELDVALUE(InputRoot.XMLNSC.Data.Items.name) ;	
+SET OutputRoot.XMLNSC.Reply.(XMLNSC.CDataField)OriginalInput = CAST(InputRoot.BLOB.BLOB AS CHAR CCSID 1208);
+
+CREATE FIELD OutputRoot.XMLNS.TestCase.(XML.Attribute)description TYPE Attribute VALUE 'Test Attribute';
+
+CREATE LASTCHILD OF CountryCodeCache NAME record.countrycode VALUE record.countryname;
+
+------------------------OPERATORS--------------------------------
+IF level BETWEEN maxLevel AND minLevel
+
+The operator EXISTS returns a Boolean value that indicates whether a SELECT function returned one or more values (TRUE) or none (FALSE).
+EXISTS(SELECT * FROM something WHERE predicate)
+
+SET OutputRoot.XMLNSC.Top.Result1 = 30 NOT IN(34, 42, 45)
+SET OutputRoot.XMLNSC.Top.Result2 = var1 IN(var2, var3, var4);
+SET OutputRoot.XMLNSC.Top.Result3 = 42 IN(SELECT A FROM InputRoot.XMLNSC.Top.a[] AS A);  -----TRUE/FALSE-------
+SET OutputRoot.XMLNSC.Top.Result4 = 42 IN(LIST{34,36,37,38,39,40,41,42,43,44});
+SET OutputRoot.XMLNSC.Top.Result5 = var1 IN(InputRoot.XMLNSC.Top.test[]);
+
+SET OutputRoot.XMLNS.Data.Age  = (DATE '2005-03-31' - DATE '1947-10-24') YEAR TO MONTH;
+
+--------------------PROCEDURE&FUNCTION-----------------------------
+CREATE FUNCTION CalculateTotalPrice (price FLOAT, quantity INTEGER) RETURNS FLOAT
+BEGIN
+    DECLARE totalPrice FLOAT;
+    SET totalPrice = price * quantity;
+    RETURN totalPrice;
+END;
+
+
+CREATE PROCEDURE UpdateOrderStatus (IN orderID CHAR, INOUT status CHAR)
+BEGIN
+    -- Logic to update order status
+    SET status = 'Processed';
+END;
+
+---------------------------------CASE-----------------------
+CASE size
+  WHEN minimum + 0 THEN
+    SET description = 'small';
+  WHEN minimum + 1 THEN
+    SET description = 'medium';        
+  WHEN minimum + 2 THEN
+    SET description = 'large';
+    CALL handleLargeObject();
+  ELSE
+    SET description = 'unknown';
+    CALL handleError();
+END CASE;
+
+
+CASE
+  WHEN i <> 0 THEN
+    CALL handleI(i);
+  WHEN j> 1 THEN
+    CALL handleIZeroAndPositiveJ(j);
+  ELSE
+    CALL handleAllOtherCases(j);
+END CASE;
+
+-----------------------------ITERATE-------------------
+CREATE FIELD Environment.test;
+  DECLARE itemValue INTEGER 20;
+  X: WHILE itemValue > 0 DO
+    SET itemValue = itemValue - 1;
+    IF itemValue IN (3, 5, 10, 15) THEN
+      ITERATE X;
+    END IF;
+    CREATE LASTCHILD OF Environment.test NAME 'value' || CAST(itemValue AS CHARACTER) VALUE itemValue;
+  END WHILE;
+------------------------LEAVE-----------------
+DECLARE i INTEGER;
+SET i = 1;
+X : REPEAT 
+  ...
+  IF i>= 4 THEN
+    LEAVE X;
+  END IF;
+
+  SET i = i + 1;
+UNTIL
+  FALSE
+END REPEAT;
+-------------------LOOP(INFINITE)-----------------
+DECLARE i INTEGER;
+SET i = 1;
+X : LOOP 
+  ...
+  IF i>= 4 THEN
+    LEAVE X;
+  END IF;
+  SET i = i + 1;
+END LOOP X;
+------------------REPEAT UNTIL(DO WHILE)-----------------
+DECLARE i INTEGER;
+SET i = 1;
+X : REPEAT
+  ...
+  SET i = i + 1;
+UNTIL
+  i>= 3
+END REPEAT X;
+------------------WHILE---------------------------
+DECLARE i INTEGER;
+SET i = 1;
+X : WHILE i <= 3 DO
+  ...
+  SET i = i + 1;
+  END WHILE X;
+--------------------FOR-------------------------
+FOR source AS Environment.SourceData.Folder[] DO
+     CREATE LASTCHILD OF OutputRoot.XMLNSC.Data.ResultData.MessageArrayTest.Folder[i] 
+            NAME 'FieldA' VALUE '\' || source.Field1 || '\' || CAST(i AS CHAR);
+
+     CREATE LASTCHILD OF OutputRoot.XMLNSC.Data.ResultData.MessageArrayTest.Folder[i] 
+            NAME 'FieldB' VALUE '\' || source.Field2 || '\' || CAST(i AS CHAR);
+     SET i = i + 1;
+END FOR;
+-----------------------LEFT---------------------
+SET resultString = LEFT(inputString, 5);	
+-- Output: 'Hello'
+-----------------------LTRIM-------------------
+DECLARE inputString CHAR '###Hello, World!###';
+DECLARE trimmedString CHAR;
+
+SET trimmedString = LTRIM(inputString, '#');   ---------------DEFAULT REMOVES LEADING SPACES----------------
+
+-- Output: 'Hello, World!###' 
+---------------------------TRANSLATE---------------
+DECLARE inputString CHAR 'Hello, World!';
+DECLARE transformedString CHAR;
+
+SET transformedString = TRANSLATE(inputString, 'eo', 'EO');
+
+-- Output: 'HEllO, WOrld!'
+---------------------------FOR----------------------------
+CREATE LASTCHILD OF Environment.values NAME 'value' VALUE 10;
+   		CREATE LASTCHILD OF Environment.values NAME 'value' VALUE 13;
+   		CREATE LASTCHILD OF Environment.values NAME 'value' VALUE 12;
+   		CREATE LASTCHILD OF Environment.values NAME 'value' VALUE 1;
+   		CREATE LASTCHILD OF Environment.values NAME 'value' VALUE 17;
+   		CREATE LASTCHILD OF Environment.values NAME 'value' VALUE 22;
+   		CREATE LASTCHILD OF Environment.values NAME 'value' VALUE 19;
+		
+		CREATE FIELD Environment.test1 VALUE FOR ALL Environment.values.value[] AS I(I>20);
+		CREATE FIELD Environment.test2 VALUE FOR ANY Environment.values.value[] AS I(I>20);
+---------------------LASTMOVE--------------------------------
+WHILE LASTMOVE(myref) DO    			 
+MOVE myref NEXTSIBLING NAME 'myRepeatingRecord';   	 --------------USE TO ITTERATE-----------
+END WHILE;
+-----------------------EXISTS--------------------------------------
+DECLARE Field1Exists BOOLEAN EXISTS(OutputRoot.XMLNS.Data.Source.F1[]); ----------[] ARE MANDATORY!!!!-------------
+----------------------------COALESCE----------------------------------
+COALESCE(Body.Salary, 0)                           -----------------ASSIGNS DEFAULT VALUE IN NONE IS PRESENT!!! IMPORTANT!!!---------------
+-------------------------Loop through the input message----------------------------
+SET OutputRoot.XMLNS.Invoice[] = 
+    (SELECT I FROM InputRoot.XMLNS.Invoice[] AS I
+              WHERE I.Customer.LastName = CurrentCustomer
+    );
+
+<!> <!> <!> <!> <!> <!> <!> <!>  If you set the element to NULL by using the following statement, the element is deleted from the message tree:
+
+SET OutputRoot.XMLNS.Invoice.Customer.Title = NULL;  
+
+If you set the value of this element to NULL as follows:
+
+SET OutputRoot.XMLNS.Invoice.Customer.Title VALUE = NULL;  
+
+IT IS NOT DELETE BUT NULL IS ASSIGNED TO THE ELEMENT <!> <!> <!> <!> <!> <!> <!> <!> <!> <!> <!> 
+
+----------------------------------------------PROPAGATE-------------------------------
+PROPAGATE;  	----- DEFAULT OUTPUT
+PROPAGATE TO TERMINAL 'out1'; ------- TO TERMINAL 1
+PROPAGATE TO LABEL 'ThirdCopy'; -------- TO LABEL
+PROPAGATE DELETE NONE; ---- DEFAULT OUTPUT & DONT CLEAR OUTPUT MESSAGE TREE
+PROPAGATE TO TERMINAL 'out1' DELETE NONE; -----TO OUTPUT1 & DONT CLEAR OUTPUT MESSAGE TREE
+---------------------------------------COPYING MESSAGES-------------------------------------
+The following single statement copies the iterations of the input fields to the output fields, and deletes any surplus fields in the output message.
+
+SET OutputRoot.XMLNS.Output_top.Outfield1.[] = InputRoot.XMLNS.Field_top.field1[];
+
+The following example shows how you can rename the elements when you copy them into the output tree.
+ This statement does not copy across the source element name, therefore each field1 element becomes a Target element.
+
+SET OutputRoot.XMLNS.Output_top.Outfield1.Target[] = 
+    (SELECT I FROM InputRoot.XMLNS.Field_top.field1[] AS I );
+
+The next example shows a different way to do the same operation; it produces the same end result.
+
+SET OutputRoot.XMLNS.Output_top.Outfield2.Target[] 
+              = InputRoot.XMLNS.Field_top.field1[];  
+
+The following example copies across the source element name. Each field1 element is retained as a field1 element under the Target element.
+
+SET OutputRoot.XMLNS.Output_top.Outfield3.Target.[] 
+              = InputRoot.XMLNS.Field_top.field1[];  
+
+This example is an alternative way to achieve the same result, with field1 elements created under the Target element.
+
+SET OutputRoot.XMLNS.Output_top.Outfield4.Target.*[] 
+              = InputRoot.XMLNS.Field_top.field1[];
+------------------------------COUNT FIELDS--------------------------------------
+SELECT COUNT(*)
+  FROM Body.Invoice.Purchases."Item"[] AS I
+
+Using COUNT(*) counts the total number of Item fields, regardless of whether any of the fields is NULL. 
+The preceding example is in fact equivalent to using the CARDINALITY function, as in the following example:
+
+CARDINALITY(Body.Invoice.Purchases."Item"[])
+
+-----------------------------SUM FIELDS-----------------------------
+CREATE FIELD OutputRoot.XMLNSC.Body.Sum VALUE (SELECT SUM(I.Price * I.Quantity)
+  					FROM OutputRoot.XMLNSC.Body.Invoice.Purchases.Item[] AS I);
+-----------------------------SELECT--------------------------------
+ SET OutputRoot.XMLNS.Data.Output[] =
+    (SELECT R.Quantity, R.Author FROM InputRoot.XMLNS.Invoice.Purchases.Item[] AS R
+    );
+
+When this ESQL code processes the Invoice message, it produces the following output message:
+
+<Data>
+  <Output>
+     <Quantity>2</Quantity>
+     <Author>Neil Bradley</Author>
+  </Output>
+  <Output>
+     <Quantity>1</Quantity>
+     <Author>Don Chamberlin</Author>
+  </Output>
+  <Output>
+     <Quantity>1</Quantity>
+     <Author>Philip Heller, Simon Roberts</Author>
+  </Output>
+</Data>
+
+
+
+SET OutputRoot.XMLNS.Data.Output[] =
+    (SELECT R.Quantity AS Book.Quantity, 
+            R.Author   AS Book.Author 
+            FROM InputRoot.XMLNS.Invoice.Purchases.Item[] AS R
+    );
+
+
+<Data>
+  <Output>
+    <Book>
+      <Quantity>2</Quantity>
+      <Author>Neil Bradley</Author>
+    </Book>
+  </Output>
+  <Output>
+    <Book>
+      <Quantity>1</Quantity>
+      <Author>Don Chamberlin</Author>
+    </Book>
+  </Output>
+  <Output>
+    <Book>
+      <Quantity>1</Quantity>
+      <Author>Philip Heller, Simon Roberts</Author>
+    </Book>
+  </Output>
+</Data> 
+
+--------------------------------------------------JSON---------------------------
+CREATE LASTCHILD OF OutputRoot DOMAIN('JSON');
+
+CREATE FIELD OutputRoot.JSON.Data IDENTITY (JSON.Array)Data;
+
+CREATE FIELD Environment.Variables.ValidationFailedJson.JSON.Data.(JSON.Array)invoices;
+
+CREATE LASTCHILD OF OutputRoot.JSON.Data TYPE NameValue NAME 'Item' VALUE 'valueA';
+CREATE LASTCHILD OF OutputRoot.JSON.Data TYPE NameValue NAME 'Item' VALUE 'valueB';
+
+CREATE FIELD OutputRoot.JSON.Data IDENTITY(JSON.Array)Data;
+SET OutputRoot.JSON.Data.Item[1].Nam1 = 'val1';
+SET OutputRoot.JSON.Data.Item[1].Num1 = 1;
+SET OutputRoot.JSON.Data.Item[2].Nam2 = 'val2';
+SET OutputRoot.JSON.Data.Item[2].Num2 = 2;
+----------------------------------MQ OUTPUT------------------------------------------
+CREATE FIELD OutputLocalEnvironment.Destination.MQ.DestinationData.queueName VALUE 'OUTPUTQ2';       --------Q OUTPUT MODE 
+CREATE FIELD OutputLocalEnvironment.Destination.MQ.DestinationData[2].queueName VALUE 'OUTPUTQ';	-----DESTINATION LIST
+----------------------------------TIMEOIT CONTROL NODE-------------------------------
+SET OutputLocalEnvironment.TimeoutRequest.Action = 'SET';
+		SET OutputLocalEnvironment.TimeoutRequest.Identifier = 'Timeout1';
+		SET OutputLocalEnvironment.TimeoutRequest.StartDate = 'TODAY';
+		SET OutputLocalEnvironment.TimeoutRequest.StartTime = 
+			CURRENT_TIME + CAST(InputRoot.JSON.Data.Message.Delay AS INTERVAL SECOND);			
+    	SET OutputLocalEnvironment.TimeoutRequest.Interval = 0;		
+		SET OutputLocalEnvironment.TimeoutRequest.Count = 1;
+		SET OutputLocalEnvironment.TimeoutRequest.IgnoreMissed = 'TRUE';
+		SET OutputLocalEnvironment.TimeoutRequest.AllowOverwrite = 'TRUE';	
+----------------------------------------SLEEP--------------------------------------------
+DECLARE returnValue BOOLEAN;
+SET returnValue = SLEEP(1000); /* attempt to sleep for one second */
+----------------------------------------SQL INPUT-------------------------------------------
+DECLARE MyRef REFERENCE TO InputRoot.JSON.Data;
+		DECLARE DBSchema CHARACTER 'MYSCHEMA';				
+		DECLARE DBTable  CHARACTER 'EMPLOYEES';
+		INSERT INTO Database.{DBSchema}.{DBTable} (PKEY, FIRSTNAME, LASTNAME, COUNTRY)
+					VALUES( MyRef.PrimaryKey, MyRef.FirstName, MyRef.LastName, MyRef.Country );
+		IF (SQLCODE = 0) THEN
+            SET OutputRoot.JSON.Data.Result = 'A row was inserted into the database successfully.';
+        ELSE
+            SET OutputRoot.JSON.Data.Result =  
+            	'The insert failed. The database SQLSTATE was ' || CAST(SQLSTATE AS CHAR) || 
+            	' and the SQLCODE was ' || CAST(SQLCODE AS CHAR);            	
+        END IF;							
+-----------------------------SLEEP-----------------------------------------------------------
+DECLARE returnValue BOOLEAN;
+SET returnValue = SLEEP(1000);
+--------------------------------HTTP-----------------------------------------------------------
+SET OutputLocalEnvironment.Destination.HTTP.RequestURL = UDP1 || InputRoot.XMLNSC.gg.bb; 
+---------------------------------------------UDP-------------------------------------------------
+DECLARE UDP2 EXTERNAL CHARACTER 'UDP22'; 
+DECLARE UDP3 EXTERNAL CHARACTER 'UDP33';          --------- DECLARE DEFAULT VALUE FOR UDP
+DECLARE UDP2 EXTERNAL CHARACTER; 		 
+DECLARE UDP1 EXTERNAL CHARACTER;		---------- USE UDP IN ESQL
+------------------------------------CACHE------------------------------------------------------
+DECLARE countyNameCache SHARED ROW;
+------------------------------------FIELD NAME--------------------------------------------
+SET elementName = FIELDNAME(ref);
+
+OutputLocalEnvironment.Destination.HTTP.RequestHeader."Content-Type" = 'application/json';
+OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 422;
+InputLocalEnvironment.WrittenDestination.HTTP.StatusCode
+InputLocalEnvironment.REST.parameters      	-------- Header parameters from REST input
+CREATE LASTCHILD OF OutputRoot.XMLNSC Type XMLNSC.Folder Name 'IRIS';     	------- XMLNSC ROOT ELEMENT
+
+REST
+  Input
+    Method:CHARACTER:GET
+    Operation:CHARACTER:searchPoliciesByContactExtNum
+    Path:CHARACTER:/insurance-policies/v1/technical/idit/search/api/search/portfolio/PO105283834/policies
+    URI:CHARACTER:https://ldc1in003d.tcsgroup.ch:7083/insurance-policies/v1/technical/idit/search/api/search/portfolio/PO105283834/policies
+    Parameters
+      externalContactNumber:CHARACTER:PO105283834
+
+
+
+
+
+
+
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+CREATE COMPUTE MODULE updateSAPPayment_setError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.Variables.Error = true;
+		
+		CALL CopyMessageHeaders();
+
+		SET OutputRoot.HTTPReplyHeader."X-Correlation-ID" = Environment.Variables.XCorrelationID;
+
+		SET Environment.Variables.HttpReturnCode = Environment.Variables.statusCode;
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = Environment.Variables.HttpReturnCode;
+		SET OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'I');
+		SET OutputRoot.JSON.Data.httpCode = '500';
+		SET OutputRoot.JSON.Data.httpMessage = 'ACE : Internal Server Error';
+		SET OutputRoot.JSON.Data.contexteCode = '';
+		SET OutputRoot.JSON.Data.id = Environment.Variables."X-Global-Transaction-Id";
+		IF EXISTS(InputExceptionList.RecoverableException[]) THEN
+			SET OutputRoot.JSON.Data.moreInformation = 'Error Calling Salesforce: ' || GetDeepestInsertTextsSafe(InputExceptionList);
+		ELSE
+			SET OutputRoot.JSON.Data.moreInformation = 'Error Calling Salesforce: | Message: ' || COALESCE(InputRoot.JSON.Data.Item[1].message, '') || 
+													   '| Error code: ' || COALESCE(InputRoot.JSON.Data.Item[1].errorCode, '');
+		END IF;
+		
+		SET OutputLocalEnvironment.Error = true;
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = '500';
+		SET OutputLocalEnvironment.Destination.HTTP.RequestIdentifier= Environment.Variables.RequestIdentifier;
+		SET OutputLocalEnvironment.Environment= Environment;
+
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541';
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541';
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.Variables.In.XCallerCode;
+		SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.In.targeturl;
+		SET Environment.Variables.TCSLog.context."error-message" = OutputRoot.JSON.Data.statusMessage || '. ' || OutputRoot.JSON.Data.moreInformation;
+		SET Environment.Variables.TCSLog.context."error-code" = OutputRoot.JSON.Data.statusCode;	
+		
+		RETURN TRUE;
+	END;
+	
+	CREATE FUNCTION GetDeepestInsertTextsSafe(exceptionTree REFERENCE) RETURNS CHARACTER
+	BEGIN
+		DECLARE result CHARACTER '';
+		DECLARE recovarableException REFERENCE TO exceptionTree.RecoverableException;
+
+		IF LASTMOVE(recovarableException) THEN
+			RETURN GetDeepestInsertTextsSafe(recovarableException);
+		END IF;
+		
+		SET result = exceptionTree.Text || ': ';
+		DECLARE insertElement REFERENCE TO exceptionTree.Insert[1];
+
+		WHILE LASTMOVE(insertElement) DO
+			IF FIELDNAME(insertElement.Text) IS NOT NULL THEN
+				SET result = result || '|' || insertElement.Text;
+			END IF;
+			MOVE insertElement NEXTSIBLING;
+		END WHILE;
+		
+		RETURN result || '|';
+	END;
+	
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+	
+END MODULE;
+
