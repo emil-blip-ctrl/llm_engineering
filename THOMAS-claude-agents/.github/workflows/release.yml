@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*"   # triggers on v1.2, v1.3, v2.0, etc.
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"          # e.g. v1.2 or v1.2.3
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          # Normalise to semver: v1.2 → 1.2.0 ; v1.2.3 → 1.2.3
+          RAW="${TAG#v}"
+          case "$RAW" in
+            *.*.*)  SEMVER="$RAW" ;;          # already three-part
+            *.*)    SEMVER="$RAW.0" ;;        # two-part → append .0
+            *)      SEMVER="$RAW.0.0" ;;      # one-part → append .0.0
+          esac
+          echo "semver=$SEMVER" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog section for this version
+        id: changelog
+        run: |
+          SEMVER="${{ steps.version.outputs.semver }}"
+          # Extract the block between [X.Y.Z] and the next [X.Y.Z]
+          NOTES=$(awk "/^\#\# \[${SEMVER}\]/{found=1; next} found && /^\#\# \[/{exit} found{print}" CHANGELOG.md)
+          if [ -z "$NOTES" ]; then
+            NOTES="See CHANGELOG.md for details."
+          fi
+          # Write to file to preserve newlines
+          echo "$NOTES" > /tmp/release_notes.md
+          echo "notes_file=/tmp/release_notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: Validate plugin version matches tag
+        run: |
+          SEMVER="${{ steps.version.outputs.semver }}"
+          PLUGIN_VER=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          if [ "$PLUGIN_VER" != "$SEMVER" ]; then
+            echo "❌ plugin.json version ($PLUGIN_VER) does not match tag ($SEMVER)"
+            exit 1
+          fi
+          echo "✅ Version consistent: $SEMVER"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Agentic-Claude ${{ steps.version.outputs.tag }}"
+          body_path: ${{ steps.changelog.outputs.notes_file }}
+          draft: false
+          prerelease: false

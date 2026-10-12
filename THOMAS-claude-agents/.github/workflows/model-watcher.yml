@@ -1,0 +1,112 @@
+name: Model Watcher
+
+# Runs on the 1st of each month and after every push to main.
+# If any agent carries an outdated model ID, opens a GitHub issue with
+# the exact commands to fix it. Issue is auto-closed when models are updated.
+
+on:
+  schedule:
+    - cron: "0 8 1 * *"   # 08:00 UTC on the 1st of every month
+  push:
+    branches: ["main"]
+    paths:
+      - "agents/**/AGENT.md"
+      - "scripts/validate_agents.py"
+  workflow_dispatch:        # allow manual trigger from GitHub UI
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-models:
+    name: Check agent model versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run validator in strict mode
+        id: validate
+        run: |
+          python3 scripts/validate_agents.py --strict > /tmp/report.txt 2>&1 || true
+          EXIT=${PIPESTATUS[0]:-$?}
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+          cat /tmp/report.txt
+
+      - name: Extract outdated agents from report
+        id: outdated
+        if: steps.validate.outputs.exit_code != '0'
+        run: |
+          OUTDATED=$(grep "WARN\|FAIL" /tmp/report.txt | grep -i "outdated\|unknown" || true)
+          echo "list<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$OUTDATED" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Close existing model-watcher issues (models are now up to date)
+        if: steps.validate.outputs.exit_code == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OPEN=$(gh issue list --label "model-update" --state open --json number -q '.[].number')
+          for num in $OPEN; do
+            gh issue close "$num" --comment "Models are now up to date. Closing automatically."
+            echo "Closed issue #$num"
+          done
+
+      - name: Open issue if models are outdated
+        if: steps.validate.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if an open issue already exists to avoid duplicates
+          EXISTING=$(gh issue list --label "model-update" --state open --json number -q '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            echo "Issue #$EXISTING already open — adding a comment instead"
+            gh issue comment "$EXISTING" --body "$(cat <<EOF
+          **Model check re-run** on $(date '+%Y-%m-%d')
+
+          ${{ steps.outdated.outputs.list }}
+
+          Fix with:
+          \`\`\`powershell
+          powershell -ExecutionPolicy Bypass -File templates/update.ps1 -Apply
+          \`\`\`
+          \`\`\`bash
+          bash templates/update.sh --apply
+          \`\`\`
+          EOF
+          )"
+          else
+            gh issue create \
+              --title "Agent models need updating ($(date '+%Y-%m'))" \
+              --label "model-update" \
+              --body "$(cat <<EOF
+          ## Agent model versions are outdated
+
+          The monthly model check detected outdated model IDs in one or more agents.
+
+          ### Affected agents
+          ${{ steps.outdated.outputs.list }}
+
+          ### How to fix
+
+          **Windows:**
+          \`\`\`powershell
+          powershell -ExecutionPolicy Bypass -File templates/update.ps1 -Apply
+          \`\`\`
+
+          **Mac/Linux:**
+          \`\`\`bash
+          bash templates/update.sh --apply
+          \`\`\`
+
+          Then verify with:
+          \`\`\`bash
+          python3 scripts/validate_agents.py --strict
+          \`\`\`
+
+          This issue will close automatically when the next push to main passes the model check.
+          EOF
+          )"
+          fi

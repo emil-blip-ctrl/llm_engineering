@@ -1,0 +1,1 @@
+- [Lineage encoding](project_lineage_encoding.md) — field-level lineage uses prefixed flat keys lin.<attr>.<field>; all ChromaDB writers must use cmdb_to_archimate/lineage.py

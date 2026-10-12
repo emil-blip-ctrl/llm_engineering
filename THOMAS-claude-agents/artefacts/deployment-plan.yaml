@@ -1,0 +1,33 @@
+---
+id: deployment-plan
+alias: DP
+format: markdown
+template: templates/artefacts/deployment-plan.md
+storage-pattern: "docs/operations/deployment-plan.md"
+standards:
+  - ITIL Change Management
+  - Azure DevOps release pipeline standards
+
+ownership:
+  responsible: devops
+  accountable: product-owner-assistant
+  consulted: [architect, developer]
+  informed:  [tester]
+
+quality-gate:
+  reviewer: devops
+  checklist:
+    - rollback procedure defined
+    - health-check endpoints listed
+    - secrets managed via Key Vault (not hardcoded)
+    - smoke test suite referenced
+    - communication plan for maintenance window
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : devops
+    proposed   → accepted   : product-owner-assistant
+    accepted   → deprecated : product-owner-assistant
+    accepted   → superseded : devops
+---

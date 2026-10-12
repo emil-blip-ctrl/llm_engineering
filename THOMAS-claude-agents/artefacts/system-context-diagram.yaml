@@ -1,0 +1,32 @@
+---
+id: system-context-diagram
+alias: SCD
+format: plantuml
+template: templates/artefacts/system-context-diagram.puml
+storage-pattern: "docs/architecture/system-context.puml"
+standards:
+  - C4 Model Level 1 (Simon Brown)
+  - ArchiMate System Context view
+
+ownership:
+  responsible: architect
+  accountable: product-owner-assistant
+  consulted: [business-analyst, devops]
+  informed:  [developer, tester, documentarian]
+
+quality-gate:
+  reviewer: architect
+  checklist:
+    - all external actors shown
+    - system boundary is a single box
+    - data flow direction indicated
+    - technology stack not exposed at this level
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : architect
+    proposed   → accepted   : product-owner-assistant
+    accepted   → deprecated : product-owner-assistant
+    accepted   → superseded : architect
+---

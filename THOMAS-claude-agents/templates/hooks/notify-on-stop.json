@@ -1,0 +1,18 @@
+{
+  "_description": "Desktop notification when Claude finishes a task. Linux: notify-send, macOS: osascript, Windows: msg.",
+  "_install": "Merge the 'hooks.Stop' entry below into your .claude/settings.json",
+
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if command -v notify-send &>/dev/null; then notify-send \"Claude Code\" \"Task finished\"; elif command -v osascript &>/dev/null; then osascript -e \"display notification \\\"Task finished\\\" with title \\\"Claude Code\\\"\"; else echo \"[Done] Claude finished\"; fi'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

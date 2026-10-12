@@ -1,0 +1,31 @@
+{
+  "name": "agentic-claude-lib",
+  "displayName": "TCS Agent & Skill Library",
+  "owner": {
+    "name": "Thomas Richeux",
+    "email": "thomas.richeux@tcs.ch"
+  },
+  "description": "Internal TCS marketplace for Claude Code plugins — agents, skills, and team compositions for enterprise software teams.",
+  "plugins": [
+    {
+      "name": "agentic-claude",
+      "displayName": "Agentic-Claude — Enterprise Agent Library",
+      "source": {
+        "source": "github",
+        "repo": "Aletheia-Thomas/Claude-Agents",
+        "ref": "v1.2.1"
+      },
+      "description": "8 specialized agents, 8 skills, and 4 team blueprints for IBM APIC/ACE/MQ enterprise teams. Includes one-shot setup, auto model-update tooling, CI validation, and security audit workflows.",
+      "version": "1.2.1",
+      "categories": ["agents", "enterprise", "ibm", "devops", "security"],
+      "author": {
+        "name": "Thomas Richeux",
+        "email": "thomas.richeux@tcs.ch"
+      },
+      "install": {
+        "quickstart": "/plugin install agentic-claude@agentic-claude-lib",
+        "docs": "https://github.com/Aletheia-Thomas/Claude-Agents/blob/main/docs/howto/PLUGIN-SETUP.md"
+      }
+    }
+  ]
+}

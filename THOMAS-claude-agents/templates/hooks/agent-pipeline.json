@@ -1,0 +1,33 @@
+{
+  "_description": "Full agent pipeline: signals the orchestrator when each agent finishes so the next one in the chain starts. Covers all 6 agents.",
+  "_install": "Merge the 'hooks.SubagentStop' array below into your .claude/settings.json",
+
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "product-owner-assistant",
+        "hooks": [{ "type": "command", "command": "echo '[Pipeline] PO Assistant finished — review backlog and trigger next sprint'", "timeout": 5 }]
+      },
+      {
+        "matcher": "architect",
+        "hooks": [{ "type": "command", "command": "echo '[Pipeline] Architect finished — trigger developer agent next'", "timeout": 5 }]
+      },
+      {
+        "matcher": "developer",
+        "hooks": [{ "type": "command", "command": "echo '[Pipeline] Developer finished — trigger tester agent next'", "timeout": 5 }]
+      },
+      {
+        "matcher": "tester",
+        "hooks": [{ "type": "command", "command": "echo '[Pipeline] Tester finished — trigger documentarian agent next'", "timeout": 5 }]
+      },
+      {
+        "matcher": "documentarian",
+        "hooks": [{ "type": "command", "command": "echo '[Pipeline] Documentarian finished — trigger devops if deployment needed'", "timeout": 5 }]
+      },
+      {
+        "matcher": "devops",
+        "hooks": [{ "type": "command", "command": "echo '[Pipeline] DevOps finished — pipeline complete'", "timeout": 5 }]
+      }
+    ]
+  }
+}

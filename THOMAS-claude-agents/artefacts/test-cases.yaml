@@ -1,0 +1,33 @@
+---
+id: test-cases
+alias: TC
+format: markdown
+template: templates/artefacts/test-cases.md
+storage-pattern: "docs/quality/test-cases/{slug}.md"
+standards:
+  - ISTQB test case template
+  - Gherkin BDD
+
+ownership:
+  responsible: tester
+  accountable: tester
+  consulted: [developer]
+  informed:  [devops]
+
+quality-gate:
+  reviewer: tester
+  checklist:
+    - linked to requirement ID
+    - preconditions stated
+    - steps are atomic
+    - expected result is observable
+    - pass/fail criteria unambiguous
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : tester
+    proposed   → accepted   : tester
+    accepted   → deprecated : tester
+    accepted   → superseded : tester
+---

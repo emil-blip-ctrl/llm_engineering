@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code Ecosystem Survey — GitHub Popularity &amp; Adoption Shortlist</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --content-bg: #ffffff;
+    --text: #1f2733;
+    --muted: #5b6675;
+    --border: #e2e6ec;
+    --accent: #3b5bdb;
+    --accent-soft: #edf0fe;
+    --code-bg: #f1f3f6;
+    --zebra: #f6f8fb;
+    --green: #1b8a4c;
+    --green-bg: #e3f6ea;
+    --amber: #9a6700;
+    --amber-bg: #fdf2d6;
+    --red: #b42318;
+    --red-bg: #fdeceb;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  /* Sticky nav */
+  nav.topnav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  nav.topnav .inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+  }
+  nav.topnav .brand { font-weight: 700; color: var(--accent); margin-right: 8px; }
+  nav.topnav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 6px;
+    border-radius: 5px;
+  }
+  nav.topnav a:hover { color: var(--accent); background: var(--accent-soft); }
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+    background: var(--content-bg);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  h1 { font-size: 2rem; line-height: 1.25; margin: 0 0 8px; }
+  h2 {
+    font-size: 1.5rem;
+    margin: 56px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent-soft);
+    scroll-margin-top: 70px;
+  }
+  h3 { font-size: 1.18rem; margin: 36px 0 12px; scroll-margin-top: 70px; }
+  h4 { font-size: 1.02rem; margin: 24px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  p { margin: 12px 0; }
+  a { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lede {
+    background: var(--accent-soft);
+    border: 1px solid #d7defb;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 0.97rem;
+  }
+  code, .inline {
+    font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+  }
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 18px 0; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 9px 12px; vertical-align: top; border-bottom: 1px solid var(--border); }
+  th { background: #eef1f6; font-weight: 700; color: #2a3340; position: sticky; }
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:hover { background: #eef3ff; }
+  td a { word-break: break-word; }
+  /* Pills / badges */
+  .pill {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .pill.strong { color: var(--green); background: var(--green-bg); }
+  .pill.adequate { color: var(--amber); background: var(--amber-bg); }
+  .pill.gap { color: var(--red); background: var(--red-bg); }
+  .eff {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    width: 22px; height: 22px; line-height: 22px;
+    text-align: center;
+    border-radius: 5px;
+    margin-right: 8px;
+  }
+  .eff.s { color: var(--green); background: var(--green-bg); }
+  .eff.m { color: var(--amber); background: var(--amber-bg); }
+  .eff.l { color: var(--red); background: var(--red-bg); }
+  .eff.w { color: var(--accent); background: var(--accent-soft); }
+  /* Lists */
+  ul.clean { padding-left: 22px; }
+  ul.clean li { margin: 8px 0; }
+  /* Cards */
+  .cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0; }
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #fcfdff;
+  }
+  .card .head { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+  .card .title { font-weight: 700; }
+  /* Scorecard summary cards */
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0; }
+  .summary .box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .summary .box .num { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+  .summary .box .lbl { font-size: 0.85rem; font-weight: 700; margin-top: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .summary .box.strong { background: var(--green-bg); } .summary .box.strong .num,.summary .box.strong .lbl { color: var(--green); }
+  .summary .box.adequate { background: var(--amber-bg); } .summary .box.adequate .num,.summary .box.adequate .lbl { color: var(--amber); }
+  .summary .box.gap { background: var(--red-bg); } .summary .box.gap .num,.summary .box.gap .lbl { color: var(--red); }
+  /* Mermaid */
+  .mermaid { text-align: center; margin: 22px 0; background: #fcfdff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; }
+  .fig-cap { text-align: center; font-size: 0.85rem; color: var(--muted); margin: -10px 0 24px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+  footer { max-width: 1000px; margin: 0 auto; padding: 24px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  .note { color: var(--muted); font-style: italic; font-size: 0.9rem; }
+  @media (max-width: 640px) {
+    .summary { grid-template-columns: 1fr; }
+    h1 { font-size: 1.55rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="inner">
+    <span class="brand">Ecosystem Survey</span>
+    <a href="#methodology">Overview</a>
+    <a href="#part-a">Part A · Landscape</a>
+    <a href="#part-b">Part B · Adoption</a>
+    <a href="#open-questions">Open Questions</a>
+    <a href="#part-c">Part C · Governance</a>
+    <a href="#scorecard">Scorecard</a>
+    <a href="#recommendations">Recommendations</a>
+  </div>
+</nav>
+
+<main>
+  <h1>Claude Code Ecosystem Survey — GitHub Popularity &amp; Adoption Shortlist</h1>
+  <p class="meta"><strong>Date:</strong> 2026-06-09 &nbsp;·&nbsp; Library plugin <code>v1.2.1</code></p>
+
+  <section id="methodology">
+    <div class="lede">
+      <strong>Purpose &amp; methodology:</strong> A landscape survey of the public Claude Code ecosystem
+      (agents, skills, hooks, MCP servers) across our four domains of interest — Development,
+      Business Analysis (BA), Architecture, Integration — ranked to inform what this library should
+      adopt, reference, or skip. Popularity is ranked primarily by GitHub <strong>stars</strong>,
+      with <strong>forks/recency</strong> as secondary signals; star counts are approximate and
+      recency is "last commit" / latest release as of the date above.
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ================= PART A ================= -->
+  <h2 id="part-a">Part A — Landscape Survey</h2>
+
+  <h3 id="agents">Agents</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Repo URL</th><th>~Stars</th><th>Last commit</th><th>Domain(s)</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>VoltAgent/awesome-claude-code-subagents</td><td><a href="https://github.com/VoltAgent/awesome-claude-code-subagents" target="_blank" rel="noopener">github.com/VoltAgent/awesome-claude-code-subagents</a></td><td>~20.5k</td><td>2026</td><td>Dev / Arch / Integration</td><td>100+ subagents incl. backend, api, cloud-architect (MIT)</td></tr>
+        <tr><td>wshobson/agents</td><td><a href="https://github.com/wshobson/agents" target="_blank" rel="noopener">github.com/wshobson/agents</a></td><td>~17k</td><td>2026</td><td>Dev / Arch / Integration</td><td>76+ subagents incl. cloud-architect, api-designer, backend-architect (MIT)</td></tr>
+        <tr><td>vijaythecoder/awesome-claude-agents</td><td><a href="https://github.com/vijaythecoder/awesome-claude-agents" target="_blank" rel="noopener">github.com/vijaythecoder/awesome-claude-agents</a></td><td>~4k</td><td>2025</td><td>Dev / Arch</td><td>24-agent orchestrated dev team</td></tr>
+        <tr><td>0xfurai/claude-code-subagents</td><td><a href="https://github.com/0xfurai/claude-code-subagents" target="_blank" rel="noopener">github.com/0xfurai/claude-code-subagents</a></td><td>~1k</td><td>2025</td><td>Dev / Integration</td><td>100+ dev/API subagents</td></tr>
+        <tr><td>rahulvrane/awesome-claude-agents</td><td><a href="https://github.com/rahulvrane/awesome-claude-agents" target="_blank" rel="noopener">github.com/rahulvrane/awesome-claude-agents</a></td><td>~0.5k</td><td>2025</td><td>Dev / Arch</td><td>Curated index</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="skills">Skills</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Repo URL</th><th>~Stars</th><th>Last commit</th><th>Domain(s)</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>anthropics/skills</td><td><a href="https://github.com/anthropics/skills" target="_blank" rel="noopener">github.com/anthropics/skills</a></td><td>~141k (whole repo)</td><td>2026</td><td>Dev / Arch</td><td>Official reference skills (MCP-gen, testing, docs)</td></tr>
+        <tr><td>VoltAgent/awesome-agent-skills</td><td><a href="https://github.com/VoltAgent/awesome-agent-skills" target="_blank" rel="noopener">github.com/VoltAgent/awesome-agent-skills</a></td><td>~22k</td><td>2026</td><td>Dev / Arch / Integration</td><td>1000+ skills incl. api-design, arch, security (MIT)</td></tr>
+        <tr><td>hesreallyhim/awesome-claude-code</td><td><a href="https://github.com/hesreallyhim/awesome-claude-code" target="_blank" rel="noopener">github.com/hesreallyhim/awesome-claude-code</a></td><td>~12k</td><td>2026</td><td>Dev / Arch</td><td>Canonical curated index</td></tr>
+        <tr><td>alirezarezvani/claude-skills</td><td><a href="https://github.com/alirezarezvani/claude-skills" target="_blank" rel="noopener">github.com/alirezarezvani/claude-skills</a></td><td>~5.2k</td><td>2026</td><td>Dev / BA / Integration</td><td>330+ skills incl. product/BA</td></tr>
+        <tr><td>rohitg00/awesome-claude-code-toolkit</td><td><a href="https://github.com/rohitg00/awesome-claude-code-toolkit" target="_blank" rel="noopener">github.com/rohitg00/awesome-claude-code-toolkit</a></td><td>~2.4k</td><td>2026</td><td>Dev / Arch / BA</td><td>135 agents / 35 skills incl. PM, Architect, DevOps</td></tr>
+        <tr><td>travisvn/awesome-claude-skills</td><td><a href="https://github.com/travisvn/awesome-claude-skills" target="_blank" rel="noopener">github.com/travisvn/awesome-claude-skills</a></td><td>~0.8k</td><td>2025</td><td>Dev / BA</td><td>Workflow skills list</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="hooks">Hooks</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Repo URL</th><th>~Stars</th><th>Last commit</th><th>Domain(s)</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>hesreallyhim/awesome-claude-code (hooks section)</td><td><a href="https://github.com/hesreallyhim/awesome-claude-code" target="_blank" rel="noopener">github.com/hesreallyhim/awesome-claude-code</a></td><td>~12k</td><td>2026</td><td>All</td><td>Canonical curated hooks list</td></tr>
+        <tr><td>disler/claude-code-hooks-mastery</td><td><a href="https://github.com/disler/claude-code-hooks-mastery" target="_blank" rel="noopener">github.com/disler/claude-code-hooks-mastery</a></td><td>~3k</td><td>2026</td><td>Dev / Arch</td><td>Reference for all 13 lifecycle hooks</td></tr>
+        <tr><td>rohitg00/awesome-claude-code-toolkit</td><td><a href="https://github.com/rohitg00/awesome-claude-code-toolkit" target="_blank" rel="noopener">github.com/rohitg00/awesome-claude-code-toolkit</a></td><td>~1k</td><td>2026</td><td>All</td><td>Bundled hooks + MCP + rules</td></tr>
+        <tr><td>claude-code-prompt-improver</td><td><a href="https://github.com/cco-ai/claude-code-prompt-improver" target="_blank" rel="noopener">github.com/cco-ai/claude-code-prompt-improver</a></td><td>~1k</td><td>2026</td><td>Dev / BA</td><td>UserPromptSubmit prompt rewriter</td></tr>
+        <tr><td>disler/claude-code-hooks-multi-agent-observability</td><td><a href="https://github.com/disler/claude-code-hooks-multi-agent-observability" target="_blank" rel="noopener">github.com/disler/claude-code-hooks-multi-agent-observability</a></td><td>~0.9k</td><td>2026</td><td>Dev / Integration</td><td>Real-time hook-event monitoring</td></tr>
+        <tr><td>JessyTsui/Claude-Code-Remote</td><td><a href="https://github.com/JessyTsui/Claude-Code-Remote" target="_blank" rel="noopener">github.com/JessyTsui/Claude-Code-Remote</a></td><td>~0.9k</td><td>2026</td><td>Dev</td><td>Stop-hook notify on completion</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Note: most hooks live inside collections; few are standalone.</p>
+
+  <h3 id="mcp">MCP Servers (Integration / Architecture weighted)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Repo URL</th><th>~Stars</th><th>Last commit</th><th>Domain(s)</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>modelcontextprotocol/servers</td><td><a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener">github.com/modelcontextprotocol/servers</a></td><td>~60k+</td><td>2026</td><td>All</td><td>Official refs (fs, fetch, memory) — MIT</td></tr>
+        <tr><td>github/github-mcp-server</td><td><a href="https://github.com/github/github-mcp-server" target="_blank" rel="noopener">github.com/github/github-mcp-server</a></td><td>~20k+</td><td>2026</td><td>Dev / Integration</td><td>Official GitHub API — MIT</td></tr>
+        <tr><td>googleapis/genai-toolbox</td><td><a href="https://github.com/googleapis/genai-toolbox" target="_blank" rel="noopener">github.com/googleapis/genai-toolbox</a></td><td>~15k</td><td>2026-06</td><td>Integration (DB)</td><td>Secure multi-DB tools — Apache-2.0</td></tr>
+        <tr><td>idosal/git-mcp</td><td><a href="https://github.com/idosal/git-mcp" target="_blank" rel="noopener">github.com/idosal/git-mcp</a></td><td>~8.1k</td><td>2026-05</td><td>Dev / Arch</td><td>Connect to any GitHub repo docs — Apache-2.0</td></tr>
+        <tr><td>sooperset/mcp-atlassian</td><td><a href="https://github.com/sooperset/mcp-atlassian" target="_blank" rel="noopener">github.com/sooperset/mcp-atlassian</a></td><td>~5.3k</td><td>2026</td><td>BA / Arch</td><td>Jira + Confluence — MIT</td></tr>
+        <tr><td>crystaldba/postgres-mcp</td><td><a href="https://github.com/crystaldba/postgres-mcp" target="_blank" rel="noopener">github.com/crystaldba/postgres-mcp</a></td><td>~2.8k</td><td>2026-05</td><td>Integration (DB)</td><td>RW + performance analysis — MIT</td></tr>
+        <tr><td>supabase-community/supabase-mcp</td><td><a href="https://github.com/supabase-community/supabase-mcp" target="_blank" rel="noopener">github.com/supabase-community/supabase-mcp</a></td><td>~2.7k</td><td>2026-05</td><td>Integration (DB)</td><td>Supabase tooling — Apache-2.0</td></tr>
+        <tr><td>janwilmake/openapi-mcp-server</td><td><a href="https://github.com/janwilmake/openapi-mcp-server" target="_blank" rel="noopener">github.com/janwilmake/openapi-mcp-server</a></td><td>~0.9k</td><td>2026</td><td>Integration (API)</td><td>Wrap any REST API via OpenAPI — MIT</td></tr>
+        <tr><td>docker/hub-mcp</td><td><a href="https://github.com/docker/hub-mcp" target="_blank" rel="noopener">github.com/docker/hub-mcp</a></td><td>~150</td><td>2026</td><td>Integration</td><td>Official Docker Hub — Apache-2.0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="mcp-landscape">MCP registry &amp; discovery landscape</h3>
+  <pre class="mermaid">
+flowchart TD
+  REG["Official Registry<br/>registry.modelcontextprotocol.io<br/>(API-first, preview Sep 2025)"]
+  G["Glama (~21k servers)"]
+  M["mcp.so (~20k)"]
+  P["PulseMCP (~11.8k, hand-reviewed)"]
+  S["Smithery (~7k, app-store UX + hosted)"]
+  D["Docker MCP Catalog<br/>(verified / curated + org catalogs)"]
+  CLIENT["Consuming Claude Code client"]
+
+  REG --> CLIENT
+  REG -.feeds.-> G
+  REG -.feeds.-> M
+  REG -.feeds.-> P
+  REG -.feeds.-> S
+  G --> CLIENT
+  M --> CLIENT
+  P --> CLIENT
+  S --> CLIENT
+  D --> CLIENT
+  </pre>
+  <p class="fig-cap">D2 — MCP registry &amp; discovery: an API-first canonical registry anchors a tier of human directories that all feed a consuming client.</p>
+
+  <h3 id="observations">Ecosystem observations</h3>
+  <ul class="clean">
+    <li><strong>The ecosystem skews heavily Dev + Architecture.</strong> Agents and skills cluster around backend/cloud-architect/api-designer roles; the largest collections (VoltAgent, wshobson) are dev-centric.</li>
+    <li><strong>BA is under-served.</strong> Only a handful of collections (alirezarezvani, rohitg00) surface product/PM/BA roles, and none offer a coherent BA <em>discipline</em> — requirements elicitation, backlog shaping, stakeholder analysis — as a first-class agent or skill set.</li>
+    <li><strong>Middleware / iPaaS integration is a gap.</strong> MCP coverage is rich for <strong>databases and generic REST/API</strong> (genai-toolbox, postgres-mcp, supabase, openapi-mcp) but there is <strong>no popular MCP for message brokers or iPaaS</strong> — Kafka, IBM MQ, RabbitMQ, MuleSoft, APIC/ACE. Integration "leadership" in the ecosystem means data/API plumbing, not enterprise middleware.</li>
+    <li><strong>Hooks rarely ship standalone.</strong> Reusable hook logic mostly lives inside larger collections; observability (disler) is the clearest standalone value.</li>
+    <li><strong>Curated indexes dominate the top of the star charts.</strong> Much of the "popularity" is meta — lists pointing at other repos — so raw stars overstate directly reusable assets.</li>
+  </ul>
+
+  <hr>
+
+  <!-- ================= PART B ================= -->
+  <h2 id="part-b">Part B — Adoption Shortlist (mapped to our inventory)</h2>
+  <p>Our current inventory: agents <code>architect, developer, tester, devops, documentarian, product-owner-assistant, librarian, library-engineer</code>; skills <code>develop, test, deploy, review, document, security-audit, postman-collection-generator, publish-confluence, pattern-diagram-design</code>; teams <code>feature-team, release-team, full-team, repo-improvement-team</code>. We already use <strong>mcp-atlassian</strong> in <code>product-owner-assistant</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Candidate</th><th>Why adopt</th><th>Maps to / gap in our lib</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td>anthropics/skills</td><td>Official skill conventions &amp; MCP-generation patterns — authoritative baseline</td><td>Reference for our SKILL.md authoring + <code>skills/</code> shape</td><td><strong>Reference-only</strong></td></tr>
+        <tr><td>disler/claude-code-hooks-multi-agent-observability</td><td>Real-time visibility into our multi-agent team runs (we already have checkpoints + progress reporting, but no live event view)</td><td>New capability; complements <code>.claude/hooks/</code> and team protocols — no equivalent in our lib</td><td><strong>Adopt (pilot)</strong></td></tr>
+        <tr><td>googleapis/genai-toolbox</td><td>Secure, governed multi-DB access — Apache-2.0, enterprise-friendly licensing</td><td>Fills an Integration(DB) gap; no DB-access tooling in our lib today</td><td><strong>Adopt (eval)</strong></td></tr>
+        <tr><td>janwilmake/openapi-mcp-server</td><td>Wrap any REST API from an OpenAPI spec — directly relevant to APIC/ACE API surfaces</td><td>Complements <code>postman-collection-generator</code> + <code>architect</code>; we have no live-API MCP</td><td><strong>Adopt (eval)</strong></td></tr>
+        <tr><td>sooperset/mcp-atlassian</td><td>Jira + Confluence tools</td><td><strong>Already adopted</strong> in <code>product-owner-assistant</code>; validates our BA/publish direction</td><td><strong>Reference-only</strong> (confirm version pin)</td></tr>
+        <tr><td>disler/claude-code-hooks-mastery</td><td>Worked examples of all 13 lifecycle hooks</td><td>Hardening reference for our commit-guard + UserPromptSubmit orchestration hooks</td><td><strong>Reference-only</strong></td></tr>
+        <tr><td>VoltAgent/awesome-claude-code-subagents</td><td>Breadth check for agent role coverage (cloud-architect, api-designer)</td><td>Benchmark our 8 agents against; our roles are deliberately enterprise-integration scoped</td><td><strong>Reference-only</strong></td></tr>
+        <tr><td>wshobson/agents</td><td>Same — large curated agent set incl. backend-architect</td><td>Benchmark only; our <code>architect</code> is APIC/ACE/MQ-specialised, not generic cloud</td><td><strong>Skip (adopt none directly)</strong></td></tr>
+        <tr><td>openapi/REST generic dev subagents (0xfurai, vijaythecoder)</td><td>Generic dev-team agents</td><td>Overlap with <code>developer</code>/<code>tester</code>/<code>feature-team</code>; no enterprise-integration depth</td><td><strong>Skip</strong></td></tr>
+        <tr><td>message-broker / iPaaS MCP (Kafka/MQ/MuleSoft)</td><td>Would be highest-value Integration adoption</td><td><strong>No mature public option exists</strong> — this is our strongest differentiator to potentially build</td><td><strong>Skip (none viable) — candidate to build</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Top-5 adoption picks</h4>
+  <div class="cards">
+    <div class="card"><div class="head"><span class="eff s">1</span><span class="title">disler/claude-code-hooks-multi-agent-observability — Adopt (pilot)</span></div><div>Live event view over our multi-agent team runs; complements existing checkpoints + progress reporting.</div></div>
+    <div class="card"><div class="head"><span class="eff s">2</span><span class="title">googleapis/genai-toolbox — Adopt (eval)</span></div><div>Secure, governed multi-DB access (Apache-2.0). Fills an Integration(DB) gap we have no tooling for today.</div></div>
+    <div class="card"><div class="head"><span class="eff s">3</span><span class="title">janwilmake/openapi-mcp-server — Adopt (eval)</span></div><div>Wrap any REST API from an OpenAPI spec; directly relevant to APIC/ACE surfaces. Complements postman-collection-generator + architect.</div></div>
+    <div class="card"><div class="head"><span class="eff s">4</span><span class="title">anthropics/skills — Reference-only</span></div><div>Authoritative baseline for SKILL.md conventions and MCP-generation patterns.</div></div>
+    <div class="card"><div class="head"><span class="eff s">5</span><span class="title">sooperset/mcp-atlassian — Reference-only (confirm pin)</span></div><div>Already adopted in product-owner-assistant; validates our BA/publish direction.</div></div>
+  </div>
+
+  <h3 id="strong-vs-leads">Where we are strong vs where the ecosystem leads</h3>
+  <ul class="clean">
+    <li><strong>We lead:</strong> enterprise integration depth (APIC / ACE / IBM MQ via <code>architect</code> + <code>pattern-diagram-design</code>), a coherent <strong>BA capability</strong> (PO-assistant + architect + Atlassian/Confluence publishing), and a governed self-maintaining library with commit-guard enforcement. The ecosystem has nothing comparable for middleware patterns or governed library upkeep.</li>
+    <li><strong>Ecosystem leads:</strong> sheer <strong>breadth of MCP DB/API servers</strong> (genai-toolbox, postgres-mcp, openapi-mcp), <strong>hook observability</strong> tooling, and the volume/variety of generic dev subagents and skills.</li>
+  </ul>
+
+  <hr>
+
+  <!-- ================= OPEN QUESTIONS ================= -->
+  <h2 id="open-questions">Open Questions for the PO</h2>
+  <ul class="clean">
+    <li><strong>Licensing posture:</strong> are Apache-2.0 / MIT third-party MCP servers acceptable to embed or only to reference, given enterprise (TCS) distribution constraints?</li>
+    <li><strong>Build vs. wait:</strong> the message-broker / iPaaS MCP gap (Kafka, MQ, MuleSoft, APIC/ACE) is unfilled publicly — do we invest in building one as a differentiator, or hold until a credible community option appears?</li>
+    <li><strong>Hook observability scope:</strong> is live multi-agent event monitoring worth a dependency, or is our existing checkpoint + progress-reporting protocol sufficient for now?</li>
+    <li><strong>DB / API MCP ownership:</strong> if we adopt genai-toolbox or openapi-mcp-server, which agent owns them (<code>architect</code>, <code>developer</code>, or a new role) and what tool-restriction guardrails apply?</li>
+    <li><strong>Reference vs. vendor:</strong> for benchmark repos (VoltAgent, wshobson, anthropics/skills), do we want a tracked "ecosystem watch" doc, or one-off comparisons only?</li>
+  </ul>
+
+  <hr>
+
+  <!-- ================= PART C ================= -->
+  <h2 id="part-c">Part C — Ecosystem Management &amp; Governance</h2>
+  <p class="meta"><strong>Date:</strong> 2026-06-09 — <strong>Scope:</strong> how the broader Claude Code / MCP ecosystem <em>manages</em> and <em>governs</em> agents, skills, plugins, and MCP servers — distribution &amp; packaging, then governance/security/lifecycle — closing with an honest self-benchmark of this library against those practices. Parts A/B surveyed <em>what exists</em>; Part C surveys <em>how it is shipped, secured, and kept trustworthy</em>.</p>
+
+  <h3 id="c1">C.1 Distribution &amp; packaging landscape</h3>
+  <ul class="clean">
+    <li><strong>Plugins are the installable/pinnable unit, marketplaces are catalogs.</strong> A <a href="https://code.claude.com/docs/en/plugin-marketplaces" target="_blank" rel="noopener"><code>marketplace.json</code></a> is a <em>catalog</em> that points at plugins (each carrying its own <code>.claude-plugin/plugin.json</code> with a required <code>version</code>); the marketplace source and the plugin source are independent, so one catalog can reference many repos at different refs. Anthropic ships a <code>claude-plugins-official</code> marketplace by default.</li>
+    <li><strong>Pinning granularity is converging on SHA for reproducibility.</strong> Plugins can be pinned by branch or tag (<code>@ref</code> / <code>#ref</code>); plugin <em>sources</em> additionally accept an <strong>exact commit SHA</strong>, which is the recommended posture for reproducible/prod installs. Native <strong>per-marketplace auto-update</strong> has existed since CC v2.0.70 — reducing the need for bespoke updater scripts.</li>
+    <li><strong>MCP discovery is maturing into real registries.</strong> The official <a href="https://registry.modelcontextprotocol.io" target="_blank" rel="noopener"><code>registry.modelcontextprotocol.io</code></a> (API-first, preview Sept 2025) anchors a tier of human directories: Glama (~21k servers), mcp.so (~20k), PulseMCP (~11.8k, hand-reviewed), Smithery (~7k, app-store UX + hosted remote), and the <a href="https://docs.docker.com/ai/mcp-catalog-and-toolkit/catalog/" target="_blank" rel="noopener">Docker MCP Catalog</a> (verified/curated entries plus private org catalogs).</li>
+    <li><strong>Two library distribution patterns dominate.</strong> (a) <em>Curated <code>awesome-*</code> lists</em> (e.g. VoltAgent's ~1000+ skills) — discovery, not install; (b) <em>package-manager-native</em> tooling that maps skills onto npm: <a href="https://github.com/sbroenne/skillpm" target="_blank" rel="noopener"><code>skillpm</code></a> and <a href="https://github.com/antfu/skills-npm" target="_blank" rel="noopener"><code>skills-npm</code></a> give skills <code>package.json</code> + lockfiles + semver + workspaces, symlinking <code>node_modules</code> → skills.</li>
+    <li><strong>Biggest trend:</strong> the ecosystem is <strong>treating skills/plugins as real software packages</strong> — semver + lockfiles + SHA-pinned registries — steadily replacing ad-hoc copy/symlink scripts. The remaining core install trade-off is symlink/junction (track HEAD) vs copy-snapshot (freeze).</li>
+  </ul>
+
+  <pre class="mermaid">
+flowchart TD
+  MP["marketplace.json<br/>(catalog of plugins)"]
+  PJ["plugin.json<br/>(per plugin, semver version)"]
+  PROJ["Consuming project<br/>.claude/settings.json"]
+  HEAD["Mode A: user-level junctions<br/>track HEAD (always latest)"]
+  PIN["Mode B: project-scope pinned plugin<br/>(reproducible)"]
+  TAG["Pin by tag (@ref / #ref)"]
+  SHA["Pin by exact commit SHA<br/>(recommended for prod)"]
+
+  MP --> PJ
+  PJ --> PROJ
+  PROJ --> HEAD
+  PROJ --> PIN
+  PIN --> TAG
+  PIN --> SHA
+  </pre>
+  <p class="fig-cap">D1 — Plugin distribution flow: catalog to per-plugin semver to consuming project, with the two consumption modes and pin granularity.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Platform / Tool</th><th>URL</th><th>Role</th><th>Maturity signal</th></tr></thead>
+      <tbody>
+        <tr><td>Claude Code plugin marketplaces</td><td><a href="https://code.claude.com/docs/en/plugin-marketplaces" target="_blank" rel="noopener">code.claude.com/docs/en/plugin-marketplaces</a></td><td>Native catalog + install/pin; per-marketplace auto-update</td><td>Native, official; SHA pinning supported</td></tr>
+        <tr><td>Official MCP Registry</td><td><a href="https://registry.modelcontextprotocol.io" target="_blank" rel="noopener">registry.modelcontextprotocol.io</a></td><td>API-first canonical MCP discovery</td><td>Preview (Sept 2025), governance-oriented</td></tr>
+        <tr><td>Docker MCP Catalog</td><td><a href="https://docs.docker.com/ai/mcp-catalog-and-toolkit/catalog/" target="_blank" rel="noopener">docs.docker.com/ai/mcp-catalog-and-toolkit/catalog/</a></td><td>Verified/curated MCP catalog + org catalogs</td><td>Vendor-backed, "verified" tier</td></tr>
+        <tr><td>skillpm</td><td><a href="https://github.com/sbroenne/skillpm" target="_blank" rel="noopener">github.com/sbroenne/skillpm</a></td><td>Skills as npm packages (semver + lockfile)</td><td>Emerging community tooling</td></tr>
+        <tr><td>skills-npm</td><td><a href="https://github.com/antfu/skills-npm" target="_blank" rel="noopener">github.com/antfu/skills-npm</a></td><td>Skills → npm workspaces, symlinked</td><td>Emerging (high-profile author)</td></tr>
+        <tr><td>Glama / mcp.so / PulseMCP / Smithery</td><td><a href="https://glama.ai/mcp/servers" target="_blank" rel="noopener">glama.ai</a> · <a href="https://mcp.so" target="_blank" rel="noopener">mcp.so</a> · <a href="https://www.pulsemcp.com" target="_blank" rel="noopener">pulsemcp.com</a> · <a href="https://smithery.ai" target="_blank" rel="noopener">smithery.ai</a></td><td>Human MCP directories (discovery, some hosting)</td><td>High volume; review rigor varies</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="c2">C.2 Governance, security &amp; lifecycle landscape</h3>
+  <ul class="clean">
+    <li><strong>Permissions are layered and deny-first.</strong> <a href="https://code.claude.com/docs/en/settings" target="_blank" rel="noopener"><code>settings.json</code></a> uses <code>allow</code>/<code>deny</code>/<code>ask</code> arrays evaluated <strong>deny &gt; allow &gt; ask</strong>, across scopes <strong>enterprise (managed) &gt; user &gt; project &gt; local</strong>. Least-privilege practice: minimal <code>allowedTools</code> + <code>permissionMode</code>, with <code>deny</code> rules (e.g. <code>Read(.env*)</code>) holding even under bypass; MCP access is scoped per-server.</li>
+    <li><strong>Validation is shifting from schema linting to evals.</strong> Frontmatter/schema lint catches missing <code>name</code>/<code>description</code> but not <em>output quality</em>. The field is moving toward <strong>LLM-as-judge evals</strong>: <a href="https://www.promptfoo.dev" target="_blank" rel="noopener">Promptfoo</a> (used by Anthropic/OpenAI) runs declarative evals + red-team suites inside CI/PRs. <code>PreToolUse</code> hooks as commit guards (our repo's pattern) sit alongside this.</li>
+    <li><strong>Security threat model is dominated by the "lethal trifecta."</strong> Willison's framing — <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">private data + untrusted content + an exfiltration vector</a> — is the reference risk. With ~8000 exposed MCP servers in the wild, tool-poisoning and zero-click RCE via indirect prompt injection are live. Defenses: outgoing-proxy/DLP, capability pinning, sandboxing, and <strong>MCP gateways as chokepoints</strong> (e.g. <a href="https://github.com/agentic-community/mcp-gateway-registry" target="_blank" rel="noopener">mcp-gateway-registry</a>).</li>
+    <li><strong>Enterprise governance is real but supply-chain trust is weak.</strong> <code>managed-settings.json</code> (via MDM/registry) plus <code>allowManagedMcpServersOnly</code> + <code>strictKnownMarketplaces</code> lock down the supply chain; SCIM, RBAC, a Compliance API, IP allowlists, and centralized-gateway audit exist. NSA's MCP CSI (May 2026) adds public guidance.</li>
+    <li><strong>Lifecycle is formalizing; provenance is not.</strong> The MCP spec defines an Active → Deprecated → Removed path (≥12-month notice) with a conformance suite, and the official registry is emerging for governed discovery. <strong>Biggest gap:</strong> there is <strong>no end-to-end signing/provenance</strong> for MCP servers, skills, or plugins — trust rests on registry reputation, leaving <em>prompt-injection-via-package</em> the largest unmitigated risk.</li>
+  </ul>
+
+  <pre class="mermaid">
+flowchart TD
+  ENT["enterprise (managed-settings.json)"]
+  USR["user"]
+  PRJ["project"]
+  LOC["local"]
+  ENT --> USR --> PRJ --> LOC
+
+  subgraph EVAL["Evaluation order (within scope)"]
+    DENY["deny"] --> ALLOW["allow"] --> ASK["ask"]
+  end
+  LOC -.governed by.-> EVAL
+  </pre>
+  <p class="fig-cap">D3 — Permission / governance scope hierarchy: enterprise &gt; user &gt; project &gt; local, each evaluated deny &gt; allow &gt; ask.</p>
+
+  <pre class="mermaid">
+flowchart LR
+  PD["Private data<br/>(repo, secrets, env)"]
+  UC["Untrusted content<br/>(web, MCP tool output, indirect prompt injection)"]
+  EC["External comms<br/>(exfiltration vector)"]
+  RISK["Exfiltration risk<br/>(tool-poisoning, zero-click RCE)"]
+
+  PD --> RISK
+  UC --> RISK
+  EC --> RISK
+
+  SB["Sandbox / capability pinning"]
+  DLP["Outgoing proxy / DLP"]
+  GW["MCP gateway chokepoint"]
+
+  SB -.mitigates.-> UC
+  DLP -.mitigates.-> EC
+  GW -.mitigates.-> RISK
+  </pre>
+  <p class="fig-cap">D5 — The "lethal trifecta": private data + untrusted content + external comms = exfil risk, with sandbox, DLP/proxy, and MCP-gateway chokepoints as mitigations.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool / Standard</th><th>URL</th><th>Role</th><th>Maturity signal</th></tr></thead>
+      <tbody>
+        <tr><td>Claude Code settings &amp; permissions</td><td><a href="https://code.claude.com/docs/en/settings" target="_blank" rel="noopener">code.claude.com/docs/en/settings</a></td><td>allow/deny/ask, managed-settings, scope precedence</td><td>Native, enterprise-ready</td></tr>
+        <tr><td>Promptfoo</td><td><a href="https://www.promptfoo.dev" target="_blank" rel="noopener">promptfoo.dev</a></td><td>Declarative LLM evals + red-team in CI/PRs</td><td>Production, vendor-adopted</td></tr>
+        <tr><td>"The lethal trifecta" (Willison)</td><td><a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">simonwillison.net/2025/Jun/16/the-lethal-trifecta/</a></td><td>Canonical agent-security threat model</td><td>Widely cited reference</td></tr>
+        <tr><td>MCP gateway registry</td><td><a href="https://github.com/agentic-community/mcp-gateway-registry" target="_blank" rel="noopener">github.com/agentic-community/mcp-gateway-registry</a></td><td>Gateway chokepoint + governance for MCP</td><td>Emerging pattern</td></tr>
+        <tr><td>Official MCP Registry (lifecycle)</td><td><a href="https://registry.modelcontextprotocol.io" target="_blank" rel="noopener">registry.modelcontextprotocol.io</a></td><td>Deprecation lifecycle + conformance</td><td>Preview; signing still absent</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= SCORECARD ================= -->
+  <h3 id="scorecard">C.3 Self-benchmark — this library vs ecosystem practice</h3>
+  <p>Honest scorecard of our current management/governance model (verified against <code>CLAUDE.md</code>, <code>.claude-plugin/</code>, <code>templates/</code>, and <code>.claude/hooks/</code>).</p>
+
+  <div class="summary">
+    <div class="box strong"><div class="num">5</div><div class="lbl">Strong</div></div>
+    <div class="box adequate"><div class="num">2</div><div class="lbl">Adequate</div></div>
+    <div class="box gap"><div class="num">3</div><div class="lbl">Gap</div></div>
+  </div>
+  <p class="fig-cap">D6 — Self-benchmark at a glance: 5 Strong / 2 Adequate / 3 Gap across the 10 dimensions.</p>
+
+  <pre class="mermaid">
+pie showData
+  title Self-benchmark across 10 dimensions
+  "Strong" : 5
+  "Adequate" : 2
+  "Gap" : 3
+  </pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Dimension</th><th>Ecosystem best practice</th><th>Our library today</th><th>Status</th><th>Recommended action</th></tr></thead>
+      <tbody>
+        <tr><td>Plugin / marketplace packaging</td><td><code>plugin.json</code> + <code>marketplace.json</code> catalog, auto-discovered dirs</td><td>Have both: <code>agentic-claude</code> plugin + <code>agentic-claude-lib</code> marketplace, auto-discovers <code>agents/</code>/<code>skills/</code>/<code>commands/</code></td><td><span class="pill strong">Strong</span></td><td>Keep; add a <code>commands/</code> shim only if needed</td></tr>
+        <tr><td>Version pinning (tag vs SHA)</td><td>Tag for releases, <strong>exact SHA</strong> for reproducible/prod installs</td><td>Git <strong>tag</strong> pin only (<code>v1.2.1</code>); no SHA option documented</td><td><span class="pill adequate">Adequate</span></td><td>Document a SHA-pin recipe for prod consumers (S)</td></tr>
+        <tr><td>Install tooling / lockfile</td><td>Reuse npm/uv + lockfiles; native CC auto-update</td><td>Bespoke PowerShell (<code>install</code>/<code>setup</code>/<code>update.ps1</code>); <strong>no lockfile</strong>, Windows-first</td><td><span class="pill gap">Gap</span></td><td>Lean on native plugin auto-update; add cross-platform path (M)</td></tr>
+        <tr><td>Frontmatter validation</td><td>Schema/frontmatter lint in CI</td><td>Commit-guard hook lints <code>name</code>/<code>description</code> + inventory sync</td><td><span class="pill strong">Strong</span></td><td>Keep; extend to <code>version:</code>/<code>model:</code> field checks (S)</td></tr>
+        <tr><td>Automated evals / testing</td><td>LLM-as-judge evals (Promptfoo) in PRs</td><td><strong>None</strong> — no behavioral tests of agents/skills</td><td><span class="pill gap">Gap</span></td><td>Pilot Promptfoo evals for 2–3 skills in CI (L)</td></tr>
+        <tr><td>Permission / tool-restriction</td><td>Least-privilege <code>allowedTools</code>, deny-first</td><td>Per-agent curated tool lists by role; project-scoped memory</td><td><span class="pill strong">Strong</span></td><td>Add explicit <code>deny(Read(.env*))</code> example to template (S)</td></tr>
+        <tr><td>Commit governance</td><td>Hooks/CI gate merges</td><td><code>PreToolUse</code> commit-guard (<code>.ps1</code> + <code>.js</code> twin); repo-improvement-team only; human commits</td><td><span class="pill strong">Strong</span></td><td>Keep; ensure twin parity stays enforced</td></tr>
+        <tr><td>Signing / provenance</td><td>(Ecosystem gap — none mature)</td><td>None</td><td><span class="pill gap">Gap (shared)</span></td><td>Watch; adopt when a standard lands — not worth building now</td></tr>
+        <tr><td>Enterprise managed-settings</td><td><code>managed-settings.json</code>, <code>strictKnownMarketplaces</code></td><td>No managed-settings example shipped</td><td><span class="pill gap">Gap</span></td><td>Add a <code>templates/managed-settings.json</code> example for TCS (M)</td></tr>
+        <tr><td>MCP supply-chain controls</td><td>Gateways, <code>allowManagedMcpServersOnly</code>, curated catalogs</td><td>Only <code>mcp-atlassian</code> used; no gateway/allowlist guidance</td><td><span class="pill adequate">Adequate</span></td><td>Document MCP allowlist + pin posture for consumers (S)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Status tally: 5 Strong, 2 Adequate, 3 Gap (one of which is a shared ecosystem gap).</p>
+
+  <!-- ================= COMMIT GUARDRAIL ================= -->
+  <h3 id="commit-guard">Our commit-governance guardrail</h3>
+  <pre class="mermaid">
+flowchart TD
+  REC["repo-improvement-team: Recommend"] --> APP["Human: Approve"]
+  APP --> APL["Apply approved edits"]
+  APL --> COMMIT["git commit (attempted)"]
+  COMMIT --> HOOK["PreToolUse commit-guard hook"]
+  HOOK --> C1{"Inventory &gt;= disk?"}
+  C1 -->|No| BLOCK["Block commit"]
+  C1 -->|Yes| C2{"Frontmatter has name + description?"}
+  C2 -->|No| BLOCK
+  C2 -->|Yes| ALLOW["Allow commit"]
+  ALLOW --> HUMAN["Human commits &amp; pushes"]
+  BLOCK -.fix &amp; retry.-> APL
+  </pre>
+  <p class="fig-cap">D4 — Commit-governance guardrail: the recommend → approve → apply → human-commits loop gated by the PreToolUse commit-guard hook.</p>
+
+  <!-- ================= RECOMMENDATIONS ================= -->
+  <h3 id="recommendations">C.4 Prioritized recommendations</h3>
+
+  <h4>Quick wins (do soon)</h4>
+  <div class="cards">
+    <div class="card"><div class="head"><span class="eff s">S</span><span class="title">Document a SHA-pin recipe</span></div><div>For reproducible/prod consumers alongside the existing tag pin — closes the highest-value packaging gap at near-zero cost.</div></div>
+    <div class="card"><div class="head"><span class="eff s">S</span><span class="title">Ship a least-privilege <code>deny</code> example</span></div><div><code>Read(.env*)</code>, secrets in <code>templates/settings.json</code> so consuming projects inherit deny-first defaults.</div></div>
+    <div class="card"><div class="head"><span class="eff s">S</span><span class="title">Document an MCP allowlist + pin posture</span></div><div>Reference <code>strictKnownMarketplaces</code> so consumers know the supply-chain stance, even though we ship few MCP servers.</div></div>
+    <div class="card"><div class="head"><span class="eff s">S</span><span class="title">Extend the commit-guard</span></div><div>Lint <code>version:</code>/<code>model:</code> frontmatter fields, not just <code>name</code>/<code>description</code> — cheap reinforcement of an already-Strong dimension.</div></div>
+  </div>
+
+  <h4>Strategic (plan/scope)</h4>
+  <div class="cards">
+    <div class="card"><div class="head"><span class="eff m">M</span><span class="title">Add a <code>templates/managed-settings.json</code> example</span></div><div>Targeted at TCS enterprise rollout (MDM/registry deployment) — turns an outright Gap into a differentiator for regulated adoption.</div></div>
+    <div class="card"><div class="head"><span class="eff m">M</span><span class="title">Add a cross-platform install path</span></div><div>Or formally lean on native plugin auto-update and de-emphasize the PowerShell updater, to remove the Windows-first constraint.</div></div>
+    <div class="card"><div class="head"><span class="eff l">L</span><span class="title">Pilot Promptfoo evals</span></div><div>For 2–3 skills in CI — the single biggest maturity gap vs the ecosystem; start small (one skill, golden outputs) before generalizing.</div></div>
+    <div class="card"><div class="head"><span class="eff w">W</span><span class="title">Signing/provenance — Watch</span></div><div>A shared ecosystem gap with no mature standard; do <strong>not</strong> build bespoke. Track the official MCP Registry and adopt when verification ships.</div></div>
+  </div>
+
+</main>
+
+<footer>
+  Generated from <code>ecosystem-survey-github-popularity.md</code> — not committed; human commits. Library plugin v1.2.1.
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+</script>
+
+</body>
+</html>

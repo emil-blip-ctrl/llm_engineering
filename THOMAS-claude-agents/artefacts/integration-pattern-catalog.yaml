@@ -1,0 +1,32 @@
+---
+id: integration-pattern-catalog
+alias: IPC
+format: markdown
+template: templates/artefacts/integration-pattern-catalog.md
+storage-pattern: "docs/architecture/integration-patterns.md"
+standards:
+  - Enterprise Integration Patterns (Hohpe & Woolf)
+  - ARCHI catalog (TCS)
+
+ownership:
+  responsible: architect
+  accountable: architect
+  consulted: [developer]
+  informed:  [tester, documentarian]
+
+quality-gate:
+  reviewer: architect
+  checklist:
+    - each pattern has a trigger condition
+    - Mermaid diagram present
+    - example payload or sequence shown
+    - non-functional constraints noted
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : architect
+    proposed   → accepted   : architect
+    accepted   → deprecated : architect
+    accepted   → superseded : architect
+---

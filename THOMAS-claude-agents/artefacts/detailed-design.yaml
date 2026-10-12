@@ -1,0 +1,34 @@
+---
+id: detailed-design
+alias: LLD
+format: markdown
+template: templates/artefacts/detailed-design.md
+storage-pattern: "docs/design/lld-{slug}.md"
+standards:
+  - IEEE 1016 SDD
+  - SOLID principles
+  - Clean Code (Robert C. Martin)
+
+ownership:
+  responsible: developer
+  accountable: architect
+  consulted: [tester]
+  informed:  [documentarian]
+
+quality-gate:
+  reviewer: architect
+  checklist:
+    - maps to HLD component boundaries
+    - sequence diagrams for key flows
+    - data model defined
+    - error handling strategy stated
+    - performance considerations noted
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : developer
+    proposed   → accepted   : architect
+    accepted   → deprecated : architect
+    accepted   → superseded : developer
+---

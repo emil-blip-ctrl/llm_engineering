@@ -1,0 +1,34 @@
+---
+id: high-level-design
+alias: HLD
+format: markdown
+template: templates/artefacts/high-level-design.md
+storage-pattern: "docs/architecture/hld-{slug}.md"
+standards:
+  - ISO/IEC 42010
+  - TOGAF Architecture Document
+  - C4 Model (Simon Brown)
+
+ownership:
+  responsible: architect
+  accountable: product-owner-assistant
+  consulted: [developer, devops]
+  informed:  [tester, documentarian]
+
+quality-gate:
+  reviewer: architect
+  checklist:
+    - system context diagram present
+    - component boundaries defined
+    - key technology choices stated
+    - non-functional requirements addressed
+    - links to relevant ADRs
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : architect
+    proposed   → accepted   : product-owner-assistant
+    accepted   → deprecated : product-owner-assistant
+    accepted   → superseded : architect
+---

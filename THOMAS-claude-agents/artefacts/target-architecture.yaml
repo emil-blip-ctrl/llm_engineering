@@ -1,0 +1,33 @@
+---
+id: target-architecture
+alias: Target Arch
+format: archimate
+template: templates/artefacts/target-architecture.yaml
+storage-pattern: "*.archimate"
+standards:
+  - ArchiMate 3.1 (The Open Group)
+  - Archi tool XML schema
+
+ownership:
+  responsible: archimate-architect
+  accountable: architect
+  consulted: [developer, devops]
+  informed:  [product-owner-assistant, tester, documentarian]
+
+quality-gate:
+  reviewer: architect
+  checklist:
+    - all layers represented (motivation/business/application/technology)
+    - views include system context and deployment
+    - relationships typed correctly
+    - no orphaned elements
+    - XML well-formed
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : archimate-architect
+    proposed   → accepted   : architect
+    accepted   → deprecated : architect
+    accepted   → superseded : archimate-architect
+---

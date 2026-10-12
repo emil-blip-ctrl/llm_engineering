@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.store/claude-code-settings.json",
+
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Task",
+      "TodoWrite",
+      "AskUserQuestion",
+      "NotebookEdit",
+      "WebSearch",
+      "WebFetch",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(pytest *)",
+      "Bash(mutmut *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push origin feature/*)",
+      "Bash(git push origin release/*)",
+      "Bash(git tag *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(gh pr *)",
+      "Bash(gh issue *)",
+      "Bash(gh release *)",
+      "Bash(docker build *)",
+      "Bash(docker compose *)",
+      "Bash(docker run *)",
+      "Bash(pip install *)",
+      "Bash(pip list*)",
+      "Bash(uv *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(mvn *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(cat *)",
+      "Bash(echo *)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push * --force)",
+      "Bash(git push * -f)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push * --force-with-lease)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -f*)",
+      "Bash(git commit --amend *)",
+      "Bash(curl * | bash*)",
+      "Bash(wget * | bash*)",
+      "Bash(eval *)"
+    ]
+  },
+
+  "hooks": {
+
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('command',''))\" 2>/dev/null || echo ''); if echo \"$cmd\" | grep -qP 'git push\\b.*\\b(main|master)\\b(?![-/_])'; then echo '[HOOK BLOCKED] Direct push to main/master is not allowed. Use a feature branch and open a PR.'; exit 1; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] File modified — run /test before committing'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Commit created — push when ready: git push origin <branch>'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git push*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Branch pushed — open a PR or notify the team'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+
+    "SubagentStop": [
+      {
+        "matcher": "architect",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Architect finished — findings written to .claude/memory/team-findings.md. Developer and DevOps can now proceed.'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "developer",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Developer finished — trigger tester agent next: /test or spawn tester'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "tester",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Tester finished — review results, then trigger documentarian: /document or spawn documentarian'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "devops",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] DevOps finished — infrastructure updated. Trigger documentarian to capture pipeline changes.'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "documentarian",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Documentarian finished — docs updated and team-findings.md consolidated. Run quality gate or close workflow.'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "product-owner-assistant",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] PO Assistant finished — check .claude/memory/sessions/ for session handoff summary.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p .claude/memory && printf '[%s] %s\\n' \"$(date '+%Y-%m-%d %H:%M:%S')\" \"$CLAUDE_NOTIFICATION\" >> .claude/memory/notifications.log 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Hook] Session ended — reminder: commit pending changes, run /test if code was modified, run /document if architecture changed.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+
+  }
+}

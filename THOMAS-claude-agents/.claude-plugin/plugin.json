@@ -1,0 +1,41 @@
+{
+  "name": "agentic-claude",
+  "displayName": "Agentic-Claude — Enterprise Agent Library",
+  "version": "1.2.1",
+  "description": "8 specialized AI agents, 8 production-ready skills, and 4 team compositions for Claude Code. One-shot setup for Windows and Mac/Linux. Built for IBM APIC/ACE/MQ integrations and enterprise software teams.",
+  "longDescription": "Agentic-Claude provides a plug-and-play team of specialized Claude Code agents for enterprise software projects. Agents cover the full development lifecycle: implementation (developer), testing (tester), infrastructure (devops), documentation (documentarian), integration architecture (architect), and orchestration (product-owner-assistant). Skills automate common workflows: feature development, code review, security audits, CI/CD, and documentation sync. Team blueprints orchestrate multiple agents for end-to-end features, releases, and migrations. Includes one-shot setup scripts, auto model-update tooling, and CI validation. Designed for IBM APIC/ACE/MQ integration teams at TCS.",
+  "categories": [
+    "agents",
+    "productivity",
+    "enterprise",
+    "security",
+    "testing",
+    "devops"
+  ],
+  "features": [
+    "8 specialized agents: developer, tester, devops, architect, documentarian, product-owner-assistant, librarian, library-engineer",
+    "8 skills: /develop, /test, /deploy, /review, /security-audit, /document, /postman-collection-generator, /publish-confluence",
+    "4 team blueprints: feature-team, release-team, full-team, repo-improvement-team",
+    "One-shot setup: setup.ps1 (Windows) and setup.sh (Mac/Linux)",
+    "Auto model-update: update.ps1/update.sh keep agents on the latest Claude models",
+    "Installation doctor: doctor.ps1/doctor.sh diagnose broken setups",
+    "GitHub Actions: CI validation, release automation, monthly model-watcher",
+    "IBM APIC/ACE/MQ specific patterns in architect agent and /security-audit skill",
+    "Hooks: branch guardrail, commit-guard, agent orchestration reminders"
+  ],
+  "author": {
+    "name": "Thomas Richeux",
+    "email": "thomas.richeux@tcs.ch"
+  },
+  "homepage": "https://github.com/Aletheia-Thomas/Claude-Agents",
+  "repository": "https://github.com/Aletheia-Thomas/Claude-Agents",
+  "license": "MIT",
+  "engines": {
+    "claude-code": ">=1.0.0"
+  },
+  "keywords": [
+    "agents", "skills", "teams", "enterprise", "ibm", "apic", "ace", "mq",
+    "devops", "security", "istqb", "clean-architecture", "ddd", "archimate",
+    "tcs", "moex", "migration", "confluence", "postman"
+  ]
+}

@@ -1,0 +1,13 @@
+@startuml system-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title System Context — <System Name>
+
+Person(user, "User", "Description of primary user")
+System(system, "System Name", "What it does")
+System_Ext(ext1, "External System", "What it provides")
+
+Rel(user, system, "Uses", "HTTPS")
+Rel(system, ext1, "Calls", "REST/MQ")
+
+@enduml

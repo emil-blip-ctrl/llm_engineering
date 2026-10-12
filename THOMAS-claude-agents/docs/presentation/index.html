@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic-Claude — Agent &amp; Skill Library</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1c2230; --border:#2b3340;
+    --txt:#e6edf3; --muted:#9aa7b4; --dim:#6e7b8a;
+    --accent:#7c9cff; --accent-2:#58d6c9; --accent-3:#f0a868;
+    --dev:#7c9cff; --test:#58d6c9; --ops:#f0a868; --doc:#c792ea; --po:#ff7b9c; --arch:#69d27a;
+    --shadow:0 8px 30px rgba(0,0,0,.35);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{background:#0a0e14;border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-family:'Cascadia Code',Consolas,monospace;font-size:.86em;color:var(--accent-2)}
+
+  /* layout */
+  .app{display:grid;grid-template-columns:288px 1fr;min-height:100vh}
+  .sidebar{background:#0a0e14;border-right:1px solid var(--border);padding:22px 16px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#0a0e14;font-size:18px}
+  .brand h1{font-size:16px;margin:0;letter-spacing:.3px}
+  .brand .ver{font-size:11px;color:var(--dim);font-weight:600}
+  .nav-group{margin-top:20px}
+  .nav-group .label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.4px;color:var(--dim);margin:0 0 8px 8px;font-weight:700}
+  .nav a{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--muted);font-size:13.5px;font-weight:500;margin-bottom:2px}
+  .nav a:hover{background:var(--panel);color:var(--txt);text-decoration:none}
+  .nav a.active{background:linear-gradient(90deg,rgba(124,156,255,.18),transparent);color:var(--txt);border-left:2px solid var(--accent)}
+  .nav a .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+
+  /* content */
+  .main{padding:38px 54px 90px;max-width:1080px}
+  .crumbs{font-size:12.5px;color:var(--dim);margin-bottom:18px}
+  .crumbs a{color:var(--muted)}
+  .crumbs span{margin:0 7px;color:var(--border)}
+  h2.page-title{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
+  .subtitle{color:var(--muted);font-size:16px;margin:0 0 30px}
+  h3{font-size:20px;margin:34px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  h4{font-size:15px;margin:22px 0 10px;color:var(--accent-2)}
+  p{color:#d3dce4}
+  ul,ol{color:#d3dce4}
+  li{margin:4px 0}
+
+  .page{display:none;animation:fade .35s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* cards */
+  .grid{display:grid;gap:16px}
+  .grid.c2{grid-template-columns:1fr 1fr}
+  .grid.c3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:.18s}
+  .card.link{cursor:pointer}
+  .card.link:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:var(--shadow)}
+  .card h4{margin:0 0 6px;color:var(--txt);font-size:16px}
+  .card p{margin:0;color:var(--muted);font-size:13.5px}
+  .card .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:20px;margin-bottom:10px;text-transform:uppercase}
+
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--panel-2);color:var(--muted);margin:0 5px 5px 0}
+  .pill.model{border-color:var(--accent);color:var(--accent)}
+  .pill.mem{border-color:var(--accent-2);color:var(--accent-2)}
+  .pill.tool{border-color:#3a4350}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;background:var(--panel);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)}
+  th{background:var(--panel-2);color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.6px}
+  tr:last-child td{border-bottom:none}
+  td code{white-space:nowrap}
+
+  .callout{border-left:3px solid var(--accent);background:var(--panel);border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;color:var(--muted);font-size:14px}
+  .callout.warn{border-color:var(--accent-3)}
+  .callout.good{border-color:var(--arch)}
+  .callout b{color:var(--txt)}
+
+  .banner{background:linear-gradient(135deg,rgba(124,156,255,.12),rgba(88,214,201,.07));border:1px solid var(--border);border-radius:var(--radius);padding:30px 34px;margin-bottom:30px}
+  .banner h2{margin:0 0 10px;font-size:34px;letter-spacing:-.6px}
+  .banner p{margin:0;color:var(--muted);font-size:16px;max-width:680px}
+  .stat-row{display:flex;gap:14px;margin-top:24px;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:120px}
+  .stat .n{font-size:28px;font-weight:800;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+
+  .constraints li{color:#e6b3bf}
+  .does li{color:#aee5c4}
+
+  /* diagrams */
+  .diagram{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin:18px 0;overflow-x:auto}
+  svg{display:block;margin:0 auto;max-width:100%;height:auto}
+  .flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;margin:14px 0}
+  .flow .step{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-weight:600}
+  .flow .arr{color:var(--accent);font-weight:800}
+
+  .back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-bottom:20px;cursor:pointer}
+  .back:hover{color:var(--accent)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:14px;justify-content:center}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--dim);font-size:12.5px}
+  .xref{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .xref a{font-size:12.5px;background:var(--panel-2);border:1px solid var(--border);padding:6px 12px;border-radius:20px;color:var(--muted)}
+  .xref a:hover{border-color:var(--accent);color:var(--txt);text-decoration:none}
+  @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.main{padding:24px}.grid.c2,.grid.c3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">A</div>
+      <div>
+        <h1>Agentic-Claude</h1>
+        <div class="ver">Agent &amp; Skill Library · v1.1</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="label">Concepts</div>
+        <a href="#overview"><span class="dot" style="background:var(--accent)"></span>Overview</a>
+        <a href="#data-model"><span class="dot" style="background:var(--accent-2)"></span>Data Model</a>
+        <a href="#memory"><span class="dot" style="background:var(--doc)"></span>Context &amp; Memory</a>
+      </div>
+      <div class="nav-group">
+        <div class="label">Teams</div>
+        <a href="#teams"><span class="dot" style="background:var(--accent-3)"></span>All Teams</a>
+        <a href="#team-feature"><span class="dot" style="background:var(--accent-3)"></span>Feature Team</a>
+        <a href="#team-release"><span class="dot" style="background:var(--accent-3)"></span>Release Team</a>
+        <a href="#team-full"><span class="dot" style="background:var(--accent-3)"></span>Full Team</a>
+      </div>
+      <div class="nav-group">
+        <div class="label">Agents</div>
+        <a href="#agents"><span class="dot" style="background:var(--accent)"></span>All Agents &amp; Relations</a>
+        <a href="#agent-po"><span class="dot" style="background:var(--po)"></span>Product Owner Assistant</a>
+        <a href="#agent-architect"><span class="dot" style="background:var(--arch)"></span>Architect</a>
+        <a href="#agent-developer"><span class="dot" style="background:var(--dev)"></span>Developer</a>
+        <a href="#agent-tester"><span class="dot" style="background:var(--test)"></span>Tester</a>
+        <a href="#agent-devops"><span class="dot" style="background:var(--ops)"></span>DevOps</a>
+        <a href="#agent-documentarian"><span class="dot" style="background:var(--doc)"></span>Documentarian</a>
+      </div>
+      <div class="nav-group">
+        <div class="label">Skills</div>
+        <a href="#skills"><span class="dot" style="background:var(--accent-2)"></span>All Skills</a>
+        <a href="#skill-develop"><span class="dot" style="background:var(--dev)"></span>/develop</a>
+        <a href="#skill-test"><span class="dot" style="background:var(--test)"></span>/test</a>
+        <a href="#skill-deploy"><span class="dot" style="background:var(--ops)"></span>/deploy</a>
+        <a href="#skill-review"><span class="dot" style="background:var(--accent)"></span>/review</a>
+        <a href="#skill-document"><span class="dot" style="background:var(--doc)"></span>/document</a>
+        <a href="#skill-postman"><span class="dot" style="background:var(--accent-3)"></span>/postman-collection-generator</a>
+      </div>
+      <div class="nav-group">
+        <div class="label">Deployment</div>
+        <a href="#hooks-guardrails"><span class="dot" style="background:var(--po)"></span>🔒 Hooks &amp; Guardrails</a>
+        <a href="#versioning"><span class="dot" style="background:var(--arch)"></span>📦 Versioning &amp; Distribution</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+  <!-- ============ OVERVIEW ============ -->
+  <section class="page" id="overview">
+    <div class="banner">
+      <h2>A reusable library for building agentic solutions with Claude</h2>
+      <p>Agent <b>roles</b>, reusable <b>skills</b>, and <b>team</b> compositions you can drop into any project. This site explains the data model, the agents and how they relate, every skill, the memory architecture, and the teams that orchestrate them.</p>
+      <div class="stat-row">
+        <div class="stat"><div class="n">6</div><div class="l">Agents</div></div>
+        <div class="stat"><div class="n">6</div><div class="l">Skills</div></div>
+        <div class="stat"><div class="n">3</div><div class="l">Teams</div></div>
+        <div class="stat"><div class="n">6</div><div class="l">Memory layers</div></div>
+      </div>
+    </div>
+
+    <h3>Navigate the way the system works</h3>
+    <p>The intended reading path mirrors how work actually flows: a <b>Team</b> is spawned, which composes <b>Agents</b>, who invoke <b>Skills</b>, all coordinated through shared <b>Context &amp; Memory</b>.</p>
+    <div class="flow">
+      <span class="step" onclick="go('teams')" style="cursor:pointer">🧩 Team</span><span class="arr">→</span>
+      <span class="step" onclick="go('agents')" style="cursor:pointer">🤖 Agents</span><span class="arr">→</span>
+      <span class="step" onclick="go('skills')" style="cursor:pointer">⚡ Skills</span><span class="arr">→</span>
+      <span class="step" onclick="go('memory')" style="cursor:pointer">🧠 Context &amp; Memory</span>
+    </div>
+
+    <h3>The four building blocks</h3>
+    <div class="grid c2">
+      <div class="card link" onclick="go('data-model')">
+        <span class="tag" style="background:rgba(88,214,201,.15);color:var(--accent-2)">Schema</span>
+        <h4>Data Model</h4>
+        <p>The entities — Agent, Skill, Team, Memory, Project — and how they connect. Start here to understand the vocabulary.</p>
+      </div>
+      <div class="card link" onclick="go('agents')">
+        <span class="tag" style="background:rgba(124,156,255,.15);color:var(--accent)">Roles</span>
+        <h4>Agents</h4>
+        <p>Six specialised roles with restricted tools and strict boundaries. See the relationship graph and one page per agent.</p>
+      </div>
+      <div class="card link" onclick="go('skills')">
+        <span class="tag" style="background:rgba(240,168,104,.15);color:var(--accent-3)">Workflows</span>
+        <h4>Skills</h4>
+        <p>Step-by-step procedures invoked as slash commands. Any agent can run them; they encode <i>how</i> work is done.</p>
+      </div>
+      <div class="card link" onclick="go('memory')">
+        <span class="tag" style="background:rgba(199,146,234,.15);color:var(--doc)">Knowledge</span>
+        <h4>Context &amp; Memory</h4>
+        <p>How agents remember within and across sessions: working memory, episodic MEMORY.md, semantic CLAUDE.md, team findings, checkpoints.</p>
+      </div>
+    </div>
+
+    <h3>Design principles</h3>
+    <table>
+      <tr><th>#</th><th>Principle</th><th>What it means</th></tr>
+      <tr><td>1</td><td>Agents are roles, not projects</td><td>Domain expertise (SOLID, ISTQB, TOGAF) with zero project-specific knowledge.</td></tr>
+      <tr><td>2</td><td>Skills are workflows, not instructions</td><td>Reusable step-by-step procedures any agent can invoke.</td></tr>
+      <tr><td>3</td><td>Teams are compositions</td><td>Which agents to spawn together for a common workflow.</td></tr>
+      <tr><td>4</td><td>Tool restriction enforces separation</td><td>Each agent only gets the tools matching its responsibility.</td></tr>
+      <tr><td>5</td><td>Memory enables learning</td><td><code>memory: project</code> keeps knowledge scoped, preventing cross-project contamination.</td></tr>
+      <tr><td>6</td><td>Progress reporting prevents stalls</td><td>Every agent reports checkpoints; the orchestrator synthesises before spawning more.</td></tr>
+      <tr><td>7</td><td>Output discipline preserves context</td><td>Agents summarise instead of dumping raw output; updates stay under 2000 chars.</td></tr>
+    </table>
+    <div class="callout"><b>Purpose of this repo:</b> a versioned, shareable library. Consuming projects install agents/skills via symlink (follow HEAD) or copy (pin a version), keeping their own <code>CLAUDE.md</code>, settings, and memory local.</div>
+  </section>
+
+  <!-- ============ DATA MODEL ============ -->
+  <section class="page" id="data-model">
+    <div class="crumbs"><a onclick="go('overview')">Overview</a><span>›</span>Data Model</div>
+    <h2 class="page-title">Data Model</h2>
+    <p class="subtitle">The core entities of the library and the relationships between them.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 880 560" font-family="Segoe UI, sans-serif">
+        <defs>
+          <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c9cff"/></marker>
+        </defs>
+        <!-- relationships (lines) -->
+        <g stroke="#3a4350" stroke-width="1.6" fill="none" marker-end="url(#arr)">
+          <line x1="220" y1="120" x2="350" y2="120"/>      <!-- project -> team install? -->
+          <line x1="440" y1="155" x2="440" y2="225"/>       <!-- team -> agent -->
+          <line x1="440" y1="320" x2="440" y2="390"/>       <!-- agent -> skill -->
+          <line x1="620" y1="265" x2="690" y2="265"/>       <!-- agent -> memory -->
+          <line x1="690" y1="430" x2="560" y2="430"/>       <!-- memory <- skill? -->
+          <line x1="150" y1="160" x2="150" y2="395"/>       <!-- project -> project memory -->
+        </g>
+        <!-- edge labels -->
+        <g font-size="11" fill="#9aa7b4">
+          <text x="252" y="110">installs</text>
+          <text x="450" y="195">composed of</text>
+          <text x="450" y="362">invokes</text>
+          <text x="628" y="255">reads / writes</text>
+          <text x="95" y="285">scopes</text>
+        </g>
+
+        <!-- PROJECT -->
+        <g>
+          <rect x="60" y="90" width="160" height="62" rx="11" fill="#1c2230" stroke="#69d27a" stroke-width="1.5"/>
+          <text x="140" y="116" text-anchor="middle" fill="#69d27a" font-weight="700" font-size="14">Project</text>
+          <text x="140" y="135" text-anchor="middle" fill="#9aa7b4" font-size="10.5">consuming repo · .claude/</text>
+        </g>
+        <!-- TEAM -->
+        <g>
+          <rect x="350" y="90" width="180" height="66" rx="11" fill="#1c2230" stroke="#f0a868" stroke-width="1.5"/>
+          <text x="440" y="116" text-anchor="middle" fill="#f0a868" font-weight="700" font-size="14">Team</text>
+          <text x="440" y="135" text-anchor="middle" fill="#9aa7b4" font-size="10.5">composition · workflow ·</text>
+          <text x="440" y="148" text-anchor="middle" fill="#9aa7b4" font-size="10.5">file boundaries</text>
+        </g>
+        <!-- AGENT -->
+        <g>
+          <rect x="350" y="226" width="270" height="96" rx="11" fill="#1c2230" stroke="#7c9cff" stroke-width="1.8"/>
+          <text x="485" y="250" text-anchor="middle" fill="#7c9cff" font-weight="700" font-size="14">Agent</text>
+          <text x="485" y="270" text-anchor="middle" fill="#c3ccd6" font-size="10.5">name · description · model</text>
+          <text x="485" y="285" text-anchor="middle" fill="#c3ccd6" font-size="10.5">tools[] · memory scope</text>
+          <text x="485" y="300" text-anchor="middle" fill="#c3ccd6" font-size="10.5">constraints · checkpoints</text>
+          <text x="485" y="315" text-anchor="middle" fill="#6e7b8a" font-size="10">defined in AGENT.md</text>
+        </g>
+        <!-- SKILL -->
+        <g>
+          <rect x="350" y="392" width="210" height="86" rx="11" fill="#1c2230" stroke="#58d6c9" stroke-width="1.5"/>
+          <text x="455" y="416" text-anchor="middle" fill="#58d6c9" font-weight="700" font-size="14">Skill</text>
+          <text x="455" y="436" text-anchor="middle" fill="#c3ccd6" font-size="10.5">name · /invocation</text>
+          <text x="455" y="451" text-anchor="middle" fill="#c3ccd6" font-size="10.5">allowed-tools · steps</text>
+          <text x="455" y="466" text-anchor="middle" fill="#6e7b8a" font-size="10">defined in SKILL.md</text>
+        </g>
+        <!-- MEMORY -->
+        <g>
+          <rect x="690" y="226" width="150" height="96" rx="11" fill="#1c2230" stroke="#c792ea" stroke-width="1.5"/>
+          <text x="765" y="250" text-anchor="middle" fill="#c792ea" font-weight="700" font-size="14">Memory</text>
+          <text x="765" y="270" text-anchor="middle" fill="#9aa7b4" font-size="10">MEMORY.md (episodic)</text>
+          <text x="765" y="284" text-anchor="middle" fill="#9aa7b4" font-size="10">team-findings.md</text>
+          <text x="765" y="298" text-anchor="middle" fill="#9aa7b4" font-size="10">checkpoints/active.md</text>
+          <text x="765" y="312" text-anchor="middle" fill="#9aa7b4" font-size="10">sessions/</text>
+        </g>
+        <!-- PROJECT MEMORY / CLAUDE.md -->
+        <g>
+          <rect x="60" y="395" width="180" height="66" rx="11" fill="#1c2230" stroke="#c792ea" stroke-width="1.3" stroke-dasharray="4 3"/>
+          <text x="150" y="421" text-anchor="middle" fill="#c792ea" font-weight="700" font-size="13">CLAUDE.md</text>
+          <text x="150" y="440" text-anchor="middle" fill="#9aa7b4" font-size="10.5">semantic memory (facts)</text>
+        </g>
+        <!-- dashed: documentarian consolidates -->
+        <line x1="690" y1="300" x2="245" y2="420" stroke="#c792ea" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#arr)" opacity=".7"/>
+        <text x="380" y="375" fill="#c792ea" font-size="10.5" opacity=".85">consolidate (documentarian)</text>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#69d27a"></i>Project</span>
+        <span><i style="background:#f0a868"></i>Team</span>
+        <span><i style="background:#7c9cff"></i>Agent</span>
+        <span><i style="background:#58d6c9"></i>Skill</span>
+        <span><i style="background:#c792ea"></i>Memory</span>
+      </div>
+    </div>
+
+    <h3>Entities</h3>
+    <table>
+      <tr><th>Entity</th><th>Defined in</th><th>Key attributes</th><th>Cardinality</th></tr>
+      <tr><td><b>Agent</b></td><td><code>agents/&lt;name&gt;/AGENT.md</code></td><td>name, description, model, tools[], memory scope, constraints, progress/checkpoint protocol</td><td>6 in library</td></tr>
+      <tr><td><b>Skill</b></td><td><code>skills/&lt;name&gt;/SKILL.md</code></td><td>name, slash invocation, allowed-tools, numbered workflow steps, report format</td><td>6 in library</td></tr>
+      <tr><td><b>Team</b></td><td><code>teams/&lt;name&gt;.md</code></td><td>composition, workflow, task assignment, file boundaries, dependencies, coordination &amp; crash recovery</td><td>3 in library</td></tr>
+      <tr><td><b>Memory</b></td><td><code>.claude/memory/</code> + <code>CLAUDE.md</code></td><td>MEMORY.md, team-findings.md, checkpoints/active.md, sessions/</td><td>per project</td></tr>
+      <tr><td><b>Project</b></td><td>consuming repo</td><td><code>.claude/</code> with symlinked agents/skills, own CLAUDE.md, settings.json, .venv</td><td>many</td></tr>
+    </table>
+
+    <h3>Relationships</h3>
+    <table>
+      <tr><th>From</th><th>Relationship</th><th>To</th><th>Notes</th></tr>
+      <tr><td>Team</td><td>is composed of</td><td>Agent (2–5)</td><td>Many-to-many — an agent appears in several teams.</td></tr>
+      <tr><td>Agent</td><td>invokes</td><td>Skill</td><td>Skills are role-agnostic; tool overlap determines which agent runs which.</td></tr>
+      <tr><td>Agent</td><td>is restricted to</td><td>Tools[]</td><td>Tool set encodes the agent's boundary (e.g. tester has no deploy tools).</td></tr>
+      <tr><td>Agent</td><td>reads / writes</td><td>Memory</td><td><code>memory: project</code> — episodic MEMORY.md, plus shared team-findings &amp; checkpoints.</td></tr>
+      <tr><td>Documentarian</td><td>consolidates</td><td>team-findings → CLAUDE.md</td><td>Episodic discoveries become semantic facts during <code>/document</code>.</td></tr>
+      <tr><td>Product-Owner-Assistant</td><td>orchestrates</td><td>all execution agents</td><td>Delegates, never codes; manages checkpoint lifecycle.</td></tr>
+      <tr><td>Project</td><td>installs</td><td>Agents + Skills</td><td>Via symlink (HEAD) or copy (pinned version) into <code>.claude/</code>.</td></tr>
+    </table>
+    <div class="xref">
+      <a onclick="go('agents')">→ Explore Agents</a>
+      <a onclick="go('skills')">→ Explore Skills</a>
+      <a onclick="go('teams')">→ Explore Teams</a>
+      <a onclick="go('memory')">→ Context &amp; Memory</a>
+    </div>
+  </section>
+
+  <!-- ============ AGENTS LIST ============ -->
+  <section class="page" id="agents">
+    <div class="crumbs"><a onclick="go('overview')">Overview</a><span>›</span>Agents</div>
+    <h2 class="page-title">Agents &amp; Their Relationships</h2>
+    <p class="subtitle">Six roles. Each has domain expertise, a restricted tool set, and hard boundaries on what it must not do.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 820 470" font-family="Segoe UI, sans-serif">
+        <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6e7b8a"/></marker></defs>
+        <!-- orchestrator lines -->
+        <g stroke="#3a4350" stroke-width="1.5" fill="none" marker-end="url(#a2)">
+          <line x1="410" y1="105" x2="180" y2="200"/>
+          <line x1="410" y1="105" x2="330" y2="200"/>
+          <line x1="410" y1="105" x2="490" y2="200"/>
+          <line x1="410" y1="105" x2="650" y2="200"/>
+          <line x1="410" y1="105" x2="410" y2="330"/>
+        </g>
+        <!-- handoff dev->test->doc -->
+        <g stroke="#58d6c9" stroke-width="1.4" fill="none" marker-end="url(#a2)" opacity=".8">
+          <line x1="375" y1="235" x2="450" y2="235"/>
+        </g>
+        <g stroke="#c792ea" stroke-width="1.4" fill="none" marker-end="url(#a2)" opacity=".8" stroke-dasharray="4 3">
+          <line x1="410" y1="360" x2="410" y2="360"/>
+        </g>
+
+        <!-- PO (orchestrator) -->
+        <g onclick="go('agent-po')" style="cursor:pointer">
+          <rect x="305" y="55" width="210" height="52" rx="12" fill="#1c2230" stroke="#ff7b9c" stroke-width="2"/>
+          <text x="410" y="78" text-anchor="middle" fill="#ff7b9c" font-weight="700" font-size="13.5">Product Owner Assistant</text>
+          <text x="410" y="95" text-anchor="middle" fill="#9aa7b4" font-size="10">orchestrator · never codes</text>
+        </g>
+        <!-- row of execution agents -->
+        <g onclick="go('agent-architect')" style="cursor:pointer">
+          <rect x="95" y="200" width="170" height="50" rx="11" fill="#1c2230" stroke="#69d27a" stroke-width="1.6"/>
+          <text x="180" y="222" text-anchor="middle" fill="#69d27a" font-weight="700" font-size="13">Architect</text>
+          <text x="180" y="238" text-anchor="middle" fill="#9aa7b4" font-size="9.5">maps integrations</text>
+        </g>
+        <g onclick="go('agent-developer')" style="cursor:pointer">
+          <rect x="290" y="200" width="85" height="50" rx="11" fill="#1c2230" stroke="#7c9cff" stroke-width="1.6"/>
+          <text x="332" y="222" text-anchor="middle" fill="#7c9cff" font-weight="700" font-size="13">Developer</text>
+          <text x="332" y="238" text-anchor="middle" fill="#9aa7b4" font-size="9.5">code</text>
+        </g>
+        <g onclick="go('agent-tester')" style="cursor:pointer">
+          <rect x="450" y="200" width="85" height="50" rx="11" fill="#1c2230" stroke="#58d6c9" stroke-width="1.6"/>
+          <text x="492" y="222" text-anchor="middle" fill="#58d6c9" font-weight="700" font-size="13">Tester</text>
+          <text x="492" y="238" text-anchor="middle" fill="#9aa7b4" font-size="9.5">tests</text>
+        </g>
+        <g onclick="go('agent-devops')" style="cursor:pointer">
+          <rect x="585" y="200" width="130" height="50" rx="11" fill="#1c2230" stroke="#f0a868" stroke-width="1.6"/>
+          <text x="650" y="222" text-anchor="middle" fill="#f0a868" font-weight="700" font-size="13">DevOps</text>
+          <text x="650" y="238" text-anchor="middle" fill="#9aa7b4" font-size="9.5">CI/CD · Docker · Azure</text>
+        </g>
+        <g onclick="go('agent-documentarian')" style="cursor:pointer">
+          <rect x="320" y="330" width="180" height="50" rx="11" fill="#1c2230" stroke="#c792ea" stroke-width="1.6"/>
+          <text x="410" y="352" text-anchor="middle" fill="#c792ea" font-weight="700" font-size="13">Documentarian</text>
+          <text x="410" y="368" text-anchor="middle" fill="#9aa7b4" font-size="9.5">docs · CLAUDE.md · ADRs</text>
+        </g>
+        <!-- shared memory node -->
+        <g>
+          <rect x="300" y="415" width="220" height="40" rx="10" fill="#11161f" stroke="#c792ea" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="410" y="440" text-anchor="middle" fill="#c792ea" font-size="11">shared: team-findings.md · checkpoints</text>
+        </g>
+        <line x1="410" y1="380" x2="410" y2="415" stroke="#3a4350" stroke-width="1.3" fill="none" marker-end="url(#a2)"/>
+        <text x="540" y="160" fill="#6e7b8a" font-size="10.5">delegates &amp; synthesises ↘</text>
+      </svg>
+      <p style="text-align:center;color:var(--muted);font-size:12.5px;margin:6px 0 0">Click any agent to open its page. The PO Assistant delegates; execution agents hand off Developer → Tester → Documentarian and share knowledge through files.</p>
+    </div>
+
+    <h3>The roster</h3>
+    <div class="grid c2">
+      <div class="card link" onclick="go('agent-po')"><span class="tag" style="background:rgba(255,123,156,.15);color:var(--po)">Orchestrator · opus</span><h4>Product Owner Assistant</h4><p>Coordinates agents, refines requirements, manages the backlog &amp; checkpoints. Never writes code.</p></div>
+      <div class="card link" onclick="go('agent-architect')"><span class="tag" style="background:rgba(105,210,122,.15);color:var(--arch)">Analysis · opus</span><h4>Architect</h4><p>Maps integration architectures (APIC/ACE/MQ), dependency chains, and patterns. No app code.</p></div>
+      <div class="card link" onclick="go('agent-developer')"><span class="tag" style="background:rgba(124,156,255,.15);color:var(--dev)">Build · opus</span><h4>Developer</h4><p>Production code only, following SOLID &amp; Clean Code. No tests, docs, or deploy.</p></div>
+      <div class="card link" onclick="go('agent-tester')"><span class="tag" style="background:rgba(88,214,201,.15);color:var(--test)">Validate · opus</span><h4>Tester</h4><p>ISTQB-aligned test design &amp; execution with pytest. Never touches production code.</p></div>
+      <div class="card link" onclick="go('agent-devops')"><span class="tag" style="background:rgba(240,168,104,.15);color:var(--ops)">Deliver · opus</span><h4>DevOps</h4><p>GitHub Actions, Docker, Azure, CI/CD. No application logic or tests.</p></div>
+      <div class="card link" onclick="go('agent-documentarian')"><span class="tag" style="background:rgba(199,146,234,.15);color:var(--doc)">Context · sonnet</span><h4>Documentarian</h4><p>Maintains CLAUDE.md, ADRs &amp; docs; consolidates team findings. No code or tests.</p></div>
+    </div>
+
+    <h3>Comparison</h3>
+    <table>
+      <tr><th>Agent</th><th>Model</th><th>Memory</th><th>Tools</th><th>Hard "no"</th></tr>
+      <tr><td><a onclick="go('agent-po')">PO Assistant</a></td><td>opus</td><td>project</td><td>Read, Grep, Glob, Task, WebSearch, WebFetch, TodoWrite, AskUserQuestion</td><td>code/tests/infra/docs</td></tr>
+      <tr><td><a onclick="go('agent-architect')">Architect</a></td><td>opus</td><td>project</td><td>Read, Write, Edit, Grep, Glob, Task, WebSearch, WebFetch, TodoWrite</td><td>app code, tests, deploy</td></tr>
+      <tr><td><a onclick="go('agent-developer')">Developer</a></td><td>opus</td><td>project</td><td>Read, Write, Edit, Bash, Grep, Glob, Task, WebSearch, WebFetch</td><td>tests, docs, deploy</td></tr>
+      <tr><td><a onclick="go('agent-tester')">Tester</a></td><td>opus</td><td>project</td><td>Read, Write, Edit, Bash, Grep, Glob, Task</td><td>production code</td></tr>
+      <tr><td><a onclick="go('agent-devops')">DevOps</a></td><td>opus</td><td>project</td><td>Read, Write, Edit, Bash, Grep, Glob, Task, WebSearch, WebFetch</td><td>app code, tests</td></tr>
+      <tr><td><a onclick="go('agent-documentarian')">Documentarian</a></td><td>sonnet</td><td>project</td><td>Read, Write, Edit, Grep, Glob, Task, WebSearch</td><td>code, tests, infra</td></tr>
+    </table>
+    <div class="callout"><b>Why tool restriction matters:</b> the tool list <i>is</i> the boundary. The tester has no way to edit <code>src/</code> conventions cleanly because separation of duties is enforced mechanically, not just by instruction.</div>
+  </section>
+
+  <!-- AGENT PAGES injected below by template -->
+  <!-- PO -->
+  <section class="page" id="agent-po">
+    <div class="crumbs"><a onclick="go('agents')">Agents</a><span>›</span>Product Owner Assistant</div>
+    <h2 class="page-title" style="color:var(--po)">Product Owner Assistant</h2>
+    <p class="subtitle">The orchestration layer — the bridge between the human PO and the execution agents.</p>
+    <div>
+      <span class="pill model">model: opus</span><span class="pill mem">memory: project</span>
+      <span class="pill tool">Read</span><span class="pill tool">Grep</span><span class="pill tool">Glob</span><span class="pill tool">Task</span><span class="pill tool">WebSearch</span><span class="pill tool">WebFetch</span><span class="pill tool">TodoWrite</span><span class="pill tool">AskUserQuestion</span>
+    </div>
+    <h3>Core identity</h3>
+    <p>Translates business intent into actionable specs, prioritises, delegates to the right agent, and validates that what was asked is what was delivered. It <b>never</b> writes code, tests, infra, or docs.</p>
+    <h3>What it does</h3>
+    <ul class="does">
+      <li><b>Requirement refinement</b> — clarifying questions, user stories with acceptance criteria, MoSCoW prioritisation.</li>
+      <li><b>Backlog management</b> — the todo list is the session backlog; each item maps to a delegatable unit.</li>
+      <li><b>Delegation</b> — routes work to Developer / Tester / DevOps / Documentarian with narrow scope (1–3 files) and output limits.</li>
+      <li><b>Quality gates</b> — verifies implement → test → document before calling a feature done.</li>
+      <li><b>Context-window management</b> — max 2 agents in parallel, sequential exploration, synthesise before spawning more.</li>
+      <li><b>Crash recovery &amp; session handoffs</b> — owns the <code>checkpoints/active.md</code> lifecycle and writes session summaries.</li>
+    </ul>
+    <h3>Delegation routing</h3>
+    <table>
+      <tr><th>Need</th><th>Delegates to</th></tr>
+      <tr><td>Write / modify code</td><td><a onclick="go('agent-developer')">Developer</a></td></tr>
+      <tr><td>Write / run tests</td><td><a onclick="go('agent-tester')">Tester</a></td></tr>
+      <tr><td>CI/CD, Docker, Azure</td><td><a onclick="go('agent-devops')">DevOps</a></td></tr>
+      <tr><td>Update docs / CLAUDE.md</td><td><a onclick="go('agent-documentarian')">Documentarian</a></td></tr>
+    </table>
+    <h3>Constraints</h3>
+    <ul class="constraints"><li>Does not write code, tests, infrastructure, or documentation.</li><li>No architectural decisions without PO input; no skipping quality gates; no committing code.</li><li>Never works around a blocker silently — escalates with options.</li></ul>
+    <div class="xref"><a onclick="go('memory')">→ Crash recovery &amp; handoffs</a><a onclick="go('team-full')">→ Leads the Full Team</a></div>
+  </section>
+
+  <!-- ARCHITECT -->
+  <section class="page" id="agent-architect">
+    <div class="crumbs"><a onclick="go('agents')">Agents</a><span>›</span>Architect</div>
+    <h2 class="page-title" style="color:var(--arch)">Architect</h2>
+    <p class="subtitle">Analyses integration architectures and produces design documentation — no implementation.</p>
+    <div>
+      <span class="pill model">model: opus</span><span class="pill mem">memory: project</span>
+      <span class="pill tool">Read</span><span class="pill tool">Write</span><span class="pill tool">Edit</span><span class="pill tool">Grep</span><span class="pill tool">Glob</span><span class="pill tool">Task</span><span class="pill tool">WebSearch</span><span class="pill tool">WebFetch</span><span class="pill tool">TodoWrite</span>
+    </div>
+    <h3>Core identity</h3>
+    <p>Reads source code, API definitions, message flows, queue configs and policy files to understand how systems connect across IBM APIC, ACE, MQ and other middleware. Produces dependency matrices and design assessments.</p>
+    <h3>Integration patterns it recognises</h3>
+    <ul>
+      <li><b>API Gateway Routing</b> (APIC → backend): invoke policies, proxy assemblies, endpoint resolution.</li>
+      <li><b>Service Orchestration</b> (ACE flows): main flow → subflows → ESQL, HTTP listeners, error handlers.</li>
+      <li><b>Asynchronous Messaging</b> (MQ): queue ownership, topic hierarchies, DLQs, request/reply vs fire-and-forget.</li>
+      <li><b>Policy-Based Config</b> (ACE policies): endpoints, credentials, MQ connections.</li>
+      <li><b>Data Transformation Chains</b>: ESQL compute nodes, canonical-model mapping, shared libraries.</li>
+    </ul>
+    <h3>Output formats</h3>
+    <p>Evidence-based dependency tables (<code>API/App · Type · Connects To · Direction · Evidence file:line</code>), end-to-end integration chains, and ADR-style pattern findings. Every connection references a specific file and line.</p>
+    <h3>Constraints</h3>
+    <ul class="constraints"><li>No application code, test code, or CI/CD &amp; deployment configs.</li><li>No unilateral architecture decisions — presents findings &amp; options.</li><li>May create/update documentation as analysis output; never commits.</li></ul>
+    <div class="xref"><a onclick="go('skill-postman')">→ Feeds /postman-collection-generator</a><a onclick="go('data-model')">→ Data Model</a></div>
+  </section>
+
+  <!-- DEVELOPER -->
+  <section class="page" id="agent-developer">
+    <div class="crumbs"><a onclick="go('agents')">Agents</a><span>›</span>Developer</div>
+    <h2 class="page-title" style="color:var(--dev)">Developer</h2>
+    <p class="subtitle">Writes production code only — SOLID principles and Clean Code.</p>
+    <div>
+      <span class="pill model">model: opus</span><span class="pill mem">memory: project</span>
+      <span class="pill tool">Read</span><span class="pill tool">Write</span><span class="pill tool">Edit</span><span class="pill tool">Bash</span><span class="pill tool">Grep</span><span class="pill tool">Glob</span><span class="pill tool">Task</span><span class="pill tool">WebSearch</span><span class="pill tool">WebFetch</span>
+    </div>
+    <h3>Core identity</h3>
+    <p>Implements features and fixes bugs. Does not test, deploy, document, or review. Reports what changed so other agents can act.</p>
+    <h3>Expertise</h3>
+    <h4>SOLID</h4>
+    <ul><li><b>SRP</b> — one reason to change per module/class/function.</li><li><b>OCP</b> — extend via composition/config, don't modify working code.</li><li><b>LSP</b> — subtypes substitutable; prefer composition when unclear.</li><li><b>ISP</b> — small, role-specific interfaces.</li><li><b>DIP</b> — depend on abstractions; inject external services.</li></ul>
+    <h4>Clean Code</h4>
+    <ul><li>Intention-revealing names; functions &lt; 20 lines, one level of abstraction.</li><li>DRY (rule of three) and YAGNI — build what's needed now.</li><li>Comment the <i>why</i>, never the <i>what</i>; meaningful errors at boundaries.</li></ul>
+    <h3>Implementation process</h3>
+    <ol><li>Read before writing — understand existing patterns.</li><li>Follow existing conventions; introduce no new patterns unasked.</li><li>Minimal change; no unrelated refactors.</li><li>No side effects; report all modified files.</li></ol>
+    <h3>Constraints</h3>
+    <ul class="constraints"><li>Does not run tests, modify CI/CD or Docker, edit docs, or create/modify test files.</li><li>Does not commit; does not add dependencies without stating the reason and package.</li></ul>
+    <div class="xref"><a onclick="go('skill-develop')">→ Runs /develop</a><a onclick="go('skill-review')">→ Subject of /review</a><a onclick="go('team-feature')">→ Feature Team</a></div>
+  </section>
+
+  <!-- TESTER -->
+  <section class="page" id="agent-tester">
+    <div class="crumbs"><a onclick="go('agents')">Agents</a><span>›</span>Tester</div>
+    <h2 class="page-title" style="color:var(--test)">Tester</h2>
+    <p class="subtitle">ISTQB-aligned test creation and execution — never production code.</p>
+    <div>
+      <span class="pill model">model: opus</span><span class="pill mem">memory: project</span>
+      <span class="pill tool">Read</span><span class="pill tool">Write</span><span class="pill tool">Edit</span><span class="pill tool">Bash</span><span class="pill tool">Grep</span><span class="pill tool">Glob</span><span class="pill tool">Task</span>
+    </div>
+    <h3>ISTQB test process</h3>
+    <ol>
+      <li><b>Analysis</b> — read requirement + implementation; identify conditions, boundaries, equivalence classes.</li>
+      <li><b>Design</b> — unit (test the contract), integration, BDD (Given/When/Then), property-based (Hypothesis). Independent tests, no shared state.</li>
+      <li><b>Implementation</b> — pytest, descriptive names <code>test_&lt;what&gt;_&lt;condition&gt;_&lt;expected&gt;</code>, fixtures, parametrize, mock externals.</li>
+      <li><b>Execution</b> — <code>pytest -v</code>, report totals; coverage when asked.</li>
+      <li><b>Reporting</b> — structured: total/passed/failed/errors/skipped, failures with expected vs actual, recommendations.</li>
+    </ol>
+    <h3>Test types reference</h3>
+    <table>
+      <tr><th>Type</th><th>Location</th><th>Purpose</th><th>When</th></tr>
+      <tr><td>Unit</td><td><code>tests/unit/</code></td><td>Single function/class</td><td>Every change</td></tr>
+      <tr><td>Integration</td><td><code>tests/integration/</code></td><td>Component interaction</td><td>API/DB/file changes</td></tr>
+      <tr><td>BDD</td><td><code>tests/bdd/</code></td><td>Scenario validation</td><td>User-facing behaviour</td></tr>
+      <tr><td>Property</td><td><code>tests/property/</code></td><td>Invariant checking</td><td>Data transformation</td></tr>
+      <tr><td>E2E</td><td><code>tests/e2e/</code></td><td>Full workflow</td><td>Major features</td></tr>
+    </table>
+    <h3>Constraints</h3>
+    <ul class="constraints"><li>Does not modify production code, infra, or docs; does not commit.</li><li>Does not skip failing tests; if a bug is found, describes it — does not fix it.</li></ul>
+    <div class="xref"><a onclick="go('skill-test')">→ Runs /test</a><a onclick="go('team-feature')">→ Feature Team</a><a onclick="go('team-release')">→ Release Team</a></div>
+  </section>
+
+  <!-- DEVOPS -->
+  <section class="page" id="agent-devops">
+    <div class="crumbs"><a onclick="go('agents')">Agents</a><span>›</span>DevOps</div>
+    <h2 class="page-title" style="color:var(--ops)">DevOps</h2>
+    <p class="subtitle">Builds and maintains the infrastructure that delivers code to production.</p>
+    <div>
+      <span class="pill model">model: opus</span><span class="pill mem">memory: project</span>
+      <span class="pill tool">Read</span><span class="pill tool">Write</span><span class="pill tool">Edit</span><span class="pill tool">Bash</span><span class="pill tool">Grep</span><span class="pill tool">Glob</span><span class="pill tool">Task</span><span class="pill tool">WebSearch</span><span class="pill tool">WebFetch</span>
+    </div>
+    <h3>Expertise</h3>
+    <h4>CI/CD — GitHub Actions</h4>
+    <ul><li>One workflow per concern (ci / deploy / quality); reusable workflows via <code>workflow_call</code>.</li><li>Pin actions to SHA, environment secrets only, caching.</li><li>Standard stages: checkout → deps → lint → unit → integration → build → security scan → deploy.</li></ul>
+    <h4>Docker &amp; Azure</h4>
+    <ul><li>Multi-stage builds, non-root user, pinned base tags, health checks.</li><li>Azure Container Apps (scale-to-zero), managed identity, Key Vault refs, Bicep over ARM.</li><li>Environments: dev / qa / staging / prod with tuned min/max replicas.</li></ul>
+    <h4>Observability</h4>
+    <ul><li>Structured JSON logs, App Insights, <code>/health</code> endpoint, alerts on error rate / latency / restarts.</li></ul>
+    <h3>Constraints</h3>
+    <ul class="constraints"><li>No application logic or test code; no doc edits (documentarian's job).</li><li>Never pushes to main directly (PRs only); no secrets in git; no <code>latest</code> tags.</li><li>Always states infrastructure cost implications before provisioning.</li></ul>
+    <div class="xref"><a onclick="go('skill-deploy')">→ Runs /deploy</a><a onclick="go('team-release')">→ Release Team</a></div>
+  </section>
+
+  <!-- DOCUMENTARIAN -->
+  <section class="page" id="agent-documentarian">
+    <div class="crumbs"><a onclick="go('agents')">Agents</a><span>›</span>Documentarian</div>
+    <h2 class="page-title" style="color:var(--doc)">Documentarian</h2>
+    <p class="subtitle">Keeps documentation in sync with the code — the keeper of living context.</p>
+    <div>
+      <span class="pill model">model: sonnet</span><span class="pill mem">memory: project</span>
+      <span class="pill tool">Read</span><span class="pill tool">Write</span><span class="pill tool">Edit</span><span class="pill tool">Grep</span><span class="pill tool">Glob</span><span class="pill tool">Task</span><span class="pill tool">WebSearch</span>
+    </div>
+    <h3>Documentation types it maintains</h3>
+    <ul>
+      <li><b>CLAUDE.md</b> — the project's AI context: purpose, architecture, commands, key files, conventions, gotchas. Kept concise &amp; scannable.</li>
+      <li><b>ADRs</b> — <code>docs/adr/NNNN-title.md</code> with Status / Context / Decision / Consequences.</li>
+      <li><b>README.md</b> — human-facing overview &amp; quick start.</li>
+      <li><b>Domain docs</b> — glossary, integration patterns, Mermaid data-flow diagrams.</li>
+      <li><b>Operations docs</b> — pipeline traceability, runbooks, troubleshooting.</li>
+    </ul>
+    <h3>Special role: consolidation</h3>
+    <div class="callout good">During <code>/document</code>, the documentarian reviews <code>team-findings.md</code>, folds relevant cross-agent discoveries into CLAUDE.md, and removes the consolidated entries. This is how <b>episodic</b> knowledge becomes <b>semantic</b> knowledge. <a onclick="go('memory')">See the memory model →</a></div>
+    <h3>Why sonnet?</h3>
+    <p>Documentation is a summarisation task, not deep reasoning — sonnet is sufficient and ~5× cheaper than opus, which matters because docs are updated frequently.</p>
+    <h3>Constraints</h3>
+    <ul class="constraints"><li>No application or test code; no CI/CD or infra.</li><li>Never documents secret values (names only); only documents what exists — no hypothetical features.</li></ul>
+    <div class="xref"><a onclick="go('skill-document')">→ Runs /document</a><a onclick="go('memory')">→ Context &amp; Memory</a></div>
+  </section>
+
+  <!-- ============ SKILLS LIST ============ -->
+  <section class="page" id="skills">
+    <div class="crumbs"><a onclick="go('overview')">Overview</a><span>›</span>Skills</div>
+    <h2 class="page-title">Skills</h2>
+    <p class="subtitle">Reusable slash-command workflows. They define <i>how</i> work is done, independent of <i>who</i> does it.</p>
+    <div class="callout">A skill is a numbered procedure with an <code>allowed-tools</code> list. Any agent whose tools satisfy the skill can run it. Skills are the library's <b>procedural memory</b>.</div>
+    <div class="grid c2">
+      <div class="card link" onclick="go('skill-develop')"><span class="tag" style="background:rgba(124,156,255,.15);color:var(--dev)">/develop</span><h4>Feature Implementation</h4><p>Understand → explore → plan → implement → verify → report. Pairs with the Developer.</p></div>
+      <div class="card link" onclick="go('skill-test')"><span class="tag" style="background:rgba(88,214,201,.15);color:var(--test)">/test</span><h4>Test Execution &amp; Validation</h4><p>Identify scope → run → analyse failures → write missing tests → report metrics.</p></div>
+      <div class="card link" onclick="go('skill-deploy')"><span class="tag" style="background:rgba(240,168,104,.15);color:var(--ops)">/deploy</span><h4>CI/CD &amp; Deployment</h4><p>Assess infra → decide → implement → validate → report required secrets.</p></div>
+      <div class="card link" onclick="go('skill-review')"><span class="tag" style="background:rgba(124,156,255,.15);color:var(--accent)">/review</span><h4>Code Review</h4><p>Architecture, quality, OWASP security, Python-specifics, testing → verdict.</p></div>
+      <div class="card link" onclick="go('skill-document')"><span class="tag" style="background:rgba(199,146,234,.15);color:var(--doc)">/document</span><h4>Documentation Sync</h4><p>Detect changes → assess impact → update CLAUDE.md → create ADRs.</p></div>
+      <div class="card link" onclick="go('skill-postman')"><span class="tag" style="background:rgba(240,168,104,.15);color:var(--accent-3)">/postman-collection-generator</span><h4>API Test Collections</h4><p>Generate Postman v2.1 collections for APIC/ACE/MQ non-regression testing.</p></div>
+    </div>
+    <h3>Skill ↔ agent affinity</h3>
+    <table>
+      <tr><th>Skill</th><th>Natural agent</th><th>Allowed tools</th></tr>
+      <tr><td><a onclick="go('skill-develop')">/develop</a></td><td>Developer</td><td>Read, Write, Edit, Bash, Grep, Glob, Task, TodoWrite</td></tr>
+      <tr><td><a onclick="go('skill-test')">/test</a></td><td>Tester</td><td>Read, Write, Edit, Bash, Grep, Glob, Task, TodoWrite</td></tr>
+      <tr><td><a onclick="go('skill-deploy')">/deploy</a></td><td>DevOps</td><td>Read, Write, Edit, Bash, Grep, Glob, Task, TodoWrite, WebSearch</td></tr>
+      <tr><td><a onclick="go('skill-review')">/review</a></td><td>any (read-only)</td><td>Read, Grep, Glob, Task, Bash, TodoWrite</td></tr>
+      <tr><td><a onclick="go('skill-document')">/document</a></td><td>Documentarian</td><td>Read, Write, Edit, Grep, Glob, Task, Bash, TodoWrite</td></tr>
+      <tr><td><a onclick="go('skill-postman')">/postman-collection-generator</a></td><td>Architect / Tester</td><td>(broad — file generation)</td></tr>
+    </table>
+  </section>
+
+  <!-- SKILL: develop -->
+  <section class="page" id="skill-develop">
+    <div class="crumbs"><a onclick="go('skills')">Skills</a><span>›</span>/develop</div>
+    <h2 class="page-title" style="color:var(--dev)">/develop</h2>
+    <p class="subtitle">Implement a feature or fix a bug, following SOLID / Clean Code, and report changes.</p>
+    <p><b>Triggers:</b> "implement", "build", "code", "fix", "add feature". <b>Allowed tools:</b> Read, Write, Edit, Bash, Grep, Glob, Task, TodoWrite.</p>
+    <h3>Workflow</h3>
+    <ol>
+      <li><b>Understand the request</b> — clarify ambiguity; capture behaviour, affected files, acceptance criteria.</li>
+      <li><b>Explore the codebase</b> — read CLAUDE.md, find existing code, identify patterns &amp; related tests.</li>
+      <li><b>Plan</b> — a todo list of files to create/modify, per-file changes, new deps, risks.</li>
+      <li><b>Implement</b> — read before modifying, minimal change, follow conventions, no unasked refactors.</li>
+      <li><b>Verify</b> — confirm all planned changes; review for obvious issues.</li>
+      <li><b>Report</b> — changes made, dependencies added, what needs testing.</li>
+    </ol>
+    <div class="xref"><a onclick="go('agent-developer')">→ Developer agent</a><a onclick="go('skill-test')">→ then /test</a></div>
+  </section>
+
+  <!-- SKILL: test -->
+  <section class="page" id="skill-test">
+    <div class="crumbs"><a onclick="go('skills')">Skills</a><span>›</span>/test</div>
+    <h2 class="page-title" style="color:var(--test)">/test</h2>
+    <p class="subtitle">Run tests, analyse results, report quality metrics, and create missing tests.</p>
+    <p><b>Triggers:</b> "test", "run tests", "check", "validate", "coverage", or after <code>/develop</code>. <b>Allowed tools:</b> Read, Write, Edit, Bash, Grep, Glob, Task, TodoWrite.</p>
+    <h3>Workflow</h3>
+    <ol>
+      <li><b>Identify scope</b> — changed files after /develop, a requested target, or the full suite.</li>
+      <li><b>Run existing tests</b> — <code>pytest -v --tb=short</code>, with <code>--cov</code> when requested.</li>
+      <li><b>Analyse results</b> — per failure: read test &amp; implementation, decide bug vs test-fix, report expected vs actual.</li>
+      <li><b>Write missing tests</b> — descriptive names, fixtures, parametrize; confirm they pass.</li>
+      <li><b>Report</b> — totals, failures with causes, new tests created, recommendations.</li>
+    </ol>
+    <div class="xref"><a onclick="go('agent-tester')">→ Tester agent</a><a onclick="go('skill-document')">→ then /document</a></div>
+  </section>
+
+  <!-- SKILL: deploy -->
+  <section class="page" id="skill-deploy">
+    <div class="crumbs"><a onclick="go('skills')">Skills</a><span>›</span>/deploy</div>
+    <h2 class="page-title" style="color:var(--ops)">/deploy</h2>
+    <p class="subtitle">Create or update GitHub Actions, Dockerfiles, and Azure configurations.</p>
+    <p><b>Triggers:</b> "deploy", "pipeline", "CI/CD", "Docker", "GitHub Actions", "Azure", "release". <b>Allowed tools:</b> Read, Write, Edit, Bash, Grep, Glob, Task, TodoWrite, WebSearch.</p>
+    <h3>Workflow</h3>
+    <ol>
+      <li><b>Assess current state</b> — existing workflows, Dockerfiles, compose, bicep/infra, git remotes.</li>
+      <li><b>Determine what's needed</b> — map the request (set up CI / add Docker / deploy to Azure / add linting / environments).</li>
+      <li><b>Implement</b> — SHA-pinned actions, multi-stage Docker, scale-to-zero Azure, document secrets (never values).</li>
+      <li><b>Validate</b> — YAML syntax, Docker build, list secrets/variables to configure.</li>
+      <li><b>Report</b> — changes, required configuration table, next steps.</li>
+    </ol>
+    <div class="xref"><a onclick="go('agent-devops')">→ DevOps agent</a><a onclick="go('team-release')">→ Release Team</a></div>
+  </section>
+
+  <!-- SKILL: review -->
+  <section class="page" id="skill-review">
+    <div class="crumbs"><a onclick="go('skills')">Skills</a><span>›</span>/review</div>
+    <h2 class="page-title" style="color:var(--accent)">/review</h2>
+    <p class="subtitle">Review code for quality, security, and adherence to project standards.</p>
+    <p><b>Triggers:</b> "review", "check code", "code quality", or before merging a PR. <b>Allowed tools:</b> Read, Grep, Glob, Task, Bash, TodoWrite (read-only — makes no edits).</p>
+    <h3>Checklist dimensions</h3>
+    <ul>
+      <li><b>Architecture &amp; Design</b> — follows patterns, no circular deps, SRP, no unnecessary coupling.</li>
+      <li><b>Code Quality</b> — naming, no dead code, DRY, appropriate error handling, no magic values.</li>
+      <li><b>Security (OWASP Top 10)</b> — no secrets, input validation, no SQLi/XSS/path traversal, trusted deps.</li>
+      <li><b>Python-Specific</b> — type hints, no mutable defaults, context managers, no bare <code>except</code>.</li>
+      <li><b>Testing</b> — new code has tests, independent, edge cases considered.</li>
+    </ul>
+    <h3>Output</h3>
+    <p>Summary, an issues table (Severity · File · Line · Issue · Suggestion), positive observations, and a verdict: Approve / Request changes / Comment.</p>
+    <div class="xref"><a onclick="go('agent-developer')">→ Reviews Developer's work</a><a onclick="go('skills')">→ All skills</a></div>
+  </section>
+
+  <!-- SKILL: document -->
+  <section class="page" id="skill-document">
+    <div class="crumbs"><a onclick="go('skills')">Skills</a><span>›</span>/document</div>
+    <h2 class="page-title" style="color:var(--doc)">/document</h2>
+    <p class="subtitle">Update project documentation to reflect recent changes; consolidate team findings.</p>
+    <p><b>Triggers:</b> "update docs", "document", "update context", "ADR", or after other skills complete. <b>Allowed tools:</b> Read, Write, Edit, Grep, Glob, Task, Bash, TodoWrite.</p>
+    <h3>Workflow</h3>
+    <ol>
+      <li><b>Identify what changed</b> — git diff &amp; recent commits.</li>
+      <li><b>Assess impact</b> — map change type → doc action (new module → CLAUDE.md architecture; decision → ADR; etc.).</li>
+      <li><b>Update CLAUDE.md</b> — minimal targeted edits, consistent style.</li>
+      <li><b>Create ADR</b> if an architectural decision was made (next available number).</li>
+      <li><b>Update other docs</b> — README / domain / operations as needed.</li>
+      <li><b>Report</b> — what was updated and what needed no update.</li>
+    </ol>
+    <div class="callout good">This is also where <b>team-findings.md is consolidated into CLAUDE.md</b> — the bridge from episodic to semantic memory.</div>
+    <div class="xref"><a onclick="go('agent-documentarian')">→ Documentarian agent</a><a onclick="go('memory')">→ Context &amp; Memory</a></div>
+  </section>
+
+  <!-- SKILL: postman -->
+  <section class="page" id="skill-postman">
+    <div class="crumbs"><a onclick="go('skills')">Skills</a><span>›</span>/postman-collection-generator</div>
+    <h2 class="page-title" style="color:var(--accent-3)">/postman-collection-generator</h2>
+    <p class="subtitle">Generate ready-to-import Postman v2.1 collections for API non-regression testing — tuned for IBM APIC / ACE / MQ.</p>
+    <p><b>Triggers:</b> "Postman", "collection", "API test", "non-reg", an OpenAPI/Swagger YAML, Kibana traces, ACE flows, or IBM APIC. The OpenAPI YAML is <b>mandatory</b>.</p>
+    <h3>What it produces</h3>
+    <ul>
+      <li>Internal &amp; external collection files (<code>{{url-apic}}</code> / <code>{{url-apic-external}}</code>).</li>
+      <li>Three environment files: QA, ACP, PROD — fully environment-agnostic collection, Vault-referenced credentials.</li>
+      <li>A Newman <code>run-tests.sh</code> and a <code>Jenkinsfile</code> — runnable in Postman UI, Newman CLI, and Jenkins.</li>
+    </ul>
+    <h3>Domain intelligence</h3>
+    <ul>
+      <li><b>Prerequisite chains</b> — contact → policy → claim; generates SETUP requests, prerequisite READMEs, or a dedicated setup folder.</li>
+      <li><b>APIC gateway rule</b> — all requests target the APIC boundary; never internal ACE URLs.</li>
+      <li><b>Auth patterns</b> — IBM Client-Id/Secret headers (internal) vs OAuth2 client-credentials (external).</li>
+      <li><b>IDIT docs</b> — reads bundled compressed extracts to derive field names, business rules, and error codes.</li>
+      <li>Test cases per endpoint: Happy Path, error cases, edge cases; schema &amp; backwards-compatibility assertions.</li>
+    </ul>
+    <div class="callout">This is the most domain-rich skill — it encodes the TCS integration conventions (URL patterns, Vault keys, consumer folder structure) so non-regression suites stay consistent across migrations.</div>
+    <div class="xref"><a onclick="go('agent-architect')">→ Architect provides the mapping</a><a onclick="go('agent-tester')">→ Tester runs the suite</a></div>
+  </section>
+
+  <!-- ============ MEMORY ============ -->
+  <section class="page" id="memory">
+    <div class="crumbs"><a onclick="go('overview')">Overview</a><span>›</span>Context &amp; Memory</div>
+    <h2 class="page-title" style="color:var(--doc)">Context &amp; Memory</h2>
+    <p class="subtitle">How agents remember — within a session, across sessions, and across each other.</p>
+
+    <div class="callout"><b>Core idea:</b> memory is just <b>markdown files</b> at the right scope — no vector store, no embeddings. The whole memory of a project fits in a system prompt. Everything below is a different file serving a different lifetime.</div>
+
+    <h3>The memory layers</h3>
+    <div class="diagram">
+      <svg viewBox="0 0 820 360" font-family="Segoe UI, sans-serif">
+        <!-- hot -->
+        <rect x="40" y="30" width="740" height="62" rx="10" fill="#1c2230" stroke="#ff7b9c" stroke-width="1.5"/>
+        <text x="60" y="56" fill="#ff7b9c" font-weight="700" font-size="14">Working memory — Context window</text>
+        <text x="60" y="76" fill="#9aa7b4" font-size="11.5">The live conversation. FIFO; auto-compacts near capacity. Managed by output discipline (&lt;2000 chars) &amp; max-2-parallel.</text>
+        <text x="730" y="50" text-anchor="end" fill="#6e7b8a" font-size="10">HOT · lost on crash</text>
+
+        <rect x="40" y="104" width="360" height="72" rx="10" fill="#1c2230" stroke="#7c9cff" stroke-width="1.5"/>
+        <text x="60" y="130" fill="#7c9cff" font-weight="700" font-size="13.5">Episodic — MEMORY.md</text>
+        <text x="60" y="149" fill="#9aa7b4" font-size="11">Per-agent, per-project. Patterns,</text>
+        <text x="60" y="164" fill="#9aa7b4" font-size="11">gotchas, conventions discovered.</text>
+
+        <rect x="420" y="104" width="360" height="72" rx="10" fill="#1c2230" stroke="#c792ea" stroke-width="1.5"/>
+        <text x="440" y="130" fill="#c792ea" font-weight="700" font-size="13.5">Semantic — CLAUDE.md</text>
+        <text x="440" y="149" fill="#9aa7b4" font-size="11">Distilled project facts. Loaded</text>
+        <text x="440" y="164" fill="#9aa7b4" font-size="11">every session; survives compaction.</text>
+
+        <rect x="40" y="188" width="360" height="60" rx="10" fill="#1c2230" stroke="#58d6c9" stroke-width="1.5"/>
+        <text x="60" y="213" fill="#58d6c9" font-weight="700" font-size="13.5">Procedural — skills/</text>
+        <text x="60" y="232" fill="#9aa7b4" font-size="11">Learned workflows as slash commands.</text>
+
+        <rect x="420" y="188" width="360" height="60" rx="10" fill="#1c2230" stroke="#f0a868" stroke-width="1.5"/>
+        <text x="440" y="213" fill="#f0a868" font-weight="700" font-size="13.5">Shared — team-findings.md</text>
+        <text x="440" y="232" fill="#9aa7b4" font-size="11">Cross-agent discoveries (agents are siloed otherwise).</text>
+
+        <rect x="40" y="260" width="360" height="60" rx="10" fill="#1c2230" stroke="#69d27a" stroke-width="1.5"/>
+        <text x="60" y="285" fill="#69d27a" font-weight="700" font-size="13.5">Recovery — checkpoints/active.md</text>
+        <text x="60" y="304" fill="#9aa7b4" font-size="11">In-progress workflow state. Survives crashes.</text>
+
+        <rect x="420" y="260" width="360" height="60" rx="10" fill="#1c2230" stroke="#9aa7b4" stroke-width="1.5"/>
+        <text x="440" y="285" fill="#c3ccd6" font-weight="700" font-size="13.5">Handoff — sessions/</text>
+        <text x="440" y="304" fill="#9aa7b4" font-size="11">End-of-workflow summaries for the next session.</text>
+      </svg>
+    </div>
+
+    <h3>Where each lives &amp; what survives</h3>
+    <table>
+      <tr><th>Layer</th><th>File</th><th>Scope</th><th>Survives crash?</th><th>Git-tracked?</th></tr>
+      <tr><td>Working</td><td>context window</td><td>session</td><td>No</td><td>—</td></tr>
+      <tr><td>Episodic</td><td><code>~/.claude/.../MEMORY.md</code></td><td>per-agent, project</td><td>Yes (when written)</td><td>No</td></tr>
+      <tr><td>Semantic</td><td><code>CLAUDE.md</code></td><td>project</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Procedural</td><td><code>skills/</code></td><td>library</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Shared</td><td><code>.claude/memory/team-findings.md</code></td><td>project</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Recovery</td><td><code>.claude/memory/checkpoints/active.md</code></td><td>project</td><td><b>Yes — this is the point</b></td><td>No</td></tr>
+      <tr><td>Handoff</td><td><code>.claude/memory/sessions/</code></td><td>project</td><td>Only if completed</td><td>No</td></tr>
+    </table>
+
+    <h3>The consolidation loop</h3>
+    <p>The hardest problem in agent memory is turning <i>episodes</i> into <i>facts</i>. The library solves it with a file convention rather than automation:</p>
+    <div class="flow">
+      <span class="step">Agent discovers something</span><span class="arr">→</span>
+      <span class="step">appends to team-findings.md</span><span class="arr">→</span>
+      <span class="step">PO reads it before delegating</span><span class="arr">→</span>
+      <span class="step" onclick="go('skill-document')" style="cursor:pointer">/document consolidates → CLAUDE.md</span><span class="arr">→</span>
+      <span class="step">stale entries removed</span>
+    </div>
+
+    <h3>Why <code>memory: project</code> (not <code>user</code>)</h3>
+    <p>Early versions used <code>memory: user</code> (global across all projects), which caused <b>cross-project contamination</b> — e.g. a developer agent applying one codebase's conventions to an unrelated project. Most agent knowledge is project-specific, so the default is <code>project</code>. Universal domain expertise (SOLID, ISTQB) lives in the agent definition itself, not in memory.</p>
+
+    <h3>Crash recovery in practice</h3>
+    <ol>
+      <li>On session start, the orchestrator checks <code>checkpoints/active.md</code>.</li>
+      <li>If present → recovery mode: parse last status per agent, present a summary, wait for the human to choose <b>Resume / Restart / Review</b>.</li>
+      <li>On Resume → append a <code>RESUMED</code> entry, skip <code>DONE</code> agents, re-assign incomplete tasks.</li>
+      <li>On successful completion → write a session summary, then delete the checkpoint file (its presence = an interrupted workflow).</li>
+    </ol>
+    <div class="callout warn"><b>Deliberately rejected:</b> ChromaDB for agent memory, vector embeddings, hierarchical paging (MemGPT-style), and auto-consolidation. At this scale (dozens of patterns per project, session lifetimes of minutes–hours), markdown files + compaction are sufficient and keep the library technology-agnostic.</div>
+    <div class="xref"><a onclick="go('agent-documentarian')">→ Documentarian consolidates</a><a onclick="go('agent-po')">→ PO owns recovery</a><a onclick="go('data-model')">→ Data Model</a></div>
+  </section>
+
+  <!-- ============ TEAMS LIST ============ -->
+  <section class="page" id="teams">
+    <div class="crumbs"><a onclick="go('overview')">Overview</a><span>›</span>Teams</div>
+    <h2 class="page-title" style="color:var(--accent-3)">Teams</h2>
+    <p class="subtitle">Compositions of agents for common workflows. A team defines who is spawned, in what order, with what file boundaries.</p>
+    <div class="grid c3">
+      <div class="card link" onclick="go('team-feature')"><span class="tag" style="background:rgba(240,168,104,.15);color:var(--accent-3)">v1.1 · 3 agents</span><h4>⚡ Feature Team</h4><p>Developer + Tester + Documentarian. Implement a feature end-to-end.</p></div>
+      <div class="card link" onclick="go('team-release')"><span class="tag" style="background:rgba(240,168,104,.15);color:var(--accent-3)">v1.1 · 3 agents</span><h4>🚀 Release Team</h4><p>Tester + DevOps + Documentarian. Prepare and validate a release.</p></div>
+      <div class="card link" onclick="go('team-full')"><span class="tag" style="background:rgba(240,168,104,.15);color:var(--accent-3)">v1.2 · 6 agents</span><h4>🏗️ Full Team</h4><p>PO + Architect + Developer + Tester + DevOps + Documentarian. Major features &amp; migrations.</p></div>
+    </div>
+    <h3>Shared coordination protocol</h3>
+    <p>Every team enforces the same guardrails to prevent context exhaustion:</p>
+    <ul>
+      <li><b>Context budget</b> — status updates under 2000 characters, structured formats only.</li>
+      <li><b>Max 2 agents in parallel</b> — synthesise before spawning the next batch.</li>
+      <li><b>Error escalation</b> — any <code>BLOCKED</code> pauses dependent work; options go to the human.</li>
+      <li><b>Crash recovery</b> — shared <code>checkpoints/active.md</code> created at start, deleted on success.</li>
+      <li><b>Team memory</b> — all agents append to <code>team-findings.md</code>; documentarian consolidates at the end.</li>
+    </ul>
+    <h3>Membership matrix</h3>
+    <table>
+      <tr><th>Agent</th><th>⚡ Feature</th><th>🚀 Release</th><th>🏗️ Full</th></tr>
+      <tr><td><a onclick="go('agent-po')">PO Assistant</a></td><td>lead*</td><td>lead*</td><td>✔ lead</td></tr>
+      <tr><td><a onclick="go('agent-architect')">Architect</a></td><td>—</td><td>—</td><td>✔</td></tr>
+      <tr><td><a onclick="go('agent-developer')">Developer</a></td><td>✔</td><td>—</td><td>✔</td></tr>
+      <tr><td><a onclick="go('agent-tester')">Tester</a></td><td>✔</td><td>✔</td><td>✔</td></tr>
+      <tr><td><a onclick="go('agent-devops')">DevOps</a></td><td>—</td><td>✔</td><td>✔</td></tr>
+      <tr><td><a onclick="go('agent-documentarian')">Documentarian</a></td><td>✔</td><td>✔</td><td>✔</td></tr>
+    </table>
+    <p style="font-size:12.5px;color:var(--muted)">*The PO Assistant orchestrates every team even when not listed as a member.</p>
+  </section>
+
+  <!-- TEAM: feature -->
+  <section class="page" id="team-feature">
+    <div class="crumbs"><a onclick="go('teams')">Teams</a><span>›</span>Feature Team</div>
+    <h2 class="page-title" style="color:var(--accent-3)">⚡ Feature Team</h2>
+    <p class="subtitle">Implement a feature end-to-end: code, tests, docs.</p>
+    <div>
+      <span class="pill" style="border-color:var(--accent-3);color:var(--accent-3)">v1.1</span>
+      <span class="pill">3 agents</span>
+      <span class="pill">sequential</span>
+    </div>
+    <h3>Composition &amp; file boundaries</h3>
+    <table>
+      <tr><th>Agent</th><th>Role</th><th>Owns</th><th>Read-only</th></tr>
+      <tr><td><a onclick="go('agent-developer')">Developer</a></td><td>Implementer</td><td><code>src/ lib/ features/ application/</code></td><td><code>tests/ docs/</code></td></tr>
+      <tr><td><a onclick="go('agent-tester')">Tester</a></td><td>Validator</td><td><code>tests/</code></td><td><code>src/ lib/</code></td></tr>
+      <tr><td><a onclick="go('agent-documentarian')">Documentarian</a></td><td>Context keeper</td><td><code>CLAUDE.md docs/ README.md</code></td><td>everything else</td></tr>
+    </table>
+    <h3>Workflow</h3>
+    <div class="flow">
+      <span class="step" onclick="go('agent-developer')" style="cursor:pointer">1 · Developer implements</span><span class="arr">→</span>
+      <span class="step" onclick="go('agent-tester')" style="cursor:pointer">2 · Tester writes &amp; runs tests</span><span class="arr">→</span>
+      <span class="step" onclick="go('agent-documentarian')" style="cursor:pointer">3 · Documentarian updates docs</span>
+    </div>
+    <p>Tester waits for Developer. Documentarian can start reading code after Developer finishes but completes after the Tester reports. The lead reviews all outputs and writes a session summary.</p>
+    <h3>Coordination rules</h3>
+    <table>
+      <tr><th>Rule</th><th>Detail</th></tr>
+      <tr><td>Context budget</td><td>Status updates ≤ 2 000 chars; structured formats only</td></tr>
+      <tr><td>Max parallel</td><td>2 agents at a time — synthesise before spawning the next</td></tr>
+      <tr><td>Error escalation</td><td>Any BLOCKED pauses dependent work; options go to the human</td></tr>
+      <tr><td>Crash recovery</td><td>Checkpoint written at start, deleted on success</td></tr>
+    </table>
+    <div class="callout">No agent modifies files outside its lane. The documentarian consolidates <code>team-findings.md</code> into CLAUDE.md at the end of every run.</div>
+    <div class="xref"><a onclick="go('skill-develop')">→ /develop</a><a onclick="go('skill-test')">→ /test</a><a onclick="go('skill-document')">→ /document</a><a onclick="go('memory')">→ Crash recovery</a></div>
+  </section>
+
+  <!-- TEAM: release -->
+  <section class="page" id="team-release">
+    <div class="crumbs"><a onclick="go('teams')">Teams</a><span>›</span>Release Team</div>
+    <h2 class="page-title" style="color:var(--accent-3)">🚀 Release Team</h2>
+    <p class="subtitle">Prepare and validate a release: test → build pipeline → release notes.</p>
+    <div>
+      <span class="pill" style="border-color:var(--accent-3);color:var(--accent-3)">v1.1</span>
+      <span class="pill">3 agents</span>
+      <span class="pill">sequential</span>
+    </div>
+    <h3>Composition &amp; file boundaries</h3>
+    <table>
+      <tr><th>Agent</th><th>Role</th><th>Owns</th><th>Read-only</th></tr>
+      <tr><td><a onclick="go('agent-tester')">Tester</a></td><td>Quality gate</td><td><code>tests/</code> (read-only during release)</td><td>everything</td></tr>
+      <tr><td><a onclick="go('agent-devops')">DevOps</a></td><td>Pipeline builder</td><td><code>.github/workflows/ Dockerfile* infra/ bicep/</code></td><td>everything else</td></tr>
+      <tr><td><a onclick="go('agent-documentarian')">Documentarian</a></td><td>Release notes</td><td><code>docs/operations/ CHANGELOG.md CLAUDE.md</code></td><td>everything else</td></tr>
+    </table>
+    <h3>Workflow</h3>
+    <div class="flow">
+      <span class="step" onclick="go('agent-tester')" style="cursor:pointer">1 · Tester runs full suite</span><span class="arr">→</span>
+      <span class="step" onclick="go('agent-devops')" style="cursor:pointer">2 · DevOps prepares pipeline</span><span class="arr">→</span>
+      <span class="step" onclick="go('agent-documentarian')" style="cursor:pointer">3 · Documentarian writes release notes</span>
+    </div>
+    <p>Sequential by design. DevOps proceeds only if tests pass. If tests fail or the pipeline breaks, the lead halts the release and presents options (fix &amp; retry, or abort).</p>
+    <h3>Coordination rules</h3>
+    <table>
+      <tr><th>Rule</th><th>Detail</th></tr>
+      <tr><td>Context budget</td><td>Status updates ≤ 2 000 chars; structured formats only</td></tr>
+      <tr><td>Max parallel</td><td>2 agents at a time — this team is sequential so parallel is rare</td></tr>
+      <tr><td>Error escalation</td><td>Test failure or pipeline break halts the release; options go to the human</td></tr>
+      <tr><td>Crash recovery</td><td>Checkpoint written at start, deleted on success</td></tr>
+    </table>
+    <div class="callout warn"><b>Release gate:</b> DevOps must not proceed if Tester reports failures. The lead halts and presents options — never skips the gate.</div>
+    <div class="xref"><a onclick="go('skill-test')">→ /test</a><a onclick="go('skill-deploy')">→ /deploy</a><a onclick="go('skill-document')">→ /document</a><a onclick="go('memory')">→ Crash recovery</a></div>
+  </section>
+
+  <!-- TEAM: full -->
+  <section class="page" id="team-full">
+    <div class="crumbs"><a onclick="go('teams')">Teams</a><span>›</span>Full Team</div>
+    <h2 class="page-title" style="color:var(--accent-3)">🏗️ Full Team</h2>
+    <p class="subtitle">All agents — for major features, project bootstrapping, migrations, and feature-bearing releases.</p>
+    <div>
+      <span class="pill" style="border-color:var(--accent-3);color:var(--accent-3)">v1.2</span>
+      <span class="pill">6 agents</span>
+      <span class="pill">phased</span>
+    </div>
+    <h3>Composition &amp; file boundaries</h3>
+    <table>
+      <tr><th>Agent</th><th>Role</th><th>Owns</th><th>Read-only</th></tr>
+      <tr><td><a onclick="go('agent-po')">PO Assistant</a></td><td>Lead / Orchestrator</td><td>(none)</td><td>everything</td></tr>
+      <tr><td><a onclick="go('agent-architect')">Architect</a></td><td>Integration Analyst</td><td><code>docs/architecture/ docs/adr/</code></td><td>everything (read all sources)</td></tr>
+      <tr><td><a onclick="go('agent-developer')">Developer</a></td><td>Implementer</td><td><code>src/ lib/ features/</code></td><td><code>tests/ docs/</code></td></tr>
+      <tr><td><a onclick="go('agent-tester')">Tester</a></td><td>Validator</td><td><code>tests/</code></td><td><code>src/ lib/</code></td></tr>
+      <tr><td><a onclick="go('agent-devops')">DevOps</a></td><td>Infrastructure</td><td><code>.github/ Dockerfile* infra/</code></td><td>everything else</td></tr>
+      <tr><td><a onclick="go('agent-documentarian')">Documentarian</a></td><td>Context keeper</td><td><code>CLAUDE.md docs/</code></td><td>everything else</td></tr>
+    </table>
+    <h3>Workflow</h3>
+    <div class="flow">
+      <span class="step" onclick="go('agent-architect')" style="cursor:pointer">1 · Architect maps dependencies</span><span class="arr">→</span>
+      <span class="step">2 · Developer + DevOps in parallel</span><span class="arr">→</span>
+      <span class="step" onclick="go('agent-tester')" style="cursor:pointer">3 · Tester validates</span><span class="arr">→</span>
+      <span class="step" onclick="go('agent-documentarian')" style="cursor:pointer">4 · Documentarian updates docs</span><span class="arr">→</span>
+      <span class="step" onclick="go('agent-po')" style="cursor:pointer">5 · PO quality gate</span>
+    </div>
+    <h3>Phased execution</h3>
+    <ol>
+      <li><b>Exploration</b> — PO scopes the work (1–2 sequential agents).</li>
+      <li><b>Planning</b> — PO presents the plan for approval.</li>
+      <li><b>Analysis</b> — Architect maps integration dependencies (skip if no integration scope).</li>
+      <li><b>Implementation</b> — Developer + DevOps in parallel (different files, max 2).</li>
+      <li><b>Validation</b> — Tester runs tests.</li>
+      <li><b>Documentation</b> — Documentarian updates docs &amp; consolidates team-findings.</li>
+      <li><b>Quality gate</b> — PO reviews all outputs and writes session summary.</li>
+    </ol>
+    <h3>Coordination rules</h3>
+    <table>
+      <tr><th>Rule</th><th>Detail</th></tr>
+      <tr><td>Context budget</td><td>Status updates ≤ 2 000 chars; structured formats only</td></tr>
+      <tr><td>Max parallel</td><td>2 agents at a time — Developer + DevOps is the recommended pair</td></tr>
+      <tr><td>Exploration</td><td>Always sequential — never spawn exploration agents in parallel</td></tr>
+      <tr><td>Error escalation</td><td>Any BLOCKED pauses dependent agents; PO presents options to human</td></tr>
+      <tr><td>Crash recovery</td><td>Checkpoint written at start, deleted on success</td></tr>
+    </table>
+    <div class="diagram">
+      <svg viewBox="0 0 820 180" font-family="Segoe UI, sans-serif">
+        <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c9cff"/></marker></defs>
+        <rect x="30" y="70" width="130" height="40" rx="9" fill="#1c2230" stroke="#69d27a"/><text x="95" y="95" text-anchor="middle" fill="#69d27a" font-size="12" font-weight="700">Architect</text>
+        <rect x="220" y="35" width="150" height="40" rx="9" fill="#1c2230" stroke="#7c9cff"/><text x="295" y="60" text-anchor="middle" fill="#7c9cff" font-size="12" font-weight="700">Developer (feat)</text>
+        <rect x="220" y="105" width="150" height="40" rx="9" fill="#1c2230" stroke="#f0a868"/><text x="295" y="130" text-anchor="middle" fill="#f0a868" font-size="12" font-weight="700">DevOps (pipeline)</text>
+        <rect x="440" y="70" width="120" height="40" rx="9" fill="#1c2230" stroke="#58d6c9"/><text x="500" y="95" text-anchor="middle" fill="#58d6c9" font-size="12" font-weight="700">Tester</text>
+        <rect x="630" y="70" width="160" height="40" rx="9" fill="#1c2230" stroke="#c792ea"/><text x="710" y="95" text-anchor="middle" fill="#c792ea" font-size="12" font-weight="700">Documentarian</text>
+        <line x1="160" y1="90" x2="220" y2="65" stroke="#3a4350" stroke-width="1.5" marker-end="url(#a3)"/>
+        <line x1="160" y1="90" x2="220" y2="120" stroke="#3a4350" stroke-width="1.5" marker-end="url(#a3)"/>
+        <line x1="370" y1="55" x2="440" y2="80" stroke="#3a4350" stroke-width="1.5" marker-end="url(#a3)"/>
+        <line x1="370" y1="125" x2="440" y2="100" stroke="#3a4350" stroke-width="1.5" marker-end="url(#a3)"/>
+        <line x1="560" y1="90" x2="630" y2="90" stroke="#3a4350" stroke-width="1.5" marker-end="url(#a3)"/>
+      </svg>
+      <p style="text-align:center;color:var(--muted);font-size:12px;margin:0">Architect feeds findings → Developer &amp; DevOps in parallel → Tester → Documentarian. Max 2 concurrent.</p>
+    </div>
+    <div class="callout good">Use this team for migrations, bootstrapping, or any work that spans code + infra + docs. For a simple feature, the <a onclick="go('team-feature')" style="cursor:pointer">⚡ Feature Team</a> is sufficient.</div>
+    <div class="xref"><a onclick="go('agents')">→ All agents</a><a onclick="go('memory')">→ Memory &amp; recovery</a><a onclick="go('skills')">→ All skills</a></div>
+  </section>
+
+  <!-- ============ HOOKS & GUARDRAILS ============ -->
+  <section class="page" id="hooks-guardrails">
+    <div class="crumbs"><a onclick="go('overview')">Overview</a><span>›</span>Deployment</div>
+    <h2 class="page-title" style="color:var(--po)">🔒 Hooks &amp; Guardrails</h2>
+    <p class="subtitle">Tool permissions and lifecycle hooks — the safety layer installed in every project via <code>templates/settings.json</code>.</p>
+    <div>
+      <span class="pill" style="border-color:var(--po);color:var(--po)">v1.0</span>
+      <span class="pill">settings.json</span>
+      <span class="pill">per-project</span>
+    </div>
+
+    <h3>How it works</h3>
+    <p><code>templates/settings.json</code> ships a pre-configured safety baseline. <code>setup.ps1</code> copies it to <code>.claude/settings.json</code> in the consuming project. Each project can then customise it independently without affecting other projects.</p>
+
+    <h3>Allowed tools</h3>
+    <p>Pre-approved so agents don't need a human confirmation for every action:</p>
+    <table>
+      <tr><th>Category</th><th>Allowed</th></tr>
+      <tr><td>Navigation</td><td><code>Read</code>, <code>Glob</code>, <code>Grep</code>, <code>Task</code>, <code>TodoWrite</code>, <code>AskUserQuestion</code>, <code>WebSearch</code>, <code>WebFetch</code></td></tr>
+      <tr><td>Python / uv</td><td><code>Bash(python *)</code>, <code>Bash(pytest *)</code>, <code>Bash(pip install *)</code>, <code>Bash(pip list*)</code>, <code>Bash(uv *)</code></td></tr>
+      <tr><td>Git (read-only)</td><td><code>Bash(git status*)</code>, <code>Bash(git diff*)</code>, <code>Bash(git log*)</code>, <code>Bash(git branch*)</code></td></tr>
+      <tr><td>GitHub CLI</td><td><code>Bash(gh pr *)</code>, <code>Bash(gh issue *)</code></td></tr>
+      <tr><td>Docker</td><td><code>Bash(docker build *)</code>, <code>Bash(docker compose *)</code></td></tr>
+      <tr><td>Node</td><td><code>Bash(npm *)</code>, <code>Bash(npx *)</code></td></tr>
+      <tr><td>File ops</td><td><code>Bash(ls *)</code>, <code>Bash(mkdir *)</code>, <code>Bash(cat *)</code></td></tr>
+    </table>
+
+    <h3>Denied tools — absolute nos</h3>
+    <table>
+      <tr><th>Denied command</th><th>Why</th></tr>
+      <tr><td><code>Bash(rm -rf /)</code></td><td>Filesystem wipe — never safe</td></tr>
+      <tr><td><code>Bash(rm -rf ~)</code></td><td>Home directory wipe</td></tr>
+      <tr><td><code>Bash(git push --force *)</code></td><td>Overwrites shared history without review</td></tr>
+      <tr><td><code>Bash(git reset --hard *)</code></td><td>Discards all uncommitted work</td></tr>
+      <tr><td><code>Bash(git clean -f*)</code></td><td>Deletes untracked files irreversibly</td></tr>
+    </table>
+
+    <h3>Lifecycle hooks</h3>
+    <table>
+      <tr><th>Event</th><th>Matcher</th><th>Action</th></tr>
+      <tr><td><code>PostToolUse</code></td><td><code>Write|Edit</code></td><td>Reminds agent to run <code>/test</code> before committing</td></tr>
+      <tr><td><code>SubagentStop</code></td><td><code>developer</code></td><td>Signals orchestrator: trigger tester next</td></tr>
+      <tr><td><code>SubagentStop</code></td><td><code>tester</code></td><td>Signals orchestrator: trigger documentarian next</td></tr>
+    </table>
+
+    <div class="callout good"><b>Customising:</b> Edit <code>.claude/settings.json</code> in your project to add allowed commands, extend the deny list, or replace <code>echo</code> hooks with real automation (e.g. run tests automatically on file save). Changes are project-scoped — they never affect other projects.</div>
+    <div class="xref"><a onclick="go('versioning')">→ Versioning &amp; Distribution</a><a onclick="go('overview')">→ Overview</a></div>
+  </section>
+
+  <!-- ============ VERSIONING & DISTRIBUTION ============ -->
+  <section class="page" id="versioning">
+    <div class="crumbs"><a onclick="go('overview')">Overview</a><span>›</span>Deployment</div>
+    <h2 class="page-title" style="color:var(--arch)">📦 Versioning &amp; Distribution</h2>
+    <p class="subtitle">How the library is versioned, distributed as a Claude Code plugin, and consumed by projects.</p>
+    <div>
+      <span class="pill" style="border-color:var(--arch);color:var(--arch)">current v1.2</span>
+      <span class="pill">semver</span>
+      <span class="pill">plugin</span>
+    </div>
+
+    <h3>Release history</h3>
+    <table>
+      <tr><th>Version</th><th>Date</th><th>Highlights</th></tr>
+      <tr><td><strong>v1.2</strong></td><td>2026-06-03</td><td>Model upgrades (opus-4-8), <code>setup.ps1</code> bootstrap, <code>update.ps1</code>, Architect in Full Team, plugin how-to guide</td></tr>
+      <tr><td>v1.1</td><td>2025 Q4</td><td>Memory architecture (project scope), <code>team-findings.md</code>, session handoffs, crash-recovery checkpoints, team compositions</td></tr>
+      <tr><td>v1.0</td><td>2025 Q3</td><td>Initial release: 6 agents, 6 skills, installer, workspace template, plugin manifest</td></tr>
+    </table>
+
+    <h3>Two consumption modes</h3>
+    <table>
+      <tr><th>Mode</th><th>How</th><th>Best for</th></tr>
+      <tr><td><strong>Track latest</strong></td><td>User-level junctions: <code>~/.claude/agents/</code> → library <code>agents/</code></td><td>Personal dev — new agents/skills appear automatically on <code>git pull</code></td></tr>
+      <tr><td><strong>Pinned</strong></td><td>Plugin at project scope pinned to a git tag (e.g. <code>v1.2</code>)</td><td>Team / reproducible builds — frozen until pin is explicitly bumped</td></tr>
+    </table>
+
+    <h3>Plugin packaging</h3>
+    <p>Agents + skills + teams ship as <strong>one versioned unit</strong> — there is no per-agent versioning.</p>
+    <table>
+      <tr><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>.claude-plugin/plugin.json</code></td><td>Plugin manifest — <code>name: agentic-claude</code>, semver version, auto-discovers <code>agents/</code> and <code>skills/</code></td></tr>
+      <tr><td><code>.claude-plugin/marketplace.json</code></td><td>Marketplace catalog — GitHub source, pinned to git tag</td></tr>
+    </table>
+
+    <h3>Installing</h3>
+    <div class="flow">
+      <span class="step">/plugin marketplace add Aletheia-Thomas/Claude-Agents</span><span class="arr">→</span>
+      <span class="step">/plugin install agentic-claude@agentic-claude-lib</span><span class="arr">→</span>
+      <span class="step">Open project .code-workspace in VS Code</span>
+    </div>
+
+    <h3>Keeping models up to date</h3>
+    <table>
+      <tr><th>Command</th><th>Effect</th></tr>
+      <tr><td><code>.\templates\update.ps1</code></td><td>Dry-run — shows outdated model IDs</td></tr>
+      <tr><td><code>.\templates\update.ps1 -Apply</code></td><td>Writes updated model IDs to <code>AGENT.md</code> files</td></tr>
+      <tr><td><code>.\templates\update.ps1 -Apply -BumpVersion</code></td><td>Also bumps version in <code>plugin.json</code> / <code>marketplace.json</code></td></tr>
+    </table>
+
+    <div class="callout warn"><b>GitLab migration:</b> when the repo moves to <code>git-scm.tcsgroup.ch</code>, update the marketplace <code>source</code> to <code>{ "source": "url", "url": "https://git-scm.tcsgroup.ch/..." }</code>. Everything else stays the same.</div>
+    <div class="xref"><a onclick="go('hooks-guardrails')">→ Hooks &amp; Guardrails</a><a onclick="go('overview')">→ Overview</a></div>
+  </section>
+
+  <div class="footer">
+    Agentic-Claude · Agent &amp; Skill Library v1.2 — generated reference site. Source of truth: <code>agents/</code>, <code>skills/</code>, <code>teams/</code>, <code>deployment/</code>, <code>docs/memory/DESIGN.md</code>, <code>CLAUDE.md</code>.
+  </div>
+  </main>
+</div>
+
+<script>
+  const pages = Array.from(document.querySelectorAll('.page'));
+  function go(id){ if(location.hash !== '#'+id){ location.hash = id; } else { render(); } }
+  function render(){
+    const id = (location.hash || '#overview').slice(1);
+    let found = false;
+    pages.forEach(p=>{ const on = p.id===id; p.classList.toggle('active',on); if(on) found=true; });
+    if(!found){ document.getElementById('overview').classList.add('active'); }
+    document.querySelectorAll('.nav a').forEach(a=>{
+      a.classList.toggle('active', a.getAttribute('href')==='#'+id);
+    });
+    document.querySelector('.main').scrollTo({top:0});
+    window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
+  }
+  window.addEventListener('hashchange', render);
+  render();
+</script>
+</body>
+</html>

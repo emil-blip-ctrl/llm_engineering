@@ -1,0 +1,1 @@
+- [Per-object versioning](project_per-object-versioning.md) — informational per-object semver added atop plugin semver; reverses the "clean child titles" Confluence rule; VERSIONS.md rejected

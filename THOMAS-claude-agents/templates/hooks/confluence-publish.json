@@ -1,0 +1,20 @@
+{
+  "_description": "Publish docs/presentation/index.html to Confluence automatically after every edit. Requires CONFLUENCE_* variables in the environment or a .env file at the repo root.",
+  "_install": "Merge the 'hooks.PostToolUse' array below into your .claude/settings.json",
+  "_requires": "pip install beautifulsoup4 lxml requests  +  CONFLUENCE_* env vars or .env",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'f=$(echo \"$CLAUDE_TOOL_OUTPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get(\\\"filePath\\\",\\\"\\\"))\" 2>/dev/null); [[ \"$f\" == *docs/presentation/index.html ]] && { [ -f .env ] && set -a && . ./.env && set +a; uv run --with beautifulsoup4 --with lxml --with requests python scripts/publish_to_confluence.py; } || true'",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

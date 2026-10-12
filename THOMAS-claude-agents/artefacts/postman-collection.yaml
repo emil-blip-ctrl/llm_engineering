@@ -1,0 +1,33 @@
+---
+id: postman-collection
+alias: NRC
+format: json
+template: templates/artefacts/postman-collection.json
+storage-pattern: "tests/postman/{slug}.collection.json"
+standards:
+  - Postman Collection v2.1 schema
+  - IBM APIC non-regression standards
+
+ownership:
+  responsible: tester
+  accountable: tester
+  consulted: [developer]
+  informed:  [devops]
+
+quality-gate:
+  reviewer: tester
+  checklist:
+    - Postman schema v2.1
+    - environment variables used (no hardcoded URLs)
+    - assertions on status code and body
+    - negative cases included
+    - importable without modification
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : tester
+    proposed   → accepted   : tester
+    accepted   → deprecated : tester
+    accepted   → superseded : tester
+---

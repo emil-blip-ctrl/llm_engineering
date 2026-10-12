@@ -1,0 +1,23 @@
+{
+  "_description": "Block user prompts containing personal data (PII). Fires on every user message before it reaches Claude. Exit code 2 cancels the submission. Covers: AVS/AHV, IBAN, credit card, Swiss phone, e-mail, CHE company ID, passport/ID mentions, dates of birth, postal addresses, long numeric IDs.",
+  "_install": [
+    "1. Copy templates/hooks/scripts/pii_check.py to your project (e.g. .claude/hooks/pii_check.py)",
+    "2. Merge the 'hooks.UserPromptSubmit' block below into your .claude/settings.json",
+    "3. Adjust the path in 'command' to match where you placed pii_check.py"
+  ],
+  "_policy": "TCS Directive SI-04 — Usage des outils IA / LPD / RGPD",
+
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/pii_check.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

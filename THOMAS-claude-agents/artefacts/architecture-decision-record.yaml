@@ -1,0 +1,34 @@
+---
+id: architecture-decision-record
+alias: ADR
+format: markdown
+template: templates/artefacts/architecture-decision-record.md
+storage-pattern: "docs/architecture/decisions/NNNN-{slug}.md"
+standards:
+  - Nygard ADR
+  - ISO/IEC 42010
+  - TOGAF Architecture Decision
+
+ownership:
+  responsible: architect
+  accountable: product-owner-assistant
+  consulted: [developer, devops]
+  informed:  [tester, documentarian]
+
+quality-gate:
+  reviewer: architect
+  checklist:
+    - title is a verb phrase
+    - context explains forces
+    - ≥2 alternatives listed
+    - consequences cover positive and negative
+    - status is draft|proposed|accepted|deprecated|superseded
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : architect
+    proposed   → accepted   : product-owner-assistant
+    accepted   → deprecated : product-owner-assistant
+    accepted   → superseded : architect
+---

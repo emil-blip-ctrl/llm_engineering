@@ -1,0 +1,45 @@
+{
+  "//": "Commit guard (PreToolUse/Bash) + PO orchestrator reminder (UserPromptSubmit). Default uses PowerShell (always present on Windows). On macOS/Linux swap the commands to their .js twins, e.g. node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-guard.js\"",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-guard.ps1\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const p=JSON.parse(require('fs').readFileSync(0,'utf8'));const cmd=((p.tool_input||{}).command||'');if(/git\\s+push\\b[\\s\\S]*\\b(main|master)\\b/.test(cmd)){process.stderr.write('[GUARDRAIL] Direct push to main is blocked on this repo.\\nCreate a branch first:\\n  git checkout -b feature/your-branch\\n  git push origin feature/your-branch\\n');process.exit(2);}if(/git\\s+commit\\b/.test(cmd)){const{execSync}=require('child_process');try{const b=execSync('git branch --show-current',{stdio:['ignore','pipe','ignore']}).toString().trim();if(b==='main'||b==='master'){process.stderr.write('[GUARDRAIL] Committing directly on main is blocked on this repo.\\nCreate a branch first:\\n  git checkout -b feature/your-branch\\n');process.exit(2);}}catch{}}process.exit(0);\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/po-orchestrator-reminder.ps1\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(python:*)",
+      "Bash(pytest:*)"
+    ],
+    "deny": ["Bash(rm -rf:*)", "Bash(sudo:*)"]
+  }
+}

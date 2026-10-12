@@ -1,0 +1,33 @@
+---
+id: api-specification
+alias: API Spec
+format: openapi
+template: templates/artefacts/api-specification.yaml
+storage-pattern: "docs/api/{slug}.openapi.yaml"
+standards:
+  - OpenAPI 3.1 (OAI)
+  - IBM APIC API definition standards
+
+ownership:
+  responsible: developer
+  accountable: architect
+  consulted: [tester]
+  informed:  [devops, documentarian]
+
+quality-gate:
+  reviewer: architect
+  checklist:
+    - version field present
+    - all paths have operationId
+    - request/response schemas defined
+    - error codes documented
+    - security scheme declared
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : developer
+    proposed   → accepted   : architect
+    accepted   → deprecated : architect
+    accepted   → superseded : developer
+---

@@ -1,0 +1,80 @@
+# Auto-publish docs/presentation/index.html to Confluence on every push to main
+# that touches the presentation or the publish script.
+#
+# Required repository secrets (Settings → Secrets → Actions):
+#   CONFLUENCE_BASE_URL    https://tcsgroup.atlassian.net/wiki
+#   CONFLUENCE_SPACE_KEY   e.g. AAI
+#   CONFLUENCE_USER        oriance.oternaud@tcs.ch
+#   CONFLUENCE_API_TOKEN   Atlassian API token
+
+name: Publish to Confluence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/presentation/index.html
+      - scripts/publish_to_confluence.py
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Convert & publish
+    runs-on: ubuntu-latest
+    env:
+      CONFLUENCE_BASE_URL:   ${{ secrets.CONFLUENCE_BASE_URL }}
+      CONFLUENCE_SPACE_KEY:  ${{ secrets.CONFLUENCE_SPACE_KEY }}
+      CONFLUENCE_PAGE_TITLE: ${{ secrets.CONFLUENCE_PAGE_TITLE }}
+      CONFLUENCE_USER:       ${{ secrets.CONFLUENCE_USER }}
+      CONFLUENCE_API_TOKEN:  ${{ secrets.CONFLUENCE_API_TOKEN }}
+      CONFLUENCE_AUTH:       basic
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify secrets are present
+        run: |
+          missing=0
+          for var in CONFLUENCE_BASE_URL CONFLUENCE_SPACE_KEY CONFLUENCE_USER CONFLUENCE_API_TOKEN; do
+            if [ -z "${!var}" ]; then
+              echo "ERROR: secret $var is not set"
+              missing=1
+            else
+              echo "OK: $var is set"
+            fi
+          done
+          exit $missing
+
+      - name: Test Confluence authentication
+        run: |
+          status=$(curl -s -o /tmp/cf_auth.json -w "%{http_code}" \
+            -u "$CONFLUENCE_USER:$CONFLUENCE_API_TOKEN" \
+            "$CONFLUENCE_BASE_URL/rest/api/user/current")
+          echo "Auth check HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "--- response ---"
+            cat /tmp/cf_auth.json
+            echo ""
+            echo "HINT: regenerate your API token at https://id.atlassian.com/manage-profile/security/api-tokens"
+            exit 1
+          fi
+          echo "Authenticated as: $(python3 -c "import json,sys; d=json.load(open('/tmp/cf_auth.json')); print(d.get('displayName','?'), d.get('email',''))")"
+
+      - name: Install Python deps
+        run: pip install --quiet beautifulsoup4 lxml requests
+
+      - name: Publish to Confluence
+        run: python scripts/publish_to_confluence.py
+
+      - name: Commit new page IDs (if any)
+        run: |
+          if git diff --quiet scripts/page_ids.json 2>/dev/null && \
+             ! git ls-files --others --exclude-standard | grep -q "scripts/page_ids.json"; then
+            echo "No new page IDs to commit"
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add scripts/page_ids.json
+            git commit -m "chore: register new Confluence page IDs [skip ci]"
+            git push
+          fi

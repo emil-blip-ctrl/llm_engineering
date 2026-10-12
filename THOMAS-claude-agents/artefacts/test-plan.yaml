@@ -1,0 +1,33 @@
+---
+id: test-plan
+alias: TP
+format: markdown
+template: templates/artefacts/test-plan.md
+storage-pattern: "docs/quality/test-plan.md"
+standards:
+  - IEEE 829
+  - ISTQB Test Plan template
+
+ownership:
+  responsible: tester
+  accountable: product-owner-assistant
+  consulted: [architect, developer]
+  informed:  [devops]
+
+quality-gate:
+  reviewer: tester
+  checklist:
+    - scope and out-of-scope defined
+    - test levels listed (unit/integration/e2e)
+    - entry and exit criteria stated
+    - risk-based prioritisation
+    - environment requirements specified
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : tester
+    proposed   → accepted   : product-owner-assistant
+    accepted   → deprecated : product-owner-assistant
+    accepted   → superseded : tester
+---

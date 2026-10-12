@@ -1,0 +1,28 @@
+# Agentic-Claude — line ending rules
+# Forces consistent line endings across OS.
+
+* text=auto eol=lf
+
+# Windows scripts: CRLF required for PowerShell and batch runners
+*.ps1  text eol=crlf
+*.psm1 text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# All other text files: LF
+*.md   text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.sh   text eol=lf
+*.py   text eol=lf
+*.js   text eol=lf
+*.ts   text eol=lf
+
+# Binary files: no conversion
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.pdf  binary
+*.gz   binary
+*.zip  binary

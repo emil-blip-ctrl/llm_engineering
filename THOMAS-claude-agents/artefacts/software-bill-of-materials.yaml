@@ -1,0 +1,34 @@
+---
+id: software-bill-of-materials
+alias: SBOM
+format: json
+template: templates/artefacts/software-bill-of-materials.json
+storage-pattern: "docs/security/sbom.json"
+standards:
+  - SPDX 2.3
+  - CycloneDX 1.4
+  - EU Cyber Resilience Act (CRA)
+
+ownership:
+  responsible: devops
+  accountable: devops
+  consulted: [developer]
+  informed:  [product-owner-assistant]
+
+quality-gate:
+  reviewer: devops
+  checklist:
+    - generated automatically (not hand-authored)
+    - all direct and transitive dependencies listed
+    - license per component recorded
+    - no GPL-incompatible licenses without approval
+    - CVE scan run on generation date
+
+lifecycle:
+  initial-state: draft
+  transitions:
+    draft      → proposed   : devops
+    proposed   → accepted   : devops
+    accepted   → deprecated : devops
+    accepted   → superseded : devops
+---

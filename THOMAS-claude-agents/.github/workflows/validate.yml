@@ -1,0 +1,148 @@
+name: Validate
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate-agents:
+    name: Validate AGENT.md files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check all AGENT.md files have required fields
+        run: |
+          ERRORS=0
+          # Known current model IDs — update this list when new models are released.
+          # Floating aliases (opus, sonnet, haiku) auto-track the latest tier.
+          VALID_MODELS=(
+            "opus"
+            "sonnet"
+            "haiku"
+            "claude-opus-4-8"
+            "claude-sonnet-4-6"
+            "claude-haiku-4-5-20251001"
+          )
+
+          for file in agents/*/AGENT.md; do
+            agent=$(basename "$(dirname "$file")")
+
+            # Must have name:
+            if ! grep -q "^name:" "$file"; then
+              echo "❌ $file — missing 'name:' field"
+              ERRORS=$((ERRORS+1))
+            fi
+
+            # Must have model:
+            if ! grep -q "^model:" "$file"; then
+              echo "❌ $file — missing 'model:' field"
+              ERRORS=$((ERRORS+1))
+            else
+              model=$(grep "^model:" "$file" | head -1 | sed 's/model:[[:space:]]*//' | sed 's/[[:space:]]*#.*//' | tr -d '[:space:]')
+              VALID=false
+              for m in "${VALID_MODELS[@]}"; do
+                [[ "$model" == "$m" ]] && VALID=true && break
+              done
+              if ! $VALID; then
+                echo "⚠️  $file — model '$model' is not in the known-latest list"
+                echo "   Run: powershell -File templates/update.ps1 -Apply"
+                ERRORS=$((ERRORS+1))
+              fi
+            fi
+
+            # Must have tools:
+            if ! grep -q "^tools:" "$file"; then
+              echo "❌ $file — missing 'tools:' field"
+              ERRORS=$((ERRORS+1))
+            fi
+
+            # Must have memory:
+            if ! grep -q "^memory:" "$file"; then
+              echo "❌ $file — missing 'memory:' field"
+              ERRORS=$((ERRORS+1))
+            fi
+          done
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo ""
+            echo "Found $ERRORS issue(s). Fix before merging."
+            exit 1
+          fi
+          echo "✅ All AGENT.md files are valid."
+
+  validate-plugin:
+    name: Validate plugin manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate plugin.json
+        run: |
+          python3 -c "
+          import json, sys
+          with open('.claude-plugin/plugin.json') as f:
+              d = json.load(f)
+          required = ['name', 'version', 'description', 'author']
+          for field in required:
+              if field not in d:
+                  print(f'❌ plugin.json missing field: {field}')
+                  sys.exit(1)
+          print(f'✅ plugin.json valid — version {d[\"version\"]}')
+          "
+
+      - name: Validate marketplace.json
+        run: |
+          python3 -c "
+          import json, sys
+          with open('.claude-plugin/marketplace.json') as f:
+              d = json.load(f)
+          if not d.get('plugins'):
+              print('❌ marketplace.json: missing plugins array')
+              sys.exit(1)
+          for p in d['plugins']:
+              for field in ['name', 'version', 'source']:
+                  if field not in p:
+                      print(f'❌ marketplace.json plugin missing field: {field}')
+                      sys.exit(1)
+          print('✅ marketplace.json valid')
+          "
+
+      - name: Check plugin version matches marketplace version
+        run: |
+          python3 -c "
+          import json, sys
+          plugin = json.load(open('.claude-plugin/plugin.json'))['version']
+          mkt    = json.load(open('.claude-plugin/marketplace.json'))['plugins'][0]['version']
+          if plugin != mkt:
+              print(f'❌ Version mismatch: plugin.json={plugin}, marketplace.json={mkt}')
+              sys.exit(1)
+          print(f'✅ Versions consistent: {plugin}')
+          "
+
+  validate-skills:
+    name: Validate SKILL.md files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check all SKILL.md files have required fields
+        run: |
+          ERRORS=0
+          for file in skills/*/SKILL.md; do
+            if ! grep -q "^name:" "$file"; then
+              echo "❌ $file — missing 'name:' field"
+              ERRORS=$((ERRORS+1))
+            fi
+            if ! grep -q "^allowed-tools:" "$file"; then
+              echo "❌ $file — missing 'allowed-tools:' field"
+              ERRORS=$((ERRORS+1))
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "Found $ERRORS issue(s)."
+            exit 1
+          fi
+          echo "✅ All SKILL.md files are valid."

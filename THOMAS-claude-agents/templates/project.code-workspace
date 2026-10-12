@@ -1,0 +1,29 @@
+{
+    "folders": [
+        {
+            "name": "AI Tools",
+            "path": "../Claude Agents"
+        },
+        {
+            "name": "Project",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "terminal.integrated.env.windows": {
+            "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+        },
+        "files.exclude": {
+            "**/.git": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true
+        },
+        "search.exclude": {
+            ".venv/**": true,
+            "node_modules/**": true,
+            "htmlcov/**": true,
+            ".pytest_cache/**": true,
+            "__pycache__/**": true
+        }
+    }
+}

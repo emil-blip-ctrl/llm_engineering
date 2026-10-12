@@ -1,0 +1,19 @@
+{
+  "_description": "Run pytest automatically after every file write or edit. Keeps the agent honest — it sees test failures immediately rather than at commit time.",
+  "_install": "Merge the 'hooks.PostToolUse' array below into your .claude/settings.json",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pytest --tb=short -q 2>&1 | tail -20",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
