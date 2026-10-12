@@ -1,0 +1,57 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+CREATE COMPUTE MODULE RetryOrSendToBO
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--Logs
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+	    SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541';
+	    SET Environment.Variables.TCSLog.context."target-system" = 'CMP05625';
+	    SET Environment.Variables.TCSLog.context."caller-code" = 'insurance-claims-integration-technical-alis';
+	    SET Environment.Variables.TCSLog.context."target-url" = UNKNOWN;
+	    SET Environment.Variables.TCSLog.context."error-message" = COALESCE(Environment.Variables.Error.httpMessage || '. ' || Environment.Variables.Error.moreInformation, 'Internal Server Error');
+		SET Environment.Variables.TCSLog.context."error-code" = COALESCE(Environment.Variables.Error.httpCode, '500');	
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		
+		IF Environment.Variables.Error.httpCode IS NULL OR STARTSWITH(CAST(Environment.Variables.Error.httpCode AS CHARACTER), '4') THEN --internal or client error: message sent to BO
+			SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+			SET Environment.Variables.ALISerror = TRUE;  
+			
+			SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		    SET OutputLocalEnvironment.Variables.TCSLog."business-identifiers" = Environment.Variables.TCSLog.context.transaction;
+		    SET OutputLocalEnvironment.Variables.TCSLog.userDefined = Environment.Variables.userDefined;
+		    
+			PROPAGATE TO TERMINAL 'out2';
+		ELSE
+			IF Environment.Variables.retryCount IS NULL THEN --first retry
+				SET Environment.Variables.userDefined.retryCount = 1;
+				SET Environment.Variables.userDefined.timestamp = CURRENT_GMTTIMESTAMP;
+		        SET OutputRoot.JSON.Data = InputRoot.JSON.Data;	  
+		        
+		        SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		        SET OutputLocalEnvironment.Variables.TCSLog."business-identifiers" = Environment.Variables.TCSLog.context.transaction;	
+		        SET OutputLocalEnvironment.Variables.TCSLog.userDefined = Environment.Variables.userDefined;  
+				PROPAGATE TO TERMINAL 'out';
+			ELSEIF Environment.Variables.retryCount = 3 THEN --already retried 3 times: message sent to BO
+				SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+				SET Environment.Variables.ALISerror = TRUE;
+				SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		        SET OutputLocalEnvironment.Variables.TCSLog."business-identifiers" = Environment.Variables.TCSLog.context.transaction;
+		        SET OutputLocalEnvironment.Variables.TCSLog.userDefined = Environment.Variables.userDefined;
+				PROPAGATE TO TERMINAL 'out2';
+			ELSE                                             --retry again
+				SET Environment.Variables.userDefined.retryCount = CAST((CAST(Environment.Variables.retryCount AS INTEGER) + 1) AS CHARACTER);
+				SET Environment.Variables.userDefined.timestamp = Environment.Variables.timestamp;
+				SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+				
+				SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		        SET OutputLocalEnvironment.Variables.TCSLog."business-identifiers" = Environment.Variables.TCSLog.context.transaction;
+		        SET OutputLocalEnvironment.Variables.TCSLog.userDefined = Environment.Variables.userDefined;
+				PROPAGATE TO TERMINAL 'out';		
+			END IF;		
+		END IF;			
+		
+		RETURN FALSE;
+	END;
+END MODULE;

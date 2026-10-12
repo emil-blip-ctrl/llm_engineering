@@ -1,0 +1,12 @@
+
+
+CREATE COMPUTE MODULE health_go_to_error
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		propagate to label 'error-label';
+		RETURN false;
+	END;
+END MODULE;
+

@@ -1,0 +1,496 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "title" : "servicesIntegrationAssistanceCases",
+    "version" : "1.0.0",
+    "description" : "servicesIntegrationAssistanceCases"
+  },
+  "paths" : {
+    "/tools/toBOM" : {
+      "post" : {
+        "operationId" : "resourceTranslateToBOM",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/BOMCase"
+            }
+          },
+          "500" : {
+            "description" : "Other errors",
+            "schema" : {
+              "$ref" : "#/definitions/BridgeServiceData"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "translate full assys case to BOM",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/BridgeServiceData"
+          },
+          "description" : "TestOnly",
+          "required" : true
+        } ]
+      }
+    },
+    "/tools/toAssys/service" : {
+      "post" : {
+        "operationId" : "resourceTranslateToServiceAssys",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/AssysService"
+            }
+          },
+          "500" : {
+            "description" : "Other errors"
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "translate a BOM service to an Assys service",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/ServiceDelivery"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        } ]
+      }
+    },
+    "/tools/toBOM/service" : {
+      "post" : {
+        "operationId" : "resourceTranslateToServiceBOM",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/ServiceDelivery"
+            }
+          },
+          "500" : {
+            "description" : "Other errors"
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "translate an Assys service to a BOM service",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/AssysService"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        } ]
+      }
+    },
+    "/tools/toBOM/case" : {
+      "post" : {
+        "operationId" : "resourceTranslateToCaseBOM",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/BOMCase"
+            }
+          },
+          "500" : {
+            "description" : "Other errors"
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "translate a BOM Case to a full Assys case",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/BridgeCaseData"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        } ]
+      }
+    },
+    "/tools/toBOM/history" : {
+      "post" : {
+        "operationId" : "resourceTranslateToHistoryBOM",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/BOMCase"
+              }
+            }
+          },
+          "500" : {
+            "description" : "Other errors"
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "translate a BOM Case to a full Assys case",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/BridgeCaseData"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        } ]
+      }
+    },
+    "/tools/toAssys/case" : {
+      "post" : {
+        "operationId" : "resourceTranslateToCaseAssys",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/BridgeCaseData"
+            }
+          },
+          "500" : {
+            "description" : "Other errors"
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "translate a BOM Case to an Assys case",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/BOMCase"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        } ]
+      }
+    },
+    "/{case-id}" : {
+      "put" : {
+        "operationId" : "resourceUpdateAssistanceCase",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/BOMCase"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error",
+            "schema" : {
+              "$ref" : "#/definitions/ResponseInformation"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Update an assistance case from the FSM application",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/BOMCase"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        }, {
+          "required" : true,
+          "name" : "case-id",
+          "in" : "path",
+          "type" : "string"
+        } ]
+      }
+    },
+    "/{case-id}/services-deliveries/{service-delivery-id}" : {
+      "put" : {
+        "operationId" : "resourceUpdateServiceDeliveryToAssistance",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/ServiceDelivery"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error",
+            "schema" : {
+              "$ref" : "#/definitions/ResponseInformation"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Update service-delivery-id",
+        "parameters" : [ {
+          "required" : true,
+          "name" : "case-id",
+          "in" : "path",
+          "type" : "string"
+        }, {
+          "required" : true,
+          "name" : "service-delivery-id",
+          "in" : "path",
+          "type" : "string"
+        }, {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/ServiceDelivery"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        } ]
+      }
+    },
+    "/" : {
+      "post" : {
+        "operationId" : "resourceCreateAssistanceCase",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/BOMCase"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "schema" : {
+              "type" : "integer"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error",
+            "schema" : {
+              "$ref" : "#/definitions/ResponseInformation"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Create an assistance case from the FSM application",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/BOMCase"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        } ]
+      }
+    },
+    "/{case-id}/services-deliveries" : {
+      "post" : {
+        "operationId" : "resourceNewServiceDeliveryToAssistance",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/ServiceDelivery"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error",
+            "schema" : {
+              "$ref" : "#/definitions/ResponseInformation"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Insert a services-deliveries",
+        "parameters" : [ {
+          "required" : true,
+          "name" : "case-id",
+          "in" : "path",
+          "type" : "string"
+        }, {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/ServiceDelivery"
+          },
+          "description" : "Service delivery to create",
+          "required" : true
+        } ]
+      }
+    },
+    "/history" : {
+      "get" : {
+        "summary" : "Retrieve the cases history for a given client personal reference",
+        "description" : "Retrieve the cases history for a given client personal reference",
+        "operationId" : "resourceHistoryCase",
+        "parameters" : [ {
+          "name" : "personalreference",
+          "in" : "query",
+          "required" : true,
+          "type" : "integer",
+          "maximum" : 999999999,
+          "description" : "personal reference"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Simplified case with only some attributes (but in the common structure)",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/BOMCase"
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or all of the mandatory parameters are incorrectly formatted or missing",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "500" : {
+            "description" : "The service is either unreachable or the service encountered a fatal error",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "basePath" : "/services/integration/assistance/v1/cases",
+  "definitions" : {
+    "BridgeServiceData" : {
+      "type" : "object",
+      "properties" : {
+        "bridgeService" : {
+          "$ref" : "#/definitions/AssysService"
+        },
+        "bridgeCase" : {
+          "$ref" : "#/definitions/BridgeCaseData"
+        }
+      }
+    },
+    "BOMCase" : {
+      "type" : "object"
+    },
+    "ResponseInformation" : {
+      "type" : "object",
+      "properties" : {
+        "code" : {
+          "type" : "string"
+        },
+        "message" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ServiceDelivery" : {
+      "type" : "object"
+    },
+    "AssysService" : {
+      "type" : "object"
+    },
+    "BridgeCaseData" : {
+      "type" : "object",
+      "properties" : {
+        "fullCase" : {
+          "type" : "object"
+        },
+        "incidentReport" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "properties" : { }
+          }
+        },
+        "incidentReportComplement" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object"
+          }
+        },
+        "onBoardDiagnostics" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object"
+          }
+        },
+        "performanceIndicators" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object"
+          }
+        },
+        "processExceptions" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object"
+          }
+        }
+      }
+    },
+    "EventFieldAgent" : {
+      "type" : "object"
+    }
+  }
+}

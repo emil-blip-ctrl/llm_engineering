@@ -1,0 +1,32 @@
+BROKER SCHEMA common
+
+
+CREATE COMPUTE MODULE callable_SetContext_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		-- copy all in the LocalEnv as it is passed to the callable flow
+		SET OutputLocalEnvironment."X-Correlation-Id" = Environment.Variables."X-Correlation-Id";
+		SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		SET Environment."X-Caller-Code" = ApplicationLabel;
+		SET OutputLocalEnvironment.Environment = Environment;
+		SET OutputLocalEnvironment."X-Caller-Code" = ApplicationLabel;
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

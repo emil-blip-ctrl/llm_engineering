@@ -1,0 +1,65 @@
+BROKER SCHEMA esql.createClaimsAlis
+PATH Shlib_PoliciesReader;
+
+CREATE COMPUTE MODULE SetEnvironment
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot; 
+		
+		SET Environment.Variables.retryCount = InputLocalEnvironment.Variables.TCSLog.userDefined.retryCount;
+		SET Environment.Variables.timestamp = InputLocalEnvironment.Variables.TCSLog.userDefined.timestamp;
+		
+		SET Environment.Variables.policyNumber = InputRoot.JSON.Data."policy-number";
+		SET Environment.Variables.countClaimContact = CARDINALITY(InputRoot.JSON.Data."claim-contacts".Item[]);
+		DECLARE email ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'e-mail');
+		SET Environment.Variables.email = email."value-code";
+		DECLARE language ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'language');
+		SET Environment.Variables.language = language."value-code";
+		DECLARE personalReference ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'personal-reference');
+		SET Environment.Variables.personalReference = personalReference."value-code";
+		DECLARE numberOfDocuments ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'number-of-documents');
+		SET Environment.Variables.numberOfDocuments = numberOfDocuments."value-code";
+		DECLARE documentListGUUID ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'document-list-guuid');
+		SET Environment.Variables.documentListGUUID = documentListGUUID."value-code";
+		DECLARE emailContent ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'confirmation-mail');
+		SET Environment.Variables.emailContent = emailContent."value-code";
+		DECLARE consumerName ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'X-CONSUMER-NAME');
+		SET Environment.Variables.initConsumerName = consumerName."value-code";
+		SET Environment.Variables.sendMailClient = FALSE;
+		SET Environment.Variables.sendMailBuisness = FALSE;
+		DECLARE policy CHARACTER getPolicyProperty('{InsuranceClaimsSendMailPolicies}:InsuranceClaimsSendMailPolicy','CLAIM_ALIS_LIST_SEND_MAIL_CLIENT');
+		DECLARE policyTwo CHARACTER getPolicyProperty('{InsuranceClaimsSendMailPolicies}:InsuranceClaimsSendMailPolicy','CLAIM_ALIS_LIST_SEND_MAIL_BUSINESS');
+		IF CONTAINS( getPolicyProperty('{InsuranceClaimsSendMailPolicies}:InsuranceClaimsSendMailPolicy','CLAIM_ALIS_LIST_SEND_MAIL_CLIENT'), UPPER( consumerName."value-code")) THEN
+			SET Environment.Variables.sendMailClient = TRUE;
+		END IF;
+		IF CONTAINS( getPolicyProperty('{InsuranceClaimsSendMailPolicies}:InsuranceClaimsSendMailPolicy','CLAIM_ALIS_LIST_SEND_MAIL_BUSINESS'), UPPER(consumerName."value-code")) THEN
+			SET Environment.Variables.sendMailBuisness = TRUE;
+		END IF;
+		
+		--Set variables in Env to trace in SUP Log
+		
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';		 
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.ESB.ESBEnvelope.initApp.name;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05625';
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541';
+		
+		SET Environment.Variables.TCSLog.context = InputLocalEnvironment.Variables.TCSLog.context;  
+		SET Environment.Variables.TCSLog.context.transaction = InputLocalEnvironment.Variables.TCSLog."business-identifiers";
+		
+		SET Environment.Variables.trackID = Environment.Monitoring.EventCorrelation.parentTransactionId;
+		SET Environment.Variables.XCorrelationID = Environment.Monitoring.EventCorrelation.globalTransactionId;
+		SET Environment.Variables.In.XCallerCode = Environment.Variables.TCSLog.context."caller-code";
+	    
+	    SET Environment.Variables.Info.RETRY_COUNT = Environment.Variables.retryCount;
+	    
+	    SET Environment.Variables.policy.apicHost = getPolicyProperty('{common-integration-policies-endpoints}:ApicEndpointsPolicy','apic-host');
+		SET Environment.Variables.policy.claimPost = getPolicyProperty('{insurance-integration-policies-endpoints}:ApicEndPointsPolicy','basepath-insurance-claims-api-technical-alis-post-claim') 
+		|| getPolicyProperty('{insurance-integration-policies-endpoints}:ApicEndPointsPolicy','path-technical-alis-post-claims') ;
+		
+	    --SET Environment.Variables.policy.apicHost = getPolicyProperty('{GlobalAPICPolicies}:APICPolicies','APICHost');
+		--SET Environment.Variables.policy.claimPost = getPolicyProperty('{GlobalAPICPolicies}:APICPolicies','ClaimAlis');
+		--SET Environment.Variables.policy.ACE_ClientID = getPolicyProperty('{GlobalSecurityPolicies}:APIApplicationCredentials','ACE_ClientID');
+	    
+		RETURN TRUE;
+	END;
+END MODULE;

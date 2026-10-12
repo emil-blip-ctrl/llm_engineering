@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:common_integration_shlib_encapsulate_calls_cc_mq_topic_call.subflow="common_integration_shlib_encapsulate_calls/cc_mq_topic_call.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="publishMessage.subflow" nsPrefix="publishMessage.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true" nodeLayoutStyle="SQUARE">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.TopicName" name="TopicName" lowerBound="1" defaultValueLiteral="default">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="publishMessage" bundleName="publishMessage" pluginId="servicesIntegrationAssistanceCasesEventsSparxConsume"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCasesEventsSparxConsume/icons/full/obj16/publishMessage.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCasesEventsSparxConsume/icons/full/obj30/publishMessage.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="-1942,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="publishMessage" pluginId="servicesIntegrationAssistanceCasesEventsSparxConsume"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="-1296,20">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="publishMessage" pluginId="servicesIntegrationAssistanceCasesEventsSparxConsume"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="-1582,20" computeExpression="esql://routine/#processEventFromQueueSparx_TracePayload_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="TracePayload3"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="TracePayload3.terminal.out" eventIdentity="INFO: Outcome message">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Outcome message"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="-1719,20" computeExpression="esql://routine/#publishMessage_SetTopicName_Compute.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="SetTopicName"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="-1851,20" computeExpression="esql://routine/#publishMessage_BuildMessage_Compute.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="BuildMessage"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_mq_topic_call.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="-1447,20">
+        <translation xmi:type="utility:ConstantString" string="cc_mq_topic_call"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_12" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.TopicName">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.TopicName" bundleName="publishMessage" pluginId="servicesIntegrationAssistanceCasesEventsSparxConsume"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

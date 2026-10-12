@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<groupId>ch.tcs.nip.pom</groupId>
+		<artifactId>tcs-pom-ace</artifactId>
+		<version>1.0.10</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>ch.tcs.nip.ace</groupId>
+	<artifactId>services-integration-assistance-cases-facade</artifactId>
+	<version>1.0.11-SNAPSHOT</version>
+	<url>http://www.tcs.ch</url>
+	<properties>
+		<ibm.plugin.version>1.39.0</ibm.plugin.version>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>ch.tcs.nip.ibm.maven.plugin</groupId>
+				<artifactId>ibm-maven-plugin</artifactId>
+				<version>${ibm.plugin.version}</version>
+			</plugin>
+            <plugin>
+            <groupId>external.atlassian.jgitflow</groupId>
+            <artifactId>jgitflow-maven-plugin</artifactId>
+            <version>1.0-m5.1</version>
+            <dependencies>
+              <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>0.1.54</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+		</plugins>
+	</build>
+</project>

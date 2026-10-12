@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmPublication.msgnode="ComIbmPublication.msgnode" xmlns:common_integration_shlib_wrap_message_messageBuild.subflow="common_integration_shlib_wrap_message/messageBuild.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
+    nsURI="common_integration_shlib_encapsulate_calls/cc_mq_topic_call.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_mq_topic_call.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="cc_mq_topic_call" bundleName="common_integration_shlib_encapsulate_calls/cc_mq_topic_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj16/cc_mq_topic_call.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj30/cc_mq_topic_call.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="20,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="common_integration_shlib_encapsulate_calls/cc_mq_topic_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="624,145">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Out" bundleName="common_integration_shlib_encapsulate_calls/cc_mq_topic_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmPublication.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="411,148" destinationQueueManagerName="MQ_LOCAL" policyUrl="{GlobalMQPolicies}:RemoteMQPolicies">
+        <translation xmi:type="utility:ConstantString" string="Publication"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Send event to topic for consumer"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="Publication.terminal.in" eventIdentity="START: Send event to topic">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START: Send event to topic"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="Publication.terminal.out" eventIdentity="END: Send event to topic">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="END: Send event to topic"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="NoMatch terminal" eventSourceName="Publication.terminal.noMatch" eventIdentity="NO MATCH: Send event to topic ">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="NO MATCH: Send event to topic "/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_wrap_message_messageBuild.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="301,136">
+        <translation xmi:type="utility:ConstantString" string="messageBuild"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Out1" location="621,237">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.NoMatch" bundleName="common_integration_shlib_encapsulate_calls/cc_mq_topic_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="136,104" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_mq_topic_call_setMonitoringLog.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="setMonitoringLog"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="setMonitoringLog.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessageSup">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$LocalEnvironment/business-identifiers" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessageSup" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="511,144" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_mq_topic_out.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="pubOut"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="pubOut.terminal.out1" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="pubOut.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="504,236" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_mq_topic_no_match.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="pubNoMatch"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="pubNoMatch.terminal.out1" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="pubNoMatch.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_4" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="OutTerminal.Out1" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

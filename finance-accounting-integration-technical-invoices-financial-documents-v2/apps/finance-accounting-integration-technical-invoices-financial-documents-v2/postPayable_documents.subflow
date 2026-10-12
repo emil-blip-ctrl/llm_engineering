@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmSAPRequest.msgnode="ComIbmSAPRequest.msgnode" xmlns:ComIbmTryCatch.msgnode="ComIbmTryCatch.msgnode" xmlns:ComIbmValidate.msgnode="ComIbmValidate.msgnode" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="postPayable_documents.subflow" nsPrefix="postPayable_documents.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" nodeLayoutStyle="SQUARE">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="postPayable_documents" bundleName="postPayable_documents" pluginId="finance_accounting_integration_technical_invoices_financial_documents_v2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_technical_invoices_financial_documents_v2/icons/full/obj16/postPayable_documents.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_technical_invoices_financial_documents_v2/icons/full/obj30/postPayable_documents.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="17,200">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="postPayable_documents" pluginId="finance_accounting_integration_technical_invoices_financial_documents_v2"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="1147,295">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="postPayable_documents" pluginId="finance_accounting_integration_technical_invoices_financial_documents_v2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="430,282" computeExpression="esql://routine/#setBusinessIdentifiers.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="BusinessIdentifiers"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="BusinessIdentifiers.terminal.out" eventIdentity="SUP: LOG invoice identifiers">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: LOG invoice identifiers"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="560,284" computeExpression="esql://routine/#payableToSapRequestMapping.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="mapping"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="mapping.terminal.in" eventIdentity="Map message to SAP finDoc">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Map message to SAP finDoc"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="mapping.terminal.out" eventIdentity="Send FinDoc to validation">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Send FinDoc to validation"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmTryCatch.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="346,203">
+        <translation xmi:type="utility:ConstantString" string="Try Catch"/>
+        <monitorEvents eventSourceDescription="Catch terminal" eventSourceName="Try Catch.terminal.catch" eventIdentity="FAIL: Catch exception">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exception"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmValidate.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="675,285" domain="XMLNSC" checkDomain="true" checkSet="true" checkType="true">
+        <translation xmi:type="utility:ConstantString" string="Validate"/>
+        <monitorEvents eventSourceDescription="Match terminal" eventSourceName="Validate.terminal.match" eventIdentity="Send validated message to SAP FinDoc">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Send validated message to SAP FinDoc"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="Validate.terminal.in" eventIdentity="Send message to validation">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Send message to validation"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmSAPRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="786,289" adapterComponent="Adapters/SAP/updateBP.outadapter" defaultMethod="executeSapZwsFinDoc">
+        <translation xmi:type="utility:ConstantString" string="SAP Request"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="SAP Request.terminal.in" eventIdentity="SUP: SEND Financial Document to ERP">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SEND Financial Document to ERP"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SAP Request.terminal.out" eventIdentity="SUP: RECEIVE Financial Document from ERP">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: RECEIVE Financial Document from ERP"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="887,199" computeExpression="esql://routine/#invoice_handling_error.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="handling_error"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="handling_error.terminal.out" eventIdentity="SUP: RECEIVE fail response">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: RECEIVE fail response"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="221,202">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_start"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow:FCMComposite_1" xmi:id="FCMComposite_1_10" location="1010,294">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_end"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="113,200" computeExpression="esql://routine/#SetLogContext.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="LogContext"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="898,294" computeExpression="esql://routine/#financial_SAPresponse.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="SapResponse"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SapResponse.terminal.out" eventIdentity="SUP: SAP response log">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SAP response log"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.try" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.match" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_11" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

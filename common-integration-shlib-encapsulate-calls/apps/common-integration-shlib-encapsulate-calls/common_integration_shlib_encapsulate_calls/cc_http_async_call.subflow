@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmHTTPAsyncRequest.msgnode="ComIbmHTTPAsyncRequest.msgnode" xmlns:ComIbmHTTPAsyncResponse.msgnode="ComIbmHTTPAsyncResponse.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_http_async_call.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.monitoring-api-name" name="monitoring-api-name" lowerBound="1">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.monitoring-api-operation" name="monitoring-api-operation" lowerBound="1">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.asyncResponseCorrelator" name="asyncResponseCorrelator" lowerBound="1" defaultValueLiteral="ToBeOverrided">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.AddRequestToGroup" name="AddRequestToGroup" lowerBound="1" defaultValueLiteral="false">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.AddRequestToGroup.internal_npcompiler" name="AddRequestToGroup.internal_npcompiler">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.GroupRequestFolderName" name="GroupRequestFolderName">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.GroupRequestTimeout" name="GroupRequestTimeout" defaultValueLiteral="0.0">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EDouble"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.cmdb-id-target" name="cmdb-id-target" lowerBound="1" defaultValueLiteral="default">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="cc_http_async_call" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj16/cc_http_async_call.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj30/cc_http_async_call.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Used when a http call is needed in the message flow design"/>
+    <longDescription xmi:type="utility:ConstantString" string="When a async http side call has to be definied, please add this subflow.&#xD;&#xA;3 subflow Parameters are mandatory &#xD;&#xA; - monitoring-api-name --> used to monitoring&#xD;&#xA; - monitoring-api-operation --> used to monitoring&#xD;&#xA; - Unique Identifier --> use to request/response asynchrone mechanism&#xD;&#xA;Before this subflow, if business-identifiers has to be defined in TCS monitoring, please create this input tree&#xD;&#xA;&#xD;&#xA;LocalEnvironment.&quot;business-identifiers&quot;.key1 = 'Value1';&#xD;&#xA;LocalEnvironment.&quot;business-identifiers&quot;.key2 = 'Value2';"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="293,419" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_async_call_Catch.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="Catch"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="380,187" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_call_Failure.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="Failure"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="Failure.terminal.out1" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator dataLocation="$Environment/Variables/X-Correlation-Id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="Failure.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="391,266" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_call_Out.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="Out"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="Out.terminal.out1" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator dataLocation="$Environment/Variables/X-Correlation-Id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="Out.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmHTTPAsyncResponse.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="82,268" asyncRequestCorrelator="ToBeOverrided">
+        <translation xmi:type="utility:ConstantString" string="HTTP Asynchronous Response"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="449,17" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_async_call_Failure_Request.Main">
+        <translation xmi:type="utility:ConstantString" string="Failure_Request"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="Failure_Request.terminal.out1" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="Failure_Request.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="391,345" dataSource="ACE_CONTEXTREFERENCE_DB" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_call_Error.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="Error"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="Error.terminal.out1" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator dataLocation="$Environment/Variables/X-Correlation-Id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="Error.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Response_Out" location="466,267">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Response_Out" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="152,20" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_call_SetLogMonitoring.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="SetLogMonitoring"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SetLogMonitoring.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessageSup">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$LocalEnvironment/business-identifiers" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessageSup" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmHTTPAsyncRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="263,21" asyncResponseCorrelator="ToBeOverrided" URLSpecifier="https://override" protocol="SSL_TLSv2">
+        <translation xmi:type="utility:ConstantString" string="HTTP Asynchronous Request"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="HTTP Asynchronous Request.terminal.in" eventIdentity="$Environment/Variables/MonitoringMessageInfo">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessageInfo" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="HTTP Asynchronous Request.terminal.out" eventIdentity="HTTP Asynchronous Request.OutTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="HTTP Asynchronous Request.OutTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="71,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="551,18">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Request_Failure" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="470,345">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Response_Error" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output2" location="387,420">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Response_Catch" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output3" location="456,189">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Response_Failure" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output4" location="504,87">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Request_Out" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="96,78" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_async_call_type_call_async.Main">
+        <translation xmi:type="utility:ConstantString" string="type-call-async-in"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="267,186" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_async_call_type_call_async.Main">
+        <translation xmi:type="utility:ConstantString" string="type-call-async-fail"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="266,265" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_async_call_type_call_async.Main">
+        <translation xmi:type="utility:ConstantString" string="type-call-async-out"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="261,343" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_http_async_call_type_call_async.Main">
+        <translation xmi:type="utility:ConstantString" string="type-call-async-error"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="OutTerminal.Response_Out" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="OutTerminal.Output2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="OutTerminal.Output3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.Output4" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_9" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.monitoring-api-name">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.monitoring-api-name" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.monitoring-api-operation">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.monitoring-api-operation" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+          <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.AsyncCorrelationIdPropertyEditor" configurable="true" describedAttribute="Property.asyncResponseCorrelator">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.asyncResponseCorrelator" bundleName="ComIbmHTTPAsyncRequest" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+            <propertyDescriptor groupName="Group.Basic" compiler="com.ibm.etools.mft.ibmnodes.compilers.BooleanPropertyCompiler" configurable="true" describedAttribute="Property.AddRequestToGroup">
+              <propertyName xmi:type="utility:TranslatableString" key="Property.AddRequestToGroup" bundleName="ComIbmHTTPAsyncRequest" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+              <propertyDescriptor groupName="Group.InternalRuntimeGroup" readOnly="true" hidden="true" userDefined="true" describedAttribute="Property.AddRequestToGroup.internal_npcompiler">
+                <propertyName xmi:type="utility:TranslatableString" key="Property.AddRequestToGroup.internal_npcompiler" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+                <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.grouprequest.GroupRequestFolderNamePropertyEditor" configurable="true" describedAttribute="Property.GroupRequestFolderName">
+                  <propertyName xmi:type="utility:TranslatableString" key="Property.GroupRequestFolderName" bundleName="ComIbmHTTPAsyncRequest" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+                  <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.grouprequest.GroupRequestTimeoutPropertyEditor" configurable="true" describedAttribute="Property.GroupRequestTimeout">
+                    <propertyName xmi:type="utility:TranslatableString" key="Property.GroupRequestTimeout" bundleName="ComIbmHTTPAsyncRequest" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+                    <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.cmdb-id-target">
+                      <propertyName xmi:type="utility:TranslatableString" key="Property.cmdb-id-target" bundleName="common_integration_shlib_encapsulate_calls/cc_http_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+                    </propertyDescriptor>
+                  </propertyDescriptor>
+                </propertyDescriptor>
+              </propertyDescriptor>
+            </propertyDescriptor>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.asyncResponseCorrelator" overriddenNodes="FCMComposite_1_8">
+      <overriddenAttribute href="ComIbmHTTPAsyncRequest.msgnode#Property.asyncResponseCorrelator"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.asyncResponseCorrelator" overriddenNodes="FCMComposite_1_4">
+      <overriddenAttribute href="ComIbmHTTPAsyncResponse.msgnode#Property.asyncRequestCorrelator"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.AddRequestToGroup" overriddenNodes="FCMComposite_1_8">
+      <overriddenAttribute href="ComIbmHTTPAsyncRequest.msgnode#Property.AddRequestToGroup"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.GroupRequestFolderName" overriddenNodes="FCMComposite_1_8">
+      <overriddenAttribute href="ComIbmHTTPAsyncRequest.msgnode#Property.GroupRequestFolderName"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.GroupRequestTimeout" overriddenNodes="FCMComposite_1_8">
+      <overriddenAttribute href="ComIbmHTTPAsyncRequest.msgnode#Property.GroupRequestTimeout"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

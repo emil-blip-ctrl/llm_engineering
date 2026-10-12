@@ -1,0 +1,27 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+/* Procedure to get last exepstion list field
+	IN REFERENCE exlist_in 'The exeption list reference'
+	OUT INTEGER number_out 'Last bips exeption number'
+	OUT REFERENCE text_out 'Last bips exeption text'
+	OUT REFERENCE stacktrace_out 'Complete stacktrace'
+	Return CHARACTER*/
+CREATE FUNCTION parseExceptionList(IN exlist_in REFERENCE, OUT number_out INTEGER, OUT text_out CHARACTER, OUT stacktrace_out CHARACTER)
+BEGIN
+	-- The complete statck trace of the exception (result of the loop into the tree) 
+	DECLARE completeStackTrace CHARACTER '';
+	-- Reference on the ExceptionList tree
+	DECLARE refExceptionList REFERENCE TO exlist_in.*[1];
+	-- Loop into the tree through the ExceptionList children
+	WHILE refExceptionList.Number IS NOT NULL DO
+		SET completeStackTrace = CAST(refExceptionList.Number AS CHARACTER) || ':' || refExceptionList.Text || ':' || COALESCE(refExceptionList.Label, '') || '
+		'|| completeStackTrace ;
+		MOVE refExceptionList LASTCHILD;
+	END WHILE;
+	-- Return the last exepction number and text and the complete stack trace
+	SET number_out = refExceptionList.Number;
+	SET text_out = refExceptionList.Text;
+	SET stacktrace_out = completeStackTrace;
+END;
+

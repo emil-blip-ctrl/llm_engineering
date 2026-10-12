@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:sapasi="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata" xmlns:sapdoccustomelements755363819="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdoccustomelements755363819" xmlns:sapdocumentlines="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocumentlines901811010" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocumentlines901811010">
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdoccustomelements755363819" schemaLocation="SapDocCustomElements755363819.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability">
+<info:resourceAdapter xmlns:info="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability" version="7.5.0.5_IF10"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="commonj.connector.asi">
+<asi:annotationSet xmlns:asi="commonj.connector.asi" asiNSURI="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:complexType name="SapDocumentLines">
+    
+    <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIBusinessObjectTypeMetadata>
+</sapasi:sapBAPIBusinessObjectTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+    
+    <xsd:sequence maxOccurs="1" minOccurs="1">
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="ITEM_IDENTIFIER" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>ITEM_IDENTIFIER</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>15</sapasi:MaxLength>
+<sapasi:Description>Char 15</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="15"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="ITEM_UNIT_PRICE" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>ITEM_UNIT_PRICE</sapasi:FieldName>
+<sapasi:FieldType>BCD</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>11</sapasi:MaxLength>
+<sapasi:Description>Net Price</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:decimal">
+            
+            <xsd:totalDigits value="11"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="NET_AMOUNT" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>NET_AMOUNT</sapasi:FieldName>
+<sapasi:FieldType>BCD</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>13</sapasi:MaxLength>
+<sapasi:Description>Amount in Transaction Currency with +/- Sign</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:decimal">
+            
+            <xsd:totalDigits value="13"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="GROSS_AMOUNT" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>GROSS_AMOUNT</sapasi:FieldName>
+<sapasi:FieldType>BCD</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>13</sapasi:MaxLength>
+<sapasi:Description>Amount in Transaction Currency with +/- Sign</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:decimal">
+            
+            <xsd:totalDigits value="13"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="UNIT" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>UNIT</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>3</sapasi:MaxLength>
+<sapasi:Description>Base Unit of Measure</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="3"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="UNIT_NAME" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>UNIT_NAME</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>15</sapasi:MaxLength>
+<sapasi:Description>Char 15</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="15"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="QUANTITY" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>QUANTITY</sapasi:FieldName>
+<sapasi:FieldType>BCD</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>13</sapasi:MaxLength>
+<sapasi:Description>Quantity</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:decimal">
+            
+            <xsd:totalDigits value="13"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="CURRENCY" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>CURRENCY</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>5</sapasi:MaxLength>
+<sapasi:Description>Currency Key</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="5"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="VAT_RATE" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>VAT_RATE</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>6</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="6"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="VAT_CODE" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>VAT_CODE</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>2</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="2"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="SapDocCustomElements" nillable="true" type="sapdoccustomelements755363819:SapDocCustomElements">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>DOC_CUSTOM_ELEMENTS</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_T_DOC_CUSTOM_ELEMENT</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+    </xsd:sequence>
+    
+  </xsd:complexType>
+  
+</xsd:schema>

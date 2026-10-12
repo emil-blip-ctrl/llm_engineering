@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:common_integration_shlib_wrap_message_messageExtract.subflow="common_integration_shlib_wrap_message/messageExtract.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_app_mq_start.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_app_mq_start.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.BackoutThreshold" name="BackoutThreshold" lowerBound="1">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.messageDomainProperty" name="messageDomainProperty">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.queueName" name="queueName" lowerBound="1" defaultValueLiteral="ToBeOverRided">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.cmdb-id-source" name="cmdb-id-source" lowerBound="1" defaultValueLiteral="default">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="cc_app_mq_start" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj16/cc_app_mq_start.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj30/cc_app_mq_start.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Manage Mq message bulf with &quot;wrap message&quot; shlib"/>
+    <longDescription xmi:type="utility:ConstantString" string="The choice was to unuse the failure output terminal. &#xD;&#xA;&#xD;&#xA;With failure output terminal connected, if there's a defined backout threshold in the input MQ queue, the message is propagated  as many times through the output terminal input node  as through the failure terminal input node. &#xD;&#xA;&#xD;&#xA;So, if there's a problem through the failure output terminal, the message will be rolled back then reprocessed to the failure output terminal as many time the backout threshold is not reached again&#xD;&#xA;&#xD;&#xA;For example, if backout threashold is set to 3 and if there is error in output terminal and also in failure terminal, the node read the message twice 3 times (Fist :  3 times though output terminal, then 3 times through failure terminal)&#xD;&#xA;&#xD;&#xA;But, by unconnected failure terminal, the message is not propagated through failure terminal and it moved to BO queue (if defined, if not moved to DLQ, if not message lost)&#xD;&#xA;&#xD;&#xA;"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="28,114" queueName="ToBeOverRided" policyUrl="{GlobalMQPolicies}:RemoteMQPolicies">
+        <translation xmi:type="utility:ConstantString" string="MQ Input"/>
+        <monitorEvents eventSourceDescription="Transaction start" eventSourceName="MQ Input.transaction.Start" eventIdentity="Start Mq input">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator dataLocation="$Root/MQRFH2/usr/gtid" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Start Mq input"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Catch terminal" eventSourceName="MQ Input.terminal.catch" eventIdentity="$Environment/Variables/MonitoringMessageCatch">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator dataLocation="$Root/MQRFH2/usr/gtid" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessageCatch" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Out" location="656,115">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Out" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Catch" location="404,240">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Catch" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="123,114" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_app_mq_start_SetMonitoringEnvContextAppMq.Main">
+        <translation xmi:type="utility:ConstantString" string="SetMonitoringEnvContextAppMq"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SetMonitoringEnvContextAppMq.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$LocalEnvironment/business-identifiers" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator dataLocation="$Environment/Variables/trackID" eventCorrelation="dataLocation"/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_wrap_message_messageExtract.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="314,115">
+        <translation xmi:type="utility:ConstantString" string="messageExtract"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="407,115" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_app_mq_start_AddInformationIntoEnv.Main">
+        <translation xmi:type="utility:ConstantString" string="AddInformationIntoEnv"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="394,322">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.BackoutThreshold" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="184,309" filterExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_app_mq_start_BackoutThresholdReached.Main">
+        <translation xmi:type="utility:ConstantString" string="BackoutThresholdReached"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="OutTerminal.Out" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="OutTerminal.Catch" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.BackoutThreshold">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.BackoutThreshold" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+        <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.mq.MQMessageDomainEditor" describedAttribute="Property.messageDomainProperty">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.messageDomainProperty" bundleName="ComIbmMQInput" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+          <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.mq.MQQueueNameEditor" configurable="true" describedAttribute="Property.queueName">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.queueName" bundleName="ComIbmMQInput" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+            <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.cmdb-id-source">
+              <propertyName xmi:type="utility:TranslatableString" key="Property.cmdb-id-source" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+            </propertyDescriptor>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.messageDomainProperty" overriddenNodes="FCMComposite_1_2">
+      <overriddenAttribute href="ComIbmMQInput.msgnode#Property.messageDomainProperty"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.queueName" overriddenNodes="FCMComposite_1_2">
+      <overriddenAttribute href="ComIbmMQInput.msgnode#Property.queueName"/>
+    </attributeLinks>
+    <stickyBoard>
+      <stickyNote location="96,4" association="FCMComposite_1_2">
+        <body xmi:type="utility:ConstantString" string="please read long description to understand behavior"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

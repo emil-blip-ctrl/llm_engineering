@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:CommonError_traceErrorAndReturnStatus.subflow="CommonError/traceErrorAndReturnStatus.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:flowUpdateCase.subflow="flowUpdateCase.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="resourceUpdateAssistanceCase.subflow" nsPrefix="resourceUpdateAssistanceCase.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="resourceUpdateAssistanceCase" bundleName="resourceUpdateAssistanceCase" pluginId="servicesIntegrationAssistanceCases"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj16/resourceUpdateAssistanceCase.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj30/resourceUpdateAssistanceCase.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="30,161">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="resourceUpdateAssistanceCase" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="686,137">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="resourceUpdateAssistanceCase" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="CommonError_traceErrorAndReturnStatus.subflow:FCMComposite_1" xmi:id="FCMComposite_1_12" location="369,50">
+        <translation xmi:type="utility:ConstantString" string="traceErrorAndReturn500"/>
+      </nodes>
+      <nodes xmi:type="CommonError_traceErrorAndReturnStatus.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="373,238" errorcode="504">
+        <translation xmi:type="utility:ConstantString" string="traceErrorAndReturn504"/>
+      </nodes>
+      <nodes xmi:type="flowUpdateCase.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="173,155">
+        <translation xmi:type="utility:ConstantString" string="flowUpdateCase"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.OutputError" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.OutputConnect" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard>
+      <stickyNote location="676,422">
+        <body xmi:type="utility:ConstantString" string="Call from mLogistics&#xA; to update a Case in Assys"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

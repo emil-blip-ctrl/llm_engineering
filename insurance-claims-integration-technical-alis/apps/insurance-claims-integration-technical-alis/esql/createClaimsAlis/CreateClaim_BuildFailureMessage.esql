@@ -1,0 +1,38 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+CREATE COMPUTE MODULE CreateClaim_BuildFailureMessage
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE exceptionList REFERENCE TO InputExceptionList.RecoverableException;
+		DECLARE refRecoverableException REFERENCE TO exceptionList;
+		CALL getUserExceptionCatalog(exceptionList, refRecoverableException);		
+		IF EXISTS(refRecoverableException.SocketTimeoutException.*[]) THEN
+			SET Environment.Variables.Error.httpCode = '504';
+		    SET Environment.Variables.Error.httpMessage = 'ACE : Gateway Timeout';
+		    SET Environment.Variables.Error.moreInformation = 'The maximum response time has been exceeded.';
+		ELSE			
+		    SET Environment.Variables.Error.httpCode = '500';
+		    SET Environment.Variables.Error.httpMessage = 'ACE : ' || refRecoverableException.Catalog || ': ' || CAST(refRecoverableException.Number AS CHARACTER);
+		    DECLARE errorMessage CHARACTER refRecoverableException."Text"; 
+		    DECLARE errorElement INTEGER 0;
+		    FOR data AS refRecoverableException.Insert[] DO
+			    SET errorElement = errorElement + 1;
+			    SET errorMessage = errorMessage || '; &' || CAST(errorElement AS CHARACTER) || '=' || data."Text";
+		    END FOR;	
+		    SET Environment.Variables.Error.moreInformation = errorMessage;	
+		END IF;			
+		
+		THROW USER EXCEPTION; 		
+		RETURN FALSE;	
+	END;
+	
+	CREATE PROCEDURE getUserExceptionCatalog(IN root REFERENCE, INOUT outRoot REFERENCE) BEGIN
+		DECLARE element REFERENCE TO root;
+		MOVE outRoot TO element;
+		MOVE element TO element.RecoverableException;
+		IF LASTMOVE(element) IS TRUE THEN
+			CALL getUserExceptionCatalog(element, outRoot);
+		END IF;
+	END;
+END MODULE;

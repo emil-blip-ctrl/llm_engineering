@@ -1,0 +1,311 @@
+BROKER SCHEMA common_integration_shlib_encapsulate_calls
+DECLARE MQReply EXTERNAL BOOLEAN FALSE;
+DECLARE BackoutThreshold EXTERNAL CHARACTER '';
+DECLARE "cmdb-id-source" EXTERNAL CHAR 'default';
+DECLARE queueName EXTERNAL CHAR '';
+
+
+CREATE COMPUTE MODULE cc_app_mq_start_SetMonitoringEnvContextAppMq
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables."cmdb-id-source" = "cmdb-id-source" ;
+		SET Environment.Variables.BackoutCount = InputRoot.MQMD.BackoutCount;
+		SET Environment.Variables.BackoutThreshold = CAST(BackoutThreshold as INTEGER);
+		IF Environment.Variables.BackoutCount + 1 >= Environment.Variables.BackoutThreshold THEN
+			SET Environment.Variables.LastTry = TRUE;
+		ELSE
+			SET Environment.Variables.LastTry = FALSE;
+		END IF;
+		-- generate contextual id for tracking
+		SET Environment.Variables.trackID = UUIDASCHAR;
+		SET Environment.Variables."X-Global-Transaction-Id" = COALESCE(InputRoot.MQRFH2.usr.gtid,'');
+		SET Environment.Variables."X-Correlation-Id" = COALESCE(InputRoot.MQRFH2.usr.correlationId,COALESCE(Environment.Variables."X-Global-Transaction-Id",''));
+		SET Environment.Variables."X-Caller-Code" = COALESCE(InputRoot.MQRFH2.usr.callerCode,'');
+		SET Environment.Variables.In."X-Caller-Code" = COALESCE(InputRoot.MQRFH2.usr.callerCode,'');
+		SET Environment.Variables."X-Origin-Caller-Code" = COALESCE(InputRoot.MQRFH2.usr.originCallerCode,'');
+		SET Environment.Variables.SourceQueue = InputRoot.MQMD.SourceQueue;
+		SET Environment.Variables.Topic = InputRoot.MQRFH2.mqps.Top;
+		-- set contextual variables to track them in SUP logs
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		SET Environment.Variables.TCSLog.context."source-queue" = Environment.Variables.SourceQueue;
+		SET Environment.Variables.TCSLog.context."mq-topic" = Environment.Variables.Topic;
+		SET Environment.Variables.TCSLog.context."origin-caller" = Environment.Variables."X-Origin-Caller-Code";
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.Variables."X-Caller-Code";
+		SET Environment.Variables.TCSLog.context."correlation-id" = Environment.Variables."X-Correlation-Id";
+		SET Environment.Variables.TCSLog.context."global-transaction-id" = Environment.Variables."X-Global-Transaction-Id";
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05625'; -- MQ
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541'; -- ACE
+		SET Environment.Variables.SetContext = true;
+		if EXISTS(Environment.Variables.Topic[]) then
+			SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.Topic;
+			SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVED message from queue ' || Environment.Variables.SourceQueue || ' through topic ' || Environment.Variables.Topic;
+			SET Environment.Variables.MonitoringMessageCatch = 'FAIL: RECEIVED Catch message from queue ' || Environment.Variables.SourceQueue || ' through topic ' || Environment.Variables.Topic;
+		else
+			SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.SourceQueue;
+			SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVED message from queue ' || Environment.Variables.SourceQueue ;
+			SET Environment.Variables.MonitoringMessageCatch = 'FAIL: RECEIVED Catch message from queue ' || Environment.Variables.SourceQueue;
+		end if;
+		RETURN TRUE;
+	END;
+END MODULE;
+CREATE COMPUTE MODULE cc_app_mq_end_ExitPoint
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.Properties = InputRoot.Properties ;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		IF NOT(COALESCE(Environment.Variables.SetContext,false)) THEN
+			THROW USER EXCEPTION VALUES('please add subflow cc_*.*_start.subflow at the beginning of your flow');
+		END IF;
+		IF EXISTS(InputExceptionList.*[]) THEN
+			DECLARE messageText CHARACTER;
+			DECLARE messageCode INTEGER;
+			CALL getFormatErrorExceptionDetail(InputExceptionList, messageCode, messageText);
+			SET Environment.Variables.ContextCode = CAST(messageCode AS CHARACTER);
+		END IF;
+		
+		IF Environment.Variables.ContextCode IS NOT NULL AND Environment.Variables.ContextCode <> '' AND EXISTS(Environment.Variables.MessageIn.*[]) THEN
+			--check if records needed
+			SET Environment.Variables.RECORD = THE(SELECT ITEM t.CONTEXT_RECORD 
+												   FROM Database.ACE_CONTEXTREFERENCE_DB.dbo.CONTEXTREFERENCE AS t 
+												   WHERE t.CONTEXT_CODE = Environment.Variables.ContextCode) ;
+			IF Environment.Variables.RECORD THEN
+				PROPAGATE TO TERMINAL 'out2' DELETE NONE;
+			END IF;
+		END IF;
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.Variables.In."X-Caller-Code" ;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05625'; --MQ
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.MonitoringMessage = 'SUP: SEND transaction finished ';
+		IF EXISTS(Environment.Variables.Topic[]) THEN
+			SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.Topic;
+		ELSE
+			SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.SourceQueue;
+		END IF;
+		IF MQReply AND Environment.Variables.ReplyToQ IS NOT NULL THEN
+			DELETE FIELD OutputRoot.Properties;
+			FOR Field AS Environment.Variables.MessageIn.*[] DO
+				if not (FIELDNAME(Field) = 'BLOB' or FIELDNAME(Field) = 'JSON' or FIELDNAME(Field) = 'XMLNSC' or FIELDNAME(Field) = 'DFDL') then
+					CREATE LASTCHILD OF OutputRoot DOMAIN(FIELDNAME(Field)) NAME FIELDNAME(Field);
+					SET OutputRoot.{FIELDNAME(Field)} = Field;
+				end if;
+			END FOR;
+			FOR Field AS InputRoot.*[] DO
+				if FIELDNAME(Field) = 'BLOB' or FIELDNAME(Field) = 'JSON' or FIELDNAME(Field) = 'XMLNSC' or FIELDNAME(Field) = 'DFDL' then 
+					CREATE LASTCHILD OF OutputRoot DOMAIN(FIELDNAME(Field)) NAME FIELDNAME(Field);
+					SET OutputRoot.{FIELDNAME(Field)} = Field;
+				end if;
+			END FOR;						
+			SET Environment.Variables.MonitoringMessage = 'SUP: SEND transaction finished to ' || Environment.Variables.ReplyToQ;
+			SET OutputRoot.MQMD.ReplyToQ = Environment.Variables.ReplyToQ;
+			PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		END IF;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_app_mq_start_AddInformationIntoEnv
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TCSLog.userDefined = InputLocalEnvironment.Variables.TCSLog.userDefined;
+		SET Environment.Variables.TCSLog."business-identifiers" = InputLocalEnvironment.Variables.TCSLog."business-identifiers";
+		SET Environment.Variables.TCSLog.filters = InputLocalEnvironment.Variables.TCSLog.filters;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE FILTER MODULE cc_app_mq_start_BackoutThresholdReached
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN Environment.Variables.BackoutThreshold > 0 and Environment.Variables.BackoutCount = Environment.Variables.BackoutThreshold - 1;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_call_pubFailure
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE messageText CHARACTER;
+		DECLARE messageCode INTEGER;
+		CALL getFormatErrorExceptionDetail(InputExceptionList, messageCode, messageText);
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code"    = messageCode;
+		SET Environment.Variables.TCSLog.context."error-message" = messageText;		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE error message to queue ' || queueName;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'ERROR: Publish message' || queueName;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE cc_mq_topic_call_setMonitoringLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET Environment.Variables.TCSLog.context."target-url" = InputLocalEnvironment.Variables.Topic;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05625'; --MQ
+		SET Environment.Variables.TCSLog.context."caller-code" = ApplicationLabel;
+		SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		-- set contextual variables
+		SET Environment.Variables.MonitoringMessageSup = 'SUP: SEND message to topic ' || COALESCE(InputLocalEnvironment.Variables.Topic,'UNKNWON');
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_call_setMonitoringLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName = queueName;
+		SET Environment.Variables.TCSLog.context."target-url" = queueName;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05625'; --MQ
+		SET Environment.Variables.TCSLog.context."caller-code" = ApplicationLabel;
+		SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		-- set contextual variables
+		SET Environment.Variables.MonitoringMessageSup = 'SUP: SEND message to queue ' || COALESCE(queueName,'UNKNWON');
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_get_setMonitoringLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET Environment.Variables.TCSLog.context."target-url" = queueName;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05625'; --MQ
+		SET Environment.Variables.TCSLog.context."caller-code" = ApplicationLabel;
+		SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		-- set contextual variables
+		SET Environment.Variables.MonitoringMessageSup = 'SUP: SEND get message on queue ' || COALESCE(queueName,'UNKNWON');
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_topic_out
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment."business-identifiers";
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE message to topic ' || InputRoot.Properties.Topic;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.MonitoringMessage = 'SUCCESS: Publish message' || InputRoot.Properties.Topic ;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_pub_out
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment."business-identifiers";
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE message to queue ' || InputLocalEnvironment.WrittenDestination.MQ.DestinationData.queueName;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.MonitoringMessage = 'SUCCESS: Publish message' || InputLocalEnvironment.WrittenDestination.MQ.DestinationData.queueName ;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_topic_no_match
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		set OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment."business-identifiers";
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code"    = '404';
+		SET Environment.Variables.TCSLog.context."error-message" = 'Topic no match';		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE error message to topic ' || InputRoot.Properties.Topic;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'ERROR: Publish message' || InputRoot.Properties.Topic ;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE cc_mq_get_no_message
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		set OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment."business-identifiers";
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code"    = '404';
+		SET Environment.Variables.TCSLog.context."error-message" = 'No message in queue: ' || queueName;		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE get no message from queue: ' || queueName;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'ERROR: Get no message from queue: ' || queueName;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE cc_mq_get_warning
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		set OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment."business-identifiers";
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TCSLog.context.severity = 'WARNING';
+		SET Environment.Variables.TCSLog.context."error-code"    = '207';
+		SET Environment.Variables.TCSLog.context."error-message" = 'The completion code indicates a warning';		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE get message from queue: ' || queueName;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'WARNING: Get message from queue: ' || queueName ;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_get_out
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment."business-identifiers";
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE get message from queue ' || queueName;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.MonitoringMessage = 'SUCCESS: Get message from queue' || queueName ;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_mq_get_failure
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE messageText CHARACTER;
+		DECLARE messageCode INTEGER;
+		CALL getFormatErrorExceptionDetail(InputExceptionList, messageCode, messageText);
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code"    = messageCode;
+		SET Environment.Variables.TCSLog.context."error-message" = messageText;		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE Get message error from queue ' || queueName;
+		PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'FAIL: Get message from queue ' || queueName;
+		RETURN TRUE;
+	END;
+END MODULE;

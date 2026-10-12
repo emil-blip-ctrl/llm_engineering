@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:common_integration_shlib_encapsulate_calls_cc_callable_async_call.subflow="common_integration_shlib_encapsulate_calls/cc_callable_async_call.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_http_async_call.subflow="common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow"
+    xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="invoice.subflow" nsPrefix="invoice.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="invoice" bundleName="invoice" pluginId="finance-accounting-integration-invoices"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance-accounting-integration-invoices/icons/full/obj16/invoice.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance-accounting-integration-invoices/icons/full/obj30/invoice.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="372,137" computeExpression="esql://routine/#invoice_routage.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="routage"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="routage.terminal.in" eventIdentity="INFO: Receive invoice">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Receive invoice"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="570,43" computeExpression="esql://routine/#invoice_error.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="error"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="error.terminal.in" eventIdentity="FAIL: Catch exception">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exception"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="error.terminal.out1" eventIdentity="SUP: RECEIVE fail response">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: RECEIVE fail response"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.in" location="26,136">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="invoice" pluginId="finance-accounting-integration-invoices"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="959,145">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="invoice" pluginId="finance-accounting-integration-invoices"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="224,135" computeExpression="esql://routine/#setBusinessIdentifiers.Main">
+        <translation xmi:type="utility:ConstantString" string="setBusinessIdentifiers"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="115,135">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_start"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_callable_async_call.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="540,139" identifier_request="CallableFlowAsyncInvoke-3a0e67b2-7bea-4645-99c7-e1169ed0757e" identifier_response="CallableFlowAsyncInvoke-3a0e67b2-7bea-4645-99c7-e1169ed0757e">
+        <translation xmi:type="utility:ConstantString" string="cc_callable_async_call1"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="833,145">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_end1"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_http_async_call.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="552,247" monitoring-api-name="finance-accounting-integration-technical-invoices-financial-documents" monitoring-api-operation="invoice" asyncResponseCorrelator="HTTPAsyncRequest-0133f414-2241-4637-a108-38da64c19acb" cmdb-id-target="CMP22944">
+        <translation xmi:type="utility:ConstantString" string="cc_http_async_call"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output2" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.redquest_ouit1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_3" sourceNode="InTerminal.in" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Response_Out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output2" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output3" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

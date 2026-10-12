@@ -1,0 +1,198 @@
+BROKER SCHEMA common_integration_shlib_encapsulate_calls
+DECLARE "monitoring-api-name" EXTERNAL CHAR '';
+DECLARE "monitoring-api-operation" EXTERNAL CHAR '';
+DECLARE "provider-name" EXTERNAL CHAR '';
+--DECLARE "cmdb-id-source" EXTERNAL CHAR 'default';
+DECLARE "cmdb-id-target" EXTERNAL CHAR 'default';
+
+CREATE COMPUTE MODULE cc_http_call_SetLogMonitoring
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF LENGTH("monitoring-api-name") = 0 THEN
+			THROW USER EXCEPTION VALUES('please provide "monitoring-api-name" on subflow cc_http_async_call.subflow');
+		END IF;
+		IF LENGTH("monitoring-api-operation") = 0 THEN
+			THROW USER EXCEPTION VALUES('please provide "monitoring-api-operation" on subflow cc_http_async_call.subflow');
+		END IF;
+		IF not(COALESCE(Environment.Variables.SetContext,false)) THEN
+			THROW USER EXCEPTION VALUES('please add subflow cc_*.*_start.subflow at the beginning of your flow');
+		END IF;
+		SET OutputRoot = InputRoot;
+		DECLARE RefHTTPRequestHeader REFERENCE to OutputRoot;
+		IF EXISTS(OutputRoot.HTTPRequestHeader[]) THEN
+			MOVE RefHTTPRequestHeader to OutputRoot.HTTPRequestHeader;
+		ELSE
+			CREATE NEXTSIBLING OF OutputRoot.Properties as RefHTTPRequestHeader NAME 'HTTPRequestHeader';
+		END IF;
+		
+		SET RefHTTPRequestHeader."X-Correlation-Id" = Environment.Variables."X-Correlation-Id";
+		SET RefHTTPRequestHeader."X-Global-Transaction-Id" = Environment.Variables."X-Global-Transaction-Id";
+		SET RefHTTPRequestHeader."X-Origin-Caller-Code" = Environment.Variables."X-Origin-Caller-Code";		
+		SET RefHTTPRequestHeader."X-Caller-Code" = ApplicationLabel;
+		SET RefHTTPRequestHeader."X-Source-System" =  'CMP05541'; -- ACE	
+		SET RefHTTPRequestHeader."X-Target-System" = COALESCE(InputLocalEnvironment."X-Target-System", 'CMP05737');--APIC
+		
+		-- set infos variables
+		DECLARE variablesRef REFERENCE TO Environment.Variables;
+		DELETE FIELD variablesRef.Info;		
+		SET variablesRef.Info.HTTPMethod = InputLocalEnvironment.Destination.HTTP.RequestLine.Method;
+		SET variablesRef.Info.RequestURL = InputLocalEnvironment.Destination.HTTP.RequestURL;
+		SET variablesRef.Info."X-Caller-Code" = InputRoot.HTTPRequestHeader."X-Caller-Code";
+		SET variablesRef.Info."OperationType" = "monitoring-api-operation";
+		SET variablesRef.Info.targetApplication = variablesRef.TCSLog.context.targetApplication;
+		SET variablesRef.Info.targetEndpointName = variablesRef.TCSLog.context.targetEndpointName;
+		
+		-- set contextual variables
+		SET variablesRef.TCSLog.context."source-system" = OutputRoot.HTTPRequestHeader."X-Source-System";
+		SET variablesRef.TCSLog.context."target-system" = OutputRoot.HTTPRequestHeader."X-Target-System";
+		SET variablesRef.TCSLog.context."caller-code" = ApplicationLabel;
+		SET variablesRef.TCSLog.context."target-url" = InputLocalEnvironment.Destination.HTTP.RequestURL;
+		
+		SET Environment.Variables.MonitoringMessageInfo = 'INFO: SEND ' || Environment.Variables.TypeCall ||' request to ' || "monitoring-api-name";
+		SET Environment.Variables.MonitoringMessageSup = 'SUP: SEND ' || Environment.Variables.TypeCall ||' request to ' || "monitoring-api-name";
+		
+		-- prepare context for async 
+		IF Environment.Variables.TypeCall = 'async' THEN
+			DECLARE Context ROW;
+			CREATE LASTCHILD OF Context DOMAIN('JSON') NAME 'JSON';
+			SET Context.JSON.Data.Environment = Environment;
+			SET Context.JSON.Data.LocalEnvironment = InputLocalEnvironment;
+			SET Context.BLOB = ASBITSTREAM(Context.JSON.Data OPTIONS FolderBitStream CCSID 1208);
+			SET OutputLocalEnvironment = InputLocalEnvironment;
+			SET OutputLocalEnvironment.Destination.HTTP.UserContext = Context.BLOB;
+		END IF;
+		RETURN TRUE;
+	END;
+END MODULE;
+CREATE COMPUTE MODULE cc_http_async_call_Catch
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TypeCall = 'async';
+		CALL GetContext(InputLocalEnvironment.HTTP.Response.UserContext, Environment,OutputLocalEnvironment,InputLocalEnvironment);
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_http_call_Error
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--set OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		IF Environment.Variables.TypeCall = 'async' THEN
+			CALL GetContext(InputLocalEnvironment.HTTP.Response.UserContext, Environment,OutputLocalEnvironment,InputLocalEnvironment);
+		END IF;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.TCSLog.context."target-system" = COALESCE(InputLocalEnvironment."X-Target-System", 'CMP05737'); --APIC	
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code"    = InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code";
+		SET Environment.Variables.TCSLog.context."error-message" = InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Line";		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE HTTP response error from ' || "monitoring-api-name";
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+		--check if cmdbid are referenced
+		IF Environment.Variables."cmdb-id-source" <> 'default' AND "cmdb-id-target" <> 'default' THEN
+			SET Environment.Variables.ContextCode = Environment.Variables."cmdb-id-source" || '_' || "cmdb-id-target" || '_' || CAST(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" AS CHARACTER);
+		END IF;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'ERROR: HTTP error generated  from ' || "monitoring-api-name" || ' - ' || "monitoring-api-operation";	
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_http_call_Failure
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--set OutputLocalEnvironment = InputLocalEnvironment;
+		DECLARE messageText CHARACTER;
+		DECLARE messageCode INTEGER;
+		CALL getFormatErrorExceptionDetail(InputExceptionList, messageCode, messageText);
+		SET OutputRoot = InputRoot;
+		IF Environment.Variables.TypeCall = 'async' THEN
+			call GetContext(InputLocalEnvironment.HTTP.Response.UserContext, Environment,OutputLocalEnvironment,InputLocalEnvironment);
+		END IF;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.TCSLog.context."target-system" = COALESCE(InputLocalEnvironment."X-Target-System", 'CMP05737'); --APIC
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code"    = messageCode;
+		SET Environment.Variables.TCSLog.context."error-message" = messageText;		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE HTTP response Failure from ' || "monitoring-api-name";
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'FAIL: HTTP failure exception when calling ' || "monitoring-api-name" || ' - ' || "monitoring-api-operation";
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE cc_http_async_call_Failure_Request
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot = InputRoot;
+		DECLARE messageText CHARACTER;
+		DECLARE messageCode INTEGER;
+		CALL getFormatErrorExceptionDetail(InputExceptionList, messageCode, messageText);
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.TCSLog.context."target-system" = COALESCE(OutputLocalEnvironment."X-Target-System", 'CMP05737');--APIC
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code"    = messageCode;
+		SET Environment.Variables.TCSLog.context."error-message" = messageText;
+		SET Environment.Variables.Error."error-code"    = messageCode;
+		SET Environment.Variables.Error."error-message" = messageText;		
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE HTTP response Failure from ' || "monitoring-api-name";
+		
+		
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541';
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541';
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'FAIL: HTTP failure exeption when calling ' || "monitoring-api-name" || ' - ' || "monitoring-api-operation";
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE cc_http_call_Out
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--set OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		IF Environment.Variables.TypeCall = 'async' THEN
+			CALL GetContext(InputLocalEnvironment.HTTP.Response.UserContext, Environment,OutputLocalEnvironment,InputLocalEnvironment);
+		END IF;
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+        DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.TCSLog.context."target-system" = COALESCE(InputLocalEnvironment."X-Target-System", 'CMP05737'); --APIC
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE HTTP response ok from ' || "monitoring-api-name";
+		PROPAGATE TO terminal 1 DELETE NONE;
+		SET Environment.Variables.MonitoringMessage = 'SUCCESS: HTTP request ' || "monitoring-api-name" || ' - ' || "monitoring-api-operation";
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE cc_http_async_call_type_call_async
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TypeCall = 'async';
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_http_async_call_type_call_sync
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.TypeCall = 'sync';
+		RETURN TRUE;
+	END;
+END MODULE;
+

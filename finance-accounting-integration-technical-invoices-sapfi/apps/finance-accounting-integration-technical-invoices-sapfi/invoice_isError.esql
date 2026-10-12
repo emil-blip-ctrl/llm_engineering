@@ -1,0 +1,8 @@
+
+CREATE FILTER MODULE invoice_isError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN Environment.Variable.Error;
+	END;
+
+END MODULE;

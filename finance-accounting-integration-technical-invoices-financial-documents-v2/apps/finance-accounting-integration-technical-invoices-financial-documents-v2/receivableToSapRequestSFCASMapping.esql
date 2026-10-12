@@ -1,0 +1,384 @@
+
+CREATE COMPUTE MODULE receivableToSapRequestSFCASMapping
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		CREATE FIELD OutputRoot.XMLNSC.ns:SapZwsFinDoc.SapFinDoc;
+		DECLARE RefOut REFERENCE TO OutputRoot.XMLNSC.ns:SapZwsFinDoc;
+
+		-- Add required namespaces
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapaddresses = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapaddresses2073361285';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapcardinformation = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcardinformation932265214';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapcredittransfer = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcredittransfer2124727546';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdata = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdata1333925805';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdoccustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdoccustomelements755363819';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdocs = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocs438412961';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdocumentlines = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocumentlines901811010';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapfindoc = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapfindoc1249096900';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapheader = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheader6103334';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapheadercustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheadercustomelements2061585280';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapmeta = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapmeta528807181';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sappartner = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappartner639908812';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sappartnercustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappartnercustomelements383215995';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sappaymentinstructions = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappaymentinstructions316354212';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapreferences = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapreferences725672799.xsd';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapreturn = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapreturn1478768624';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapserviceproviderid = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapserviceproviderid1102181588';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:saptechnicalreponse = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/saptechnicalreponse568329194';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapthirdaddresses = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdaddresses1000666237';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapthirdparties = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdparties366063943';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapthirdpartycustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdpartycustomelements1538637409';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapzwsfindoc = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsfindoc';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:xsi = 'http://www.w3.org/2001/XMLSchema-instance';
+		SET RefOut.(XMLNSC.Attribute)xsi:schemaLocation = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsfindoc SapZwsFinDoc.xsd';
+
+		DECLARE invoice REFERENCE TO InputRoot.JSON.Data.[1];
+		DECLARE processControl CHARACTER CAST(invoice.processControl.specificationIdentifier.Item[1].content AS CHARACTER);
+		DECLARE batchCompanyCode CHARACTER '';
+		DECLARE invoiceRef REFERENCE TO InputRoot.JSON.Data.[1];
+
+		WHILE LASTMOVE(invoiceRef) DO
+			DECLARE currentCompanyCode CHARACTER GetIdentifierValue(invoiceRef.seller.sellerIdentifier, 'COMPANY_CODE');
+
+			IF currentCompanyCode IS NULL OR LENGTH(TRIM(currentCompanyCode)) = 0 THEN
+				THROW USER EXCEPTION CATALOG 'Validation' MESSAGE 2951 VALUES('Missing COMPANY_CODE for ambulance invoice');
+			END IF;
+
+			IF LENGTH(batchCompanyCode) = 0 THEN
+				SET batchCompanyCode = currentCompanyCode;
+			ELSEIF batchCompanyCode <> currentCompanyCode THEN
+				THROW USER EXCEPTION CATALOG 'Validation' MESSAGE 2951 VALUES('Multiple COMPANY_CODE values found in the same ambulance batch');
+			END IF;
+
+			MOVE invoiceRef NEXTSIBLING;
+		END WHILE;
+
+		SET RefOut.OBJECT_SYSTEM = batchCompanyCode;
+		SET RefOut.PROCESS_CONTROL = processControl;
+		SET RefOut.PRODUCER_APP = 'SANSYSMIT';
+		SET RefOut.X_GLOBAL_TRANSACTION_ID = Environment.Variables.XCorrelationID;
+
+		DECLARE invoiceIndex INTEGER 1;
+		WHILE LASTMOVE(invoice) DO
+
+			CREATE LASTCHILD OF RefOut.SapFinDoc NAME 'SapDocs';
+			DECLARE sapDoc REFERENCE TO RefOut.SapFinDoc.SapDocs[invoiceIndex];
+
+			CREATE FIELD sapDoc.SapHeader;
+			CREATE FIELD sapDoc.SapPartner;
+			DECLARE sapHeader REFERENCE TO sapDoc.SapHeader;
+			DECLARE sapPartner REFERENCE TO sapDoc.SapPartner;
+
+			DECLARE headerCustomIndex INTEGER 1;
+			DECLARE sapPartnerCustomElementsIndex INTEGER 1;
+			DECLARE buyerTradingName CHARACTER CAST(invoice.buyer.buyerTradingName AS CHARACTER);
+			DECLARE buyerName CHARACTER CAST(invoice.buyer.buyerName AS CHARACTER);
+			DECLARE transportNumber CHARACTER GetIdentifierValue(invoice.invoiceNumber, 'TRANSPORT_NUMBER');
+			DECLARE invoiceId CHARACTER GetIdentifierValue(invoice.invoiceNumber, 'INVOICE_ID');
+			DECLARE precedingReference CHARACTER invoice.precedingInvoiceReference.content;
+			DECLARE street CHARACTER '';
+			DECLARE streetNumber CHARACTER '';
+			DECLARE sapPartnerReferencesIndex INTEGER 1;
+
+			SET sapHeader.DOCUMENT_DATE = CAST(invoice.invoiceIssueDate AS CHARACTER);
+			SET sapHeader.POSTING_DATE = CAST(invoice.invoiceIssueDate AS CHARACTER);
+			SET sapHeader.DOCUMENT_TYPE = CAST(invoice.invoiceTypeCode AS CHARACTER);
+
+			IF transportNumber IS NOT NULL AND LENGTH(TRIM(transportNumber)) > 0 THEN
+				SET sapHeader.REFERENCE = LEFT(TRIM(transportNumber), 16);
+			END IF;
+
+			IF precedingReference IS NOT NULL AND LENGTH(TRIM(precedingReference)) > 0 THEN
+				SET sapHeader.PRECENDING_REFERENCE = LEFT(TRIM(precedingReference), 20);
+			END IF;
+
+			CALL AddHeaderCustomElement(sapHeader, 'INVOICE_ID', REPLACE(TRIM(invoiceId), '-', ''));
+
+			FOR invoiceNote AS invoice.invoiceNote.Item[] DO
+				DECLARE noteCode CHARACTER CAST(invoiceNote.invoiceNoteSubjectCode AS CHARACTER);
+				DECLARE noteText CHARACTER CAST(invoiceNote.invoiceNoteText AS CHARACTER);
+				SET noteCode = UPPER(noteCode);
+
+				IF noteCode = 'INTERVENTION_ID' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_ID', noteText);
+				ELSEIF noteCode = 'INTERVENTION_CASE_NUMBER' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_CASE_NUMBER', noteText);
+				ELSEIF noteCode = 'INTERVENTION_TYPE' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_TYPE', noteText);
+				ELSEIF noteCode = 'INTERVENTION_START_TIME' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_START_TIME', noteText);
+				ELSEIF noteCode = 'INTERVENTION_END_TIME' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_END_TIME', noteText);
+				ELSEIF noteCode = 'INTERVENTION_KILOMETERS' THEN
+					IF LENGTH(TRIM(noteText)) > 0 THEN
+						DECLARE formattedKilometers CHARACTER TRIM(CAST(CAST(noteText AS DECIMAL) AS CHARACTER FORMAT '##0.00'));
+						CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_KILOMETERS', formattedKilometers);
+					END IF;
+				ELSEIF noteCode = 'INTERVENTION_SITE_NAME' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_SITE_NAME', noteText);
+				ELSEIF noteCode = 'INTERVENTION_SITE_STREET' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_SITE_STREET', noteText);
+				ELSEIF noteCode = 'INTERVENTION_SITE_STREET_NUMBER' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_SITE_STREET_NUMBER', noteText);
+				ELSEIF noteCode = 'INTERVENTION_SITE_COMPLEMENT' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_SITE_COMPLEMENT', noteText);
+				ELSEIF noteCode = 'INTERVENTION_SITE_POSTAL_CODE' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_SITE_POSTAL_CODE', noteText);
+				ELSEIF noteCode = 'INTERVENTION_SITE_CITY' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_SITE_CITY', noteText);
+				ELSEIF noteCode = 'INTERVENTION_SITE_COUNTRY_CODE' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_SITE_COUNTRY_CODE', noteText);
+				ELSEIF noteCode = 'INTERVENTION_DESTINATION_NAME' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_DESTINATION_NAME', noteText);
+				ELSEIF noteCode = 'INTERVENTION_DESTINATION_STREET' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_DESTINATION_STREET', noteText);
+				ELSEIF noteCode = 'INTERVENTION_DESTINATION_STREET_NUMBER' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_DESTINATION_STREET_NUMBER', noteText);
+				ELSEIF noteCode = 'INTERVENTION_DESTINATION_COMPLEMENT' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_DESTINATION_COMPLEMENT', noteText);
+				ELSEIF noteCode = 'INTERVENTION_DESTINATION_POSTAL_CODE' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_DESTINATION_POSTAL_CODE', noteText);
+				ELSEIF noteCode = 'INTERVENTION_DESTINATION_CITY' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_DESTINATION_CITY', noteText);
+				ELSEIF noteCode = 'INTERVENTION_DESTINATION_COUNTRY_CODE' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_DESTINATION_COUNTRY_CODE', noteText);
+				ELSEIF noteCode = 'INTERVENTION_ORGANIZATION_ID' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_ORGANIZATION_ID', noteText);
+				ELSEIF noteCode = 'INTERVENTION_ORGANIZATION_NAME' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_ORGANIZATION_NAME', noteText);
+				ELSEIF noteCode = 'INTERVENTION_BASE_ID' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_BASE_ID', noteText);
+				ELSEIF noteCode = 'INTERVENTION_BASE_NAME' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_BASE_NAME', noteText);
+				ELSEIF noteCode = 'INTERVENTION_ALARMED_BY_ID' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_ALARMED_BY_ID', noteText);
+				ELSEIF noteCode = 'INTERVENTION_ALARMED_BY_NAME' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INTERVENTION_ALARMED_BY_NAME', noteText);
+				ELSEIF noteCode = 'INVOICE_REFERENCE' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'INVOICE_REFERENCE', noteText);
+				ELSEIF noteCode = 'COMMENTS' THEN
+					CALL AddHeaderCustomElement(sapHeader, 'COMMENTS', noteText);
+				END IF;
+			END FOR;
+
+			DECLARE tradingName CHARACTER buyerTradingName;
+			DECLARE tradingNameLen INTEGER LENGTH(tradingName);
+
+			IF tradingNameLen = 0 THEN
+				SET sapPartner.LEGAL_ENTITY_NAME1 = '';
+				SET sapPartner.LEGAL_ENTITY_NAME2 = '';
+			ELSEIF tradingNameLen <= 40 THEN
+				SET sapPartner.LEGAL_ENTITY_NAME1 = tradingName;
+			ELSEIF tradingNameLen <= 80 THEN
+				SET sapPartner.LEGAL_ENTITY_NAME1 = SUBSTRING(tradingName FROM 1 FOR 40);
+				SET sapPartner.LEGAL_ENTITY_NAME2 = SUBSTRING(tradingName FROM 41 FOR 40);
+			ELSE
+				SET sapPartner.LEGAL_ENTITY_NAME1 = SUBSTRING(tradingName FROM 1 FOR 40);
+				SET sapPartner.LEGAL_ENTITY_NAME2 = SUBSTRING(tradingName FROM 41 FOR 40);
+				CALL AddPartnerCustomElement(sapPartner, 'LEGAL_ENTITY_NAME3', SUBSTRING(tradingName FROM 81 FOR 70));
+			END IF;
+
+			CALL AddPartnerCustomElement(sapPartner, 'PARTNER_TYPE_ID', GetInvoiceNoteValue(invoice.invoiceNote, 'PARTNER_TYPE_ID'));
+			CALL AddPartnerCustomElement(sapPartner, 'PARTNER_TYPE_NAME', GetInvoiceNoteValue(invoice.invoiceNote, 'PARTNER_TYPE_NAME'));
+
+			DECLARE normalizedBuyerName CHARACTER TRIM(buyerName);
+			DECLARE buyerNamePipePos INTEGER POSITION('|' IN normalizedBuyerName);
+
+			IF LENGTH(normalizedBuyerName) = 0 THEN
+				SET sapPartner.LASTNAME = '';
+				SET sapPartner.FIRSTNAME = '';
+			ELSEIF buyerNamePipePos > 0 THEN
+				SET sapPartner.LASTNAME = LEFT(TRIM(SUBSTRING(normalizedBuyerName FROM 1 FOR buyerNamePipePos - 1)), 40);
+				SET sapPartner.FIRSTNAME = LEFT(TRIM(SUBSTRING(normalizedBuyerName FROM buyerNamePipePos + 1)), 40);
+			ELSE
+				SET sapPartner.LASTNAME = LEFT(normalizedBuyerName, 40);
+				SET sapPartner.FIRSTNAME = '';
+			END IF;
+
+			SET sapPartner.LANGUE_ISO = 'FR';
+			SET sapPartner.SapAddresses.ADDRESS_TYPE = 'STD';
+
+			DECLARE addressLine CHARACTER CAST(invoice.buyer.buyerPostalAddress.addressLine1 AS CHARACTER);
+			DECLARE lastPipePos INTEGER 0;
+			DECLARE pos INTEGER 1;
+
+			SET street = TRIM(addressLine);
+			SET streetNumber = '';
+
+			WHILE pos <= LENGTH(addressLine) DO
+				IF SUBSTRING(addressLine FROM pos FOR 1) = '|' THEN
+					SET lastPipePos = pos;
+				END IF;
+				SET pos = pos + 1;
+			END WHILE;
+
+			IF lastPipePos > 0 THEN
+				SET street = TRIM(SUBSTRING(addressLine FROM 1 FOR lastPipePos - 1));
+				SET streetNumber = TRIM(SUBSTRING(addressLine FROM lastPipePos + 1));
+			END IF;
+
+			SET sapPartner.SapAddresses.STREET = LEFT(street, 60);
+			SET sapPartner.SapAddresses.STREET_NUMBER = LEFT(streetNumber, 10);
+			SET sapPartner.SapAddresses.STREET2 = LEFT(CAST(invoice.buyer.buyerPostalAddress.addressLine2 AS CHARACTER), 40);
+			SET sapPartner.SapAddresses.PO_BOX = LEFT(CAST(invoice.buyer.buyerPostalAddress.addressLine3 AS CHARACTER), 10);
+			SET sapPartner.SapAddresses.POSTCODE = LEFT(CAST(invoice.buyer.buyerPostalAddress.postCode AS CHARACTER), 10);
+			SET sapPartner.SapAddresses.CITY = LEFT(CAST(invoice.buyer.buyerPostalAddress.city AS CHARACTER), 40);
+			SET sapPartner.SapAddresses.COUNTRY = LEFT(CAST(invoice.buyer.buyerPostalAddress.countryCode AS CHARACTER), 3);
+
+			FOR buyerIdentifier AS invoice.buyer.buyerIdentifier.Item[] DO
+				IF UPPER(CAST(buyerIdentifier.schemeIdentifier AS CHARACTER)) = 'SANSYS' THEN
+					SET sapPartner.SapReferences[sapPartnerReferencesIndex].REFERENCE_TYPE = 'SANSYS';
+					SET sapPartner.SapReferences[sapPartnerReferencesIndex].REFERENCE = LEFT(CAST(buyerIdentifier.content AS CHARACTER), 60);
+					SET sapPartnerReferencesIndex = sapPartnerReferencesIndex + 1;
+				END IF;
+			END FOR;
+
+			CREATE FIELD sapDoc.SapThirdParties;
+			DECLARE sapThirdParties REFERENCE TO sapDoc.SapThirdParties;
+			DECLARE patientDetailsIndex INTEGER 1;
+
+			SET sapThirdParties.ROLE = '2';
+			SET sapThirdParties.LANGUE_ISO = 'FR';
+			SET sapThirdParties.SapThirdAddresses.ADDRESS_TYPE = 'STD';
+
+			FOR invoiceNote AS invoice.invoiceNote.Item[] DO
+				DECLARE patientNoteCode CHARACTER UPPER(CAST(invoiceNote.invoiceNoteSubjectCode AS CHARACTER));
+				DECLARE patientNoteText CHARACTER CAST(invoiceNote.invoiceNoteText AS CHARACTER);
+
+				IF patientNoteCode = 'PATIENT_LASTNAME' THEN
+					SET sapThirdParties.LASTNAME = LEFT(patientNoteText, 40);
+				ELSEIF patientNoteCode = 'PATIENT_FIRSTNAME' THEN
+					SET sapThirdParties.FIRSTNAME = LEFT(patientNoteText, 40);
+				ELSEIF patientNoteCode = 'PATIENT_STREET' THEN
+					SET sapThirdParties.SapThirdAddresses.STREET = LEFT(patientNoteText, 60);
+				ELSEIF patientNoteCode = 'PATIENT_STREET_NUMBER' THEN
+					SET sapThirdParties.SapThirdAddresses.STREET_NUMBER = LEFT(patientNoteText, 10);
+				ELSEIF patientNoteCode = 'PATIENT_COMPLEMENT' THEN
+					SET sapThirdParties.SapThirdAddresses.STREET2 = LEFT(patientNoteText, 40);
+				ELSEIF patientNoteCode = 'PATIENT_PO_BOX' THEN
+					SET sapThirdParties.SapThirdAddresses.PO_BOX = LEFT(patientNoteText, 10);
+				ELSEIF patientNoteCode = 'PATIENT_POSTAL_CODE' THEN
+					SET sapThirdParties.SapThirdAddresses.POSTCODE = LEFT(patientNoteText, 10);
+				ELSEIF patientNoteCode = 'PATIENT_CITY' THEN
+					SET sapThirdParties.SapThirdAddresses.CITY = LEFT(patientNoteText, 40);
+				ELSEIF patientNoteCode = 'PATIENT_CANTON_NAME' THEN
+					SET sapThirdParties.SapThirdAddresses.REGION = LEFT(patientNoteText, 40);
+				ELSEIF patientNoteCode = 'PATIENT_COUNTRY_CODE' THEN
+					SET sapThirdParties.SapThirdAddresses.COUNTRY = LEFT(patientNoteText, 3);
+				ELSEIF patientNoteCode = 'PATIENT_CATEGORY_ID' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_CATEGORY_ID', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_CATEGORY_NAME' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_CATEGORY_NAME', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_BIRTHDATE' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_BIRTHDATE', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_COUNTRY_NAME' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_COUNTRY_NAME', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_INSURANCE_NAME' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_INSURANCE_NAME', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_INSURANCE_POLICY_NUMBER' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_INSURANCE_POLICY_NUMBER', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_CANTON_ID' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_CANTON_ID', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_LEGAL_REPRESENTATIVE_ID' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_LEGAL_REPRESENTATIVE_ID', patientNoteText);
+				ELSEIF patientNoteCode = 'PATIENT_LEGAL_REPRESENTATIVE_NAME' THEN
+					CALL AddThirdPartyCustomElement(sapThirdParties, 'PATIENT_LEGAL_REPRESENTATIVE_NAME', patientNoteText);
+				END IF;
+			END FOR;
+
+			DECLARE documentLinesIndex INTEGER 1;
+			FOR invoiceLine AS invoice.invoiceLine.Item[] DO
+				DECLARE articleCode CHARACTER GetIdentifierValue(invoiceLine.itemInformation.itemSellersIdentifier, 'ARTICLE_CODE');
+
+				IF articleCode IS NOT NULL AND LENGTH(TRIM(articleCode)) > 0 THEN
+					SET sapDoc.SapDocumentLines[documentLinesIndex].ITEM_IDENTIFIER = LEFT(articleCode, 15);
+				END IF;
+
+				SET sapDoc.SapDocumentLines[documentLinesIndex].ITEM_UNIT_PRICE = CAST(invoiceLine.priceDetails.itemNetPrice AS DECIMAL);
+				SET sapDoc.SapDocumentLines[documentLinesIndex].NET_AMOUNT = CAST(invoiceLine.invoicedLineNetAmount AS DECIMAL);
+				SET sapDoc.SapDocumentLines[documentLinesIndex].QUANTITY = CAST(invoiceLine.invoicedQuantity AS DECIMAL);
+				SET sapDoc.SapDocumentLines[documentLinesIndex].CURRENCY = LEFT(CAST(invoice.invoiceCurrencyCode AS CHARACTER), 5);
+				SET sapDoc.SapDocumentLines[documentLinesIndex].VAT_CODE = 'E';
+				SET sapDoc.SapDocumentLines[documentLinesIndex].VAT_RATE = '0.0';
+
+				DECLARE sapDocumentLine REFERENCE TO sapDoc.SapDocumentLines[documentLinesIndex];
+				DECLARE customElementsIndex INTEGER 1;
+
+				CALL AddDocumentLineCustomElement(sapDocumentLine, 'ARTICLE_LINE', CAST(invoiceLine.itemInformation.itemName AS CHARACTER));
+				CALL AddDocumentLineCustomElement(sapDocumentLine, 'ARTICLE_LINE', CAST(invoiceLine.itemInformation.itemDescription AS CHARACTER));
+
+				SET documentLinesIndex = documentLinesIndex + 1;
+			END FOR;
+
+			SET invoiceIndex = invoiceIndex + 1;
+			MOVE invoice NEXTSIBLING;
+		END WHILE;
+
+		RETURN TRUE;
+	END;
+
+	CREATE FUNCTION GetIdentifierValue(identifierParentRef REFERENCE, schemeIdentifier CHARACTER) RETURNS CHARACTER
+	BEGIN
+		DECLARE itemRef REFERENCE TO identifierParentRef.Item[1];
+
+		WHILE LASTMOVE(itemRef) DO
+			IF UPPER(CAST(itemRef.schemeIdentifier AS CHARACTER)) = UPPER(schemeIdentifier) THEN
+				RETURN CAST(itemRef.content AS CHARACTER);
+			END IF;
+			MOVE itemRef NEXTSIBLING;
+		END WHILE;
+
+		RETURN CAST(NULL AS CHARACTER);
+	END;
+
+	CREATE FUNCTION GetInvoiceNoteValue(invoiceNoteParentRef REFERENCE, subjectCode CHARACTER) RETURNS CHARACTER
+	BEGIN
+		DECLARE itemRef REFERENCE TO invoiceNoteParentRef.Item[1];
+
+		WHILE LASTMOVE(itemRef) DO
+			IF UPPER(CAST(itemRef.invoiceNoteSubjectCode AS CHARACTER)) = UPPER(subjectCode) THEN
+				RETURN CAST(itemRef.invoiceNoteText AS CHARACTER);
+			END IF;
+			MOVE itemRef NEXTSIBLING;
+		END WHILE;
+
+		RETURN CAST(NULL AS CHARACTER);
+	END;
+
+
+	CREATE PROCEDURE AddHeaderCustomElement(INOUT sapHeader REFERENCE, IN customKey CHARACTER, IN customValue CHARACTER)
+	BEGIN
+		IF customValue IS NOT NULL AND LENGTH(TRIM(customValue)) > 0 THEN
+			DECLARE index INTEGER (CARDINALITY(sapHeader.SapHeaderCustomElements[]) + 1);
+			SET sapHeader.SapHeaderCustomElements[index].CUSTOM_KEY = customKey;
+			SET sapHeader.SapHeaderCustomElements[index].CUSTOM_VALUE = LEFT(TRIM(customValue), 70);
+		END IF;
+	END;
+
+	CREATE PROCEDURE AddPartnerCustomElement(INOUT sapPartner REFERENCE, IN customKey CHARACTER, IN customValue CHARACTER)
+	BEGIN
+		IF customValue IS NOT NULL AND LENGTH(TRIM(customValue)) > 0 THEN
+			DECLARE index INTEGER (CARDINALITY(sapPartner.SapPartnerCustomElements[]) + 1);
+			SET sapPartner.SapPartnerCustomElements[index].CUSTOM_KEY = customKey;
+			SET sapPartner.SapPartnerCustomElements[index].CUSTOM_VALUE = LEFT(TRIM(customValue), 70);
+		END IF;
+	END;
+
+	CREATE PROCEDURE AddThirdPartyCustomElement(INOUT sapThirdParties REFERENCE, IN customKey CHARACTER, IN customValue CHARACTER)
+	BEGIN
+		IF customValue IS NOT NULL AND LENGTH(TRIM(customValue)) > 0 THEN
+			DECLARE index INTEGER (CARDINALITY(sapThirdParties.SapThirdPartyCustomElements[]) + 1);
+			SET sapThirdParties.SapThirdPartyCustomElements[index].CUSTOM_KEY = customKey;
+			SET sapThirdParties.SapThirdPartyCustomElements[index].CUSTOM_VALUE = LEFT(TRIM(customValue), 70);
+		END IF;
+	END;
+
+	CREATE PROCEDURE AddDocumentLineCustomElement(INOUT sapDocumentLine REFERENCE, IN customKey CHARACTER, IN customValue CHARACTER)
+	BEGIN
+		IF customValue IS NOT NULL AND LENGTH(TRIM(customValue)) > 0 THEN
+			DECLARE index INTEGER (CARDINALITY(sapDocumentLine.SapDocCustomElements[]) + 1);
+			SET sapDocumentLine.SapDocCustomElements[index].CUSTOM_KEY = customKey;
+			SET sapDocumentLine.SapDocCustomElements[index].CUSTOM_VALUE = LEFT(TRIM(customValue), 70);
+		END IF;
+	END;
+END MODULE;

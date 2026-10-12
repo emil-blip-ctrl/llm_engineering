@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCallableFlowInput.msgnode="ComIbmCallableFlowInput.msgnode" xmlns:ComIbmCallableFlowReply.msgnode="ComIbmCallableFlowReply.msgnode" xmlns:CommonError_manageConnectionError.subflow="CommonError/manageConnectionError.subflow" xmlns:CommonError_manageOtherError.subflow="CommonError/manageOtherError.subflow" xmlns:SHLIB_TranslatorFsmBom_TranslateBomToFsmCase.subflow="SHLIB_TranslatorFsmBom/TranslateBomToFsmCase.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:flowCreateCase.subflow="flowCreateCase.subflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="createFSMAssistanceCaseCallableFlow.msgflow" nsPrefix="createFSMAssistanceCaseCallableFlow.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="createFSMAssistanceCaseCallableFlow" bundleName="createFSMAssistanceCaseCallableFlow" pluginId="servicesIntegrationAssistanceCases"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj16/createFSMAssistanceCaseCallableFlow.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj30/createFSMAssistanceCaseCallableFlow.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCallableFlowInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="21,176" callableInputEndpoint="CALLABLE_CREATE_FSM_ASSISTANCE_CASE">
+        <translation xmi:type="utility:ConstantString" string="CallableFSMCreateCaseInput"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Callable node for case creation. Used by service-integration-assistance-case-facade"/>
+        <monitorEvents eventSourceDescription="Transaction start" eventSourceName="CallableFSMCreateCaseInput.transaction.Start" eventIdentity="START Transaction Callable FSM Create Case">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START Transaction Callable FSM Create Case"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="CallableFSMCreateCaseInput.terminal.failure" eventIdentity="FAIL: Callable FSM Create Case">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Callable FSM Create Case"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="CallableFSMCreateCaseInput.terminal.out" eventIdentity="START Callable FSM Create Case">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator dataLocation="$LocalEnvironment/Variables/TCSLog/context/correlation-id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START Callable FSM Create Case"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Transaction end" eventSourceName="CallableFSMCreateCaseInput.transaction.End" eventIdentity="END Transaction CallableFSMCreateCaseInput">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="END Transaction CallableFSMCreateCaseInput"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Transaction rollback" eventSourceName="CallableFSMCreateCaseInput.transaction.Rollback" eventIdentity="FAIL Transaction CallableFSMCreateCaseInput">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator dataLocation="$LocalEnvironment/TCSLog/context/correlation-id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL Transaction CallableFSMCreateCaseInput"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Catch terminal" eventSourceName="CallableFSMCreateCaseInput.terminal.catch" eventIdentity="FAIL: Callable FSM Create Case">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator dataLocation="$LocalEnvironment/TCSLog/context/correlation-id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Callable FSM Create Case"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="791,178">
+        <translation xmi:type="utility:ConstantString" string="CallableFSMCreateCaseReply"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="CallableFSMCreateCaseReply.terminal.in" eventIdentity="BEFORE CallableFSMCreateCaseReply.InTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="BEFORE CallableFSMCreateCaseReply.InTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="CallableFSMCreateCaseReply.terminal.out" eventIdentity="AFTER: CallableFSMCreateCaseReply.OutTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="AFTER: CallableFSMCreateCaseReply.OutTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="CallableFSMCreateCaseReply.terminal.failure" eventIdentity="FAIL: CallableFSMCreateCaseReply.FailureTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: CallableFSMCreateCaseReply.FailureTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="CommonError_manageConnectionError.subflow:FCMComposite_1" xmi:id="FCMComposite_1_6" location="546,283">
+        <translation xmi:type="utility:ConstantString" string="manageConnectionError"/>
+      </nodes>
+      <nodes xmi:type="CommonError_manageOtherError.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="679,63">
+        <translation xmi:type="utility:ConstantString" string="manageOtherError"/>
+      </nodes>
+      <nodes xmi:type="flowCreateCase.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="352,179">
+        <translation xmi:type="utility:ConstantString" string="flowCreateCase"/>
+      </nodes>
+      <nodes xmi:type="SHLIB_TranslatorFsmBom_TranslateBomToFsmCase.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="548,173">
+        <translation xmi:type="utility:ConstantString" string="TranslateBomToFsmCase"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.OutputError1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_8" sourceTerminalName="Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.OutputError" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.OutputAltern" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

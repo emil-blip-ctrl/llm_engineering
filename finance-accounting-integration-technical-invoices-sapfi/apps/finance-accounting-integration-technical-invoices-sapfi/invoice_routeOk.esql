@@ -1,0 +1,12 @@
+
+
+CREATE COMPUTE MODULE invoice_routeOk
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		set OutputLocalEnvironment.Environment = UNKNOWN;
+		set Environment.Variables.Error = false;
+		RETURN TRUE;
+	END;
+END MODULE;
+	

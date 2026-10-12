@@ -1,0 +1,147 @@
+
+
+CREATE COMPUTE MODULE create_case_BOM_v1_to_v2
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		CALL BomV1ToBomV2(OutputRoot.JSON.Data);
+		RETURN TRUE;
+	END;
+
+	CREATE FUNCTION BomV1ToBomV2 (IN input REFERENCE) 
+	BEGIN
+		FOR CaseReference AS input.CaseReferenceList.Item[] DO
+		    IF EXISTS(CaseReference.Organisation.TypeOfPerson[]) THEN
+		        SET CaseReference.Organisation.TypeOfPerson = 'legalperson';
+		    END IF;
+		END FOR;
+		
+		FOR CaseClientReference AS input.CaseClient.ReferenceList.Item[] DO
+		    IF EXISTS(CaseClientReference.Organisation.TypeOfPerson[]) THEN
+		        SET CaseClientReference.Organisation.TypeOfPerson = 'legalperson';
+		    END IF;
+		END FOR;
+		
+		FOR ItemUsed AS input.ItemsUsedList.Item[] DO		
+	        IF LOWER(ItemUsed.TypeOfItem) = 'vehicle' THEN		
+	            FOR DefectedComponent AS ItemUsed.LastVehicleStatus.DefectedComponentsList.Item[] DO		
+	                IF EXISTS(DefectedComponent.Faulttype[]) THEN
+	                    SET DefectedComponent.FaultType = DefectedComponent.Faulttype;		
+	                    DELETE FIELD DefectedComponent.Faulttype;
+	                END IF;		
+	            END FOR;		
+	        END IF;		
+		END FOR;
+		
+		FOR ServiceDelivery AS input.ServiceDeliveryList.Item[] DO			
+		    IF LOWER(ServiceDelivery.TypeOfService) = 'repairmonitoringservice' THEN
+		        IF EXISTS(ServiceDelivery.diagnostic[]) THEN
+		            SET ServiceDelivery.Diagnostic = ServiceDelivery.diagnostic;
+		            DELETE FIELD ServiceDelivery.diagnostic;
+		        END IF;
+		        IF EXISTS(ServiceDelivery.repairstatus[]) THEN
+		            SET ServiceDelivery.RepairStatus = ServiceDelivery.repairstatus;
+		            DELETE FIELD ServiceDelivery.repairstatus;
+		        END IF;
+		        IF EXISTS(ServiceDelivery.estimatedcosts[]) THEN	
+		            CREATE FIELD ServiceDelivery.EstimatedCosts IDENTITY (JSON.Array)EstimatedCosts;
+		            SET ServiceDelivery.EstimatedCosts.Item[1] = ServiceDelivery.estimatedcosts;
+		            DELETE FIELD ServiceDelivery.estimatedcosts;
+		        END IF;		
+		    END IF;
+		
+		    FOR ApprovalRequest AS ServiceDelivery.ApprovalRequestList.Item[] DO	
+		        IF EXISTS(ApprovalRequest.code[]) THEN
+		            SET ApprovalRequest.Code = ApprovalRequest.code;
+		            DELETE FIELD ApprovalRequest.code;
+		        END IF;		
+		        IF EXISTS(ApprovalRequest.approved[]) THEN
+		            SET ApprovalRequest.Approved = ApprovalRequest.approved;
+		            DELETE FIELD ApprovalRequest.approved;
+		        END IF;		
+		        IF EXISTS(ApprovalRequest.channel[]) THEN
+		            SET ApprovalRequest.Channel = ApprovalRequest.channel;
+		            DELETE FIELD ApprovalRequest.channel;
+		        END IF;		
+		        IF EXISTS(ApprovalRequest.initiator[]) THEN
+		            SET ApprovalRequest.Initiator = ApprovalRequest.initiator;
+		            DELETE FIELD ApprovalRequest.initiator;
+		        END IF;		
+		    END FOR;
+		
+		    IF LOWER(ServiceDelivery.TypeOfService) = 'rsaservicedelivery' THEN
+		        IF EXISTS(ServiceDelivery.PreferredVehiclerReceiver[]) THEN
+		            SET ServiceDelivery.PreferredVehicleReceiver = ServiceDelivery.PreferredVehiclerReceiver;
+		            DELETE FIELD ServiceDelivery.PreferredVehiclerReceiver;
+		        END IF;	
+		    END IF;
+
+		    IF EXISTS(ServiceDelivery.CaseReference.Organisation.TypeOfPerson[]) THEN
+		        SET ServiceDelivery.CaseReference.Organisation.TypeOfPerson = 'legalperson';
+		    END IF;
+
+		    FOR ServiceReference AS ServiceDelivery.ServiceReferenceList.Item[] DO
+		        IF EXISTS(ServiceReference.Organisation.TypeOfPerson[]) THEN
+		            SET ServiceReference.Organisation.TypeOfPerson = 'legalperson';
+		        END IF;	
+		    END FOR;
+		
+		    FOR ExternalProductId AS ServiceDelivery.Product.ExternalProductIdList.Item[] DO	
+		        IF EXISTS(ExternalProductId.Organisation.TypeOfPerson[]) THEN
+		            SET ExternalProductId.Organisation.TypeOfPerson = 'legalperson';
+		        END IF;	
+		    END FOR;
+		
+		    IF EXISTS(ServiceDelivery.ServiceRequestor.TypeOfPerson[]) THEN
+		        SET ServiceDelivery.ServiceRequestor.TypeOfPerson = 'legalperson';
+		    END IF;
+		
+		    IF EXISTS(ServiceDelivery.ServiceRequestor.Id[]) THEN
+		        SET ServiceDelivery.ServiceRequestor.PartnerReference = ServiceDelivery.ServiceRequestor.Id;
+		        DELETE FIELD ServiceDelivery.ServiceRequestor.Id;
+		    END IF;
+		
+		    IF EXISTS(ServiceDelivery.ServiceProvider.TypeOfPerson[]) THEN
+		        SET ServiceDelivery.ServiceProvider.TypeOfPerson = 'legalperson';
+		    END IF;
+		
+		    IF EXISTS(ServiceDelivery.ServiceProvider.Id[]) THEN
+		        SET ServiceDelivery.ServiceProvider.PartnerReference = ServiceDelivery.ServiceProvider.Id;
+		        DELETE FIELD ServiceDelivery.ServiceProvider.Id;
+		    END IF;
+		    
+		    IF EXISTS(ServiceDelivery.ServiceExecutor.TypeOfPerson[]) THEN
+		        SET ServiceDelivery.ServiceExecutor.TypeOfPerson = 'legalperson';
+		    END IF;
+		
+		    IF EXISTS(ServiceDelivery.ServiceExecutor.Id[]) THEN
+		        SET ServiceDelivery.ServiceExecutor.PartnerReference = ServiceDelivery.ServiceExecutor.Id;	
+		        DELETE FIELD ServiceDelivery.ServiceExecutor.Id;
+		    END IF;
+		
+		    IF EXISTS(ServiceDelivery.Product.Name[]) AND (
+		           NOT EXISTS(ServiceDelivery.Coverage.ServiceContract.Id[])
+		           OR ServiceDelivery.Coverage.ServiceContract.Id = ''
+		           OR ServiceDelivery.Coverage.ServiceContract.Id IS NULL
+		       ) THEN	
+		    	SET ServiceDelivery.Coverage.ServiceContract.Id = ServiceDelivery.Product.Name;		
+		    END IF;
+		
+		    IF EXISTS(ServiceDelivery.Product.ExternalProductIdList.Item[]) AND
+		    NOT EXISTS(ServiceDelivery.Coverage.ServiceContract.ExternalContractReferenceList.Item[]) THEN
+		        IF NOT EXISTS(ServiceDelivery.Coverage.ServiceContract.ExternalContractReferenceList[]) THEN
+		            CREATE FIELD ServiceDelivery.Coverage.ServiceContract.ExternalContractReferenceList IDENTITY (JSON.Array)ExternalContractReferenceList;
+		        END IF;		
+		        SET ServiceDelivery.Coverage.ServiceContract.ExternalContractReferenceList = ServiceDelivery.Product.ExternalProductIdList;	
+		    END IF;
+		    
+		    FOR FieldAgent AS ServiceDelivery.ServiceExecutor.FieldAgentList.Item[] DO
+		        IF EXISTS(FieldAgent.ServiceExecutor.TypeOfPerson[]) THEN
+		            SET FieldAgent.ServiceExecutor.TypeOfPerson = 'legalperson';
+		        END IF;	
+		    END FOR;
+				
+		END FOR;
+	END;
+		
+END MODULE;

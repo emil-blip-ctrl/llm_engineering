@@ -1,0 +1,3413 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Spring REST Documentation and Testing with Swagger",
+        "version": "1.0",
+        "title": "Translator Assys/CDM services - REST API",
+        "contact": {
+            "name": "IT TCS - Data & Solutions"
+        },
+        "license": {
+            "name": "TCS"
+        }
+    },
+    "host": "localhost:8082",
+    "basePath": "/translator-cdm-assys/v1",
+    "tags": [{
+            "name": "ping-controller",
+            "description": "Ping Controller"
+        }
+    ],
+    "paths": {
+        "/ping": {
+            "get": {
+                "tags": ["ping-controller"],
+                "summary": "Check if the web application is UP - HTTP 200 = success",
+                "operationId": "infoCaseUsingGET",
+                "produces": ["*/*"],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/BridgeCaseData"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "deprecated": false
+            }
+        }
+    },
+    "definitions": {
+        "AbroadRoadsideAssistanceService": {
+            "title": "AbroadRoadsideAssistanceService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "AbroadRoadsideAssistanceService"
+                }
+            ]
+        },
+        "AbroadTransportService": {
+            "title": "AbroadTransportService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "clubReferenceNb": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "dailyCareTakingTariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "deliveryComments": {
+                            "type": "string"
+                        },
+                        "deliveryDate": {
+                            "type": "string"
+                        },
+                        "distance": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "estimatedDeliveryDate": {
+                            "type": "string"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "repairTariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "sendDate": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "towageTariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "AbroadTransportService"
+                }
+            ]
+        },
+        "AbstractService": {
+            "type": "object",
+            "discriminator": "requestedType",
+            "properties": {
+                "assistedContact": {
+                    "$ref": "#/definitions/ContactAddress"
+                },
+                "assistedVehicle": {
+                    "$ref": "#/definitions/Vehicle"
+                },
+                "bridgeMessageAttributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "bridgeSendingEnabled": {
+                    "type": "boolean"
+                },
+                "caseReferenceNb": {
+                    "type": "string"
+                },
+                "contactAddresses": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/ContactAddress"
+                    }
+                },
+                "covered": {
+                    "type": "boolean"
+                },
+                "creationDate": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "fsmSendingEnabled": {
+                    "type": "boolean"
+                },
+                "guarantee": {
+                    "$ref": "#/definitions/Guarantee"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "isRedispatched": {
+                    "type": "boolean"
+                },
+                "prodId": {
+                    "type": "string"
+                },
+                "redispatched": {
+                    "type": "boolean"
+                },
+                "requestedType": {
+                    "type": "string"
+                },
+                "serviceRoles": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "serviceStatus": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "serviceStatusReason": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "supplier": {
+                    "$ref": "#/definitions/Supplier"
+                },
+                "tariff": {
+                    "$ref": "#/definitions/Amount"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "AbstractService"
+        },
+        "AccountDetail": {
+            "type": "object",
+            "properties": {
+                "CRMreference": {
+                    "type": "string"
+                },
+                "clientReference": {
+                    "type": "string"
+                },
+                "crmreference": {
+                    "type": "string"
+                }
+            },
+            "title": "AccountDetail"
+        },
+        "Address": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "$ref": "#/definitions/City"
+                },
+                "complement": {
+                    "$ref": "#/definitions/Complement"
+                },
+                "country": {
+                    "$ref": "#/definitions/Country"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "geoPosition": {
+                    "$ref": "#/definitions/GeoPosition"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "id_edid": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "id_egid": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "official": {
+                    "type": "boolean"
+                },
+                "poBox": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/State"
+                },
+                "street": {
+                    "$ref": "#/definitions/Street"
+                },
+                "streetNb": {
+                    "$ref": "#/definitions/StreetNb"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "zipCode": {
+                    "$ref": "#/definitions/ZipCode"
+                }
+            },
+            "title": "Address"
+        },
+        "AddressAlias": {
+            "type": "object",
+            "properties": {
+                "addressId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "comments": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "AddressAlias"
+        },
+        "Amount": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "currency": {
+                    "type": "string"
+                }
+            },
+            "title": "Amount"
+        },
+        "BridgeCaseData": {
+            "type": "object",
+            "properties": {
+                "documents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Document"
+                    }
+                },
+                "fullCase": {
+                    "$ref": "#/definitions/Case"
+                },
+                "incidentReport": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CaseIncident"
+                    }
+                },
+                "incidentReportComplement": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RoadsideAssistanceIncidentComplementForARC"
+                    }
+                },
+                "onBoardDiagnostics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OnBoardDiagnostic"
+                    }
+                },
+                "performanceIndicators": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/IndicatorValue"
+                    }
+                }
+            },
+            "title": "BridgeCaseData"
+        },
+        "BridgeServicePatrolData": {
+            "type": "object",
+            "properties": {
+                "dispatchedService": {
+                    "$ref": "#/definitions/AbstractService"
+                },
+                "garage": {
+                    "$ref": "#/definitions/Poi"
+                },
+                "geoPosition": {
+                    "$ref": "#/definitions/GeoPosition"
+                },
+                "patrolcraft": {
+                    "$ref": "#/definitions/PatrolCraft"
+                }
+            },
+            "title": "BridgeServicePatrolData"
+        },
+        "Caller": {
+            "type": "object",
+            "properties": {
+                "callerPartner": {
+                    "type": "string"
+                },
+                "callerSource": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phoneNumberList": {
+                    "$ref": "#/definitions/PhoneNumberList"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "Caller"
+        },
+        "CarManufacturer": {
+            "type": "object",
+            "properties": {
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "vehicleCategory": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "CarManufacturer"
+        },
+        "CarModel": {
+            "type": "object",
+            "properties": {
+                "arcCode": {
+                    "type": "string"
+                },
+                "carManufacturerId": {
+                    "type": "object"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "height": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "length": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "name": {
+                    "type": "object"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "width": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            },
+            "title": "CarModel"
+        },
+        "Case": {
+            "type": "object",
+            "properties": {
+                "callCenterId": {
+                    "type": "string"
+                },
+                "caseStatusCode": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "client": {
+                    "$ref": "#/definitions/Client"
+                },
+                "contactAddresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ContactAddress"
+                    }
+                },
+                "coverageList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CaseCoverage"
+                    }
+                },
+                "createDate": {
+                    "type": "string"
+                },
+                "createUserInitial": {
+                    "type": "string"
+                },
+                "defaultServiceRoles": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "estimatedWaitingTime": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "incident": {
+                    "$ref": "#/definitions/Incident"
+                },
+                "initialCall": {
+                    "$ref": "#/definitions/InitialCall"
+                },
+                "layerId": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "notesList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CaseNote"
+                    }
+                },
+                "partnerReferencesList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CasePartnerReference"
+                    }
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "referenceNb": {
+                    "type": "string"
+                },
+                "requestorCountry": {
+                    "type": "string"
+                },
+                "serviceList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AbstractService"
+                    }
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "vehicleList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Vehicle"
+                    }
+                },
+                "version": {
+                    "type": "string"
+                },
+                "waitingTimeExtension": {
+                    "type": "string"
+                }
+            },
+            "title": "Case"
+        },
+        "CaseCoverage": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "clientNumber": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "fddsNumber": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "originCountry": {
+                    "type": "string"
+                },
+                "policyNumber": {
+                    "type": "string"
+                },
+                "product": {
+                    "type": "string"
+                },
+                "productCategory": {
+                    "type": "string"
+                },
+                "productCode": {
+                    "type": "string"
+                },
+                "productCompanyReference": {
+                    "type": "string"
+                },
+                "refBeneficiary": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "CaseCoverage"
+        },
+        "CaseIncident": {
+            "type": "object",
+            "properties": {
+                "arcBreakdownCategoryId": {
+                    "type": "string"
+                },
+                "arcBreakdownCauseId": {
+                    "type": "string"
+                },
+                "arcBreakdownComponentId": {
+                    "type": "string"
+                },
+                "arcOutcomeId": {
+                    "type": "string"
+                },
+                "arcSubmitStatus": {
+                    "type": "string"
+                },
+                "assistanceAmount": {
+                    "type": "string"
+                },
+                "carAssysManufacturer": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "carAssysModel": {
+                    "$ref": "#/definitions/CarModel"
+                },
+                "carModel": {
+                    "$ref": "#/definitions/CarModel"
+                },
+                "caseIncidentNb": {
+                    "type": "string"
+                },
+                "caseRefNb": {
+                    "type": "string"
+                },
+                "causeEReport": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "chassisNb": {
+                    "type": "string"
+                },
+                "circulationStartDate": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "garageComments": {
+                    "type": "string"
+                },
+                "garageInvoiceDate": {
+                    "type": "string"
+                },
+                "garageInvoiceNb": {
+                    "type": "string"
+                },
+                "garageZone": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "interventionReason": {
+                    "type": "string"
+                },
+                "kilometers": {
+                    "type": "string"
+                },
+                "paymentMean": {
+                    "type": "string"
+                },
+                "plateNb": {
+                    "type": "string"
+                },
+                "reportComment": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "status": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "workBeginTime": {
+                    "type": "string"
+                },
+                "workEndTime": {
+                    "type": "string"
+                }
+            },
+            "title": "CaseIncident"
+        },
+        "CaseNote": {
+            "type": "object",
+            "properties": {
+                "caseReferenceNb": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "createdRole": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "createdUser": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "externalReference": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "noteType": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "originDate": {
+                    "type": "string"
+                },
+                "originOperator": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "CaseNote"
+        },
+        "CasePartnerReference": {
+            "type": "object",
+            "properties": {
+                "caseReferenceNb": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "partner": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "partnerReference": {
+                    "type": "string"
+                },
+                "partnerRole": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "CasePartnerReference"
+        },
+        "City": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "City"
+        },
+        "Client": {
+            "type": "object",
+            "properties": {
+                "contactAddress": {
+                    "$ref": "#/definitions/ContactAddress"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "employee": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "partnerCaseNumber": {
+                    "type": "string"
+                },
+                "personalReference": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "Client"
+        },
+        "Color": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "Color"
+        },
+        "Complement": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "Complement"
+        },
+        "ContactAddress": {
+            "type": "object",
+            "properties": {
+                "accountDetail": {
+                    "$ref": "#/definitions/AccountDetail"
+                },
+                "address": {
+                    "$ref": "#/definitions/Address"
+                },
+                "alias": {
+                    "$ref": "#/definitions/AddressAlias"
+                },
+                "birthDate": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "highwayNode": {
+                    "$ref": "#/definitions/HighwayNode"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "locationType": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "phoneNumberList": {
+                    "$ref": "#/definitions/PhoneNumberList"
+                },
+                "poi": {
+                    "$ref": "#/definitions/Poi"
+                },
+                "regionId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "sectorsData": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SectorData"
+                    }
+                },
+                "title": {
+                    "$ref": "#/definitions/MultiValueItem"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "ContactAddress"
+        },
+        "Country": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "Country"
+        },
+        "DayOpeningHours": {
+            "type": "object",
+            "properties": {
+                "amFrom": {
+                    "type": "string"
+                },
+                "amTo": {
+                    "type": "string"
+                },
+                "dayOfWeek": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "pmFrom": {
+                    "type": "string"
+                },
+                "pmTo": {
+                    "type": "string"
+                }
+            },
+            "title": "DayOpeningHours"
+        },
+        "Document": {
+            "type": "object",
+            "properties": {
+                "actionId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "documentType": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "serviceId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "Document"
+        },
+        "DocumentPlace": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "object"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "DocumentPlace"
+        },
+        "Garage": {
+            "title": "Garage",
+            "allOf": [{
+                    "$ref": "#/definitions/Poi"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "accidentTariff": {
+                            "$ref": "#/definitions/GarageTariff"
+                        },
+                        "address": {
+                            "$ref": "#/definitions/Address"
+                        },
+                        "alphaExtensions": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/PoiAlphaExtension"
+                            }
+                        },
+                        "assistanceTariff": {
+                            "$ref": "#/definitions/GarageTariff"
+                        },
+                        "carManufacturers": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/GarageBrand"
+                            }
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "complement": {
+                            "type": "string"
+                        },
+                        "contact": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "dispatchSector": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "email": {
+                            "type": "string"
+                        },
+                        "emailForAccountingAspect": {
+                            "type": "string"
+                        },
+                        "firstname": {
+                            "type": "string"
+                        },
+                        "garageTariffZoneList": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/GarageTariffZone"
+                            }
+                        },
+                        "homepage": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "intExtensions": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/PoiIntExtension"
+                            }
+                        },
+                        "language": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "onCallPhone": {
+                            "type": "string"
+                        },
+                        "onCallPhonePrivate": {
+                            "type": "boolean"
+                        },
+                        "phoneNumbers": {
+                            "$ref": "#/definitions/PhoneNumberList"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "serviceDetails": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "skills": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            }
+                        },
+                        "tcsReferenceNumber": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "useDRApp": {
+                            "type": "boolean"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        },
+                        "weekOpeningHours": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DayOpeningHours"
+                            }
+                        }
+                    },
+                    "title": "Garage"
+                }
+            ]
+        },
+        "GeoPosition": {
+            "type": "object",
+            "properties": {
+                "swissLatitude": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "swissLongitude": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "wgsLatitude": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "wgsLongitude": {
+                    "type": "number",
+                    "format": "double"
+                }
+            },
+            "title": "GeoPosition"
+        },
+        "Guarantee": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "$ref": "#/definitions/Amount"
+                },
+                "convertedAmount": {
+                    "$ref": "#/definitions/Amount"
+                },
+                "received": {
+                    "type": "boolean"
+                }
+            },
+            "title": "Guarantee"
+        },
+        "HighwayNode": {
+            "type": "object",
+            "properties": {
+                "deleted": {
+                    "type": "boolean"
+                },
+                "directionId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "distance": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "geoPosition": {
+                    "$ref": "#/definitions/GeoPosition"
+                },
+                "highwayId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "segmentId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "type": {
+                    "$ref": "#/definitions/MultiValueItem"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "HighwayNode"
+        },
+        "HotelService": {
+            "title": "HotelService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "endDate": {
+                            "type": "string"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "nbNights": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "nbRooms": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "nbTotalPeople": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "startDate": {
+                            "type": "string"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "HotelService"
+                }
+            ]
+        },
+        "Incident": {
+            "type": "object",
+            "properties": {
+                "adultsNb": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "alternateDate": {
+                    "type": "string"
+                },
+                "childrenNb": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "creditCardId": {
+                    "type": "object"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "location": {
+                    "$ref": "#/definitions/ContactAddress"
+                },
+                "onAppointment": {
+                    "type": "boolean"
+                },
+                "primaryCause": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "Incident"
+        },
+        "IndicatorValue": {
+            "type": "object",
+            "properties": {
+                "caseReference": {
+                    "type": "string"
+                },
+                "indicatorType": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "indicatorValue": {
+                    "type": "string"
+                },
+                "performanceLabel": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "updatedDate": {
+                    "type": "string"
+                },
+                "updatedUserInitials": {
+                    "type": "string"
+                }
+            },
+            "title": "IndicatorValue"
+        },
+        "InitialCall": {
+            "type": "object",
+            "properties": {
+                "callDate": {
+                    "type": "string"
+                },
+                "caller": {
+                    "$ref": "#/definitions/Caller"
+                },
+                "cause": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "InitialCall"
+        },
+        "KeyPlace": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "object"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "KeyPlace"
+        },
+        "LicensePlate": {
+            "type": "object",
+            "properties": {
+                "countryCode": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "LicensePlate"
+        },
+        "LicensePlatePlace": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "object"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "LicensePlatePlace"
+        },
+        "MultiValueItem": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "MultiValueItem"
+        },
+        "OnBoardDiagnostic": {
+            "type": "object",
+            "properties": {
+                "carManufacturerName": {
+                    "type": "string"
+                },
+                "carModelName": {
+                    "type": "string"
+                },
+                "caseIncidentId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "component": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "diagnosticIncrement": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "errorCode": {
+                    "type": "string"
+                },
+                "errorDescription": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "system": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "OnBoardDiagnostic"
+        },
+        "PatrolCraft": {
+            "type": "object",
+            "properties": {
+                "currentPosition": {
+                    "$ref": "#/definitions/GeoPosition"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "phoneMobile": {
+                    "type": "string"
+                },
+                "tcsReferenceNb": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "PatrolCraft"
+        },
+        "PhoneNumberList": {
+            "type": "object",
+            "properties": {
+                "fax1": {
+                    "type": "string"
+                },
+                "fax2": {
+                    "type": "string"
+                },
+                "mobilePhone1": {
+                    "type": "string"
+                },
+                "mobilePhone2": {
+                    "type": "string"
+                },
+                "phone1": {
+                    "type": "string"
+                },
+                "phone2": {
+                    "type": "string"
+                },
+                "phone3": {
+                    "type": "string"
+                }
+            },
+            "title": "PhoneNumberList"
+        },
+        "Poi": {
+            "type": "object",
+            "discriminator": "requestedType",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/Address"
+                },
+                "alphaExtensions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PoiAlphaExtension"
+                    }
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "emailForAccountingAspect": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "homepage": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "intExtensions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PoiIntExtension"
+                    }
+                },
+                "language": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phoneNumbers": {
+                    "$ref": "#/definitions/PhoneNumberList"
+                },
+                "requestedType": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "weekOpeningHours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DayOpeningHours"
+                    }
+                }
+            },
+            "title": "Poi"
+        },
+        "PoiAlphaExtension": {
+            "type": "object",
+            "properties": {
+                "typeId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "title": "PoiAlphaExtension"
+        },
+        "PoiIntExtension": {
+            "type": "object",
+            "properties": {
+                "typeId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "value": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            },
+            "title": "PoiIntExtension"
+        },
+        "RailPlaneService": {
+            "title": "RailPlaneService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "RailPlaneService"
+                }
+            ]
+        },
+        "RailService": {
+            "title": "RailService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "nbAdult": {
+                            "type": "string"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "startDateTime": {
+                            "type": "string"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "RailService"
+                }
+            ]
+        },
+        "RentalCarService": {
+            "title": "RentalCarService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "category": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "maxNbDays": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "pickupDate": {
+                            "type": "string"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "returnDate": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "vehiculeUsageDurationNbDays": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "RentalCarService"
+                }
+            ]
+        },
+        "RoadsideAssistanceIncidentComplementForARC": {
+            "type": "object",
+            "properties": {
+                "caseIncidentId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "dealerCodeRepair": {
+                    "type": "string"
+                },
+                "dealerNameRepair": {
+                    "type": "string"
+                },
+                "dealerOpen": {
+                    "type": "boolean"
+                },
+                "dealerOriginatedCall": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "engineCapacity": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "engineType": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "homeDealer": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "isDealerOpen": {
+                    "type": "boolean"
+                },
+                "isHomeDealer": {
+                    "type": "boolean"
+                },
+                "isSingleSourceCompletion": {
+                    "type": "boolean"
+                },
+                "isTowingRequested": {
+                    "type": "boolean"
+                },
+                "obdInformation": {
+                    "type": "string"
+                },
+                "replacementVehicleDays": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "replacementVehicleMakeModel": {
+                    "$ref": "#/definitions/CarModel"
+                },
+                "singleSourceCompletion": {
+                    "type": "boolean"
+                },
+                "timeOfArrivalAtDealer": {
+                    "type": "string"
+                },
+                "towingDistance": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "towingRequested": {
+                    "type": "boolean"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "RoadsideAssistanceIncidentComplementForARC"
+        },
+        "RoadsideAssistanceService": {
+            "title": "RoadsideAssistanceService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "causeEreport": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "courseType": {
+                            "type": "string"
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "dispatchValidDate": {
+                            "type": "string"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "fsmTariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "fsmZone": {
+                            "type": "string"
+                        },
+                        "garageTariffType": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "onSiteDate": {
+                            "type": "string"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "resolvedDate": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "tariffType": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "RoadsideAssistanceService"
+                }
+            ]
+        },
+        "SectorData": {
+            "type": "object",
+            "properties": {
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "sectorId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "subSectorId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "SectorData"
+        },
+        "StandardService": {
+            "title": "StandardService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "incidentDescription": {
+                            "type": "string"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "technicalDetails": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "StandardService"
+                }
+            ]
+        },
+        "State": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "State"
+        },
+        "Street": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "Street"
+        },
+        "StreetNb": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "StreetNb"
+        },
+        "Supplier": {
+            "type": "object",
+            "properties": {
+                "contactAddress": {
+                    "$ref": "#/definitions/ContactAddress"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "patrolCraft": {
+                    "$ref": "#/definitions/PatrolCraft"
+                },
+                "poi": {
+                    "$ref": "#/definitions/Poi"
+                },
+                "supplierStatus": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "type": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "Supplier"
+        },
+        "TaxiService": {
+            "title": "TaxiService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "distance": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "numberOfPeople": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "price": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "TaxiService"
+                }
+            ]
+        },
+        "TransportService": {
+            "title": "TransportService",
+            "allOf": [{
+                    "$ref": "#/definitions/AbstractService"
+                }, {
+                    "type": "object",
+                    "properties": {
+                        "assistedContact": {
+                            "$ref": "#/definitions/ContactAddress"
+                        },
+                        "assistedVehicle": {
+                            "$ref": "#/definitions/Vehicle"
+                        },
+                        "availabilityDate": {
+                            "type": "string"
+                        },
+                        "bridgeMessageAttributes": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "bridgeSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "carKeyPlace": {
+                            "type": "string"
+                        },
+                        "carKeyPlaceWhenComplete": {
+                            "type": "string"
+                        },
+                        "caseReferenceNb": {
+                            "type": "string"
+                        },
+                        "clubReferenceNb": {
+                            "type": "string"
+                        },
+                        "comment": {
+                            "type": "string"
+                        },
+                        "contactAddresses": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/ContactAddress"
+                            }
+                        },
+                        "covered": {
+                            "type": "boolean"
+                        },
+                        "coveredDistance": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "creationDate": {
+                            "type": "string"
+                        },
+                        "deleted": {
+                            "type": "boolean"
+                        },
+                        "deliveryDate": {
+                            "type": "string"
+                        },
+                        "deliveryDeadline": {
+                            "type": "string"
+                        },
+                        "estimatedDeliveryDate": {
+                            "type": "string"
+                        },
+                        "estimatedDistance": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "fsmSendingEnabled": {
+                            "type": "boolean"
+                        },
+                        "guarantee": {
+                            "$ref": "#/definitions/Guarantee"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "isRedispatched": {
+                            "type": "boolean"
+                        },
+                        "otherComments": {
+                            "type": "string"
+                        },
+                        "pickupDeadline": {
+                            "type": "string"
+                        },
+                        "pickupReadyDate": {
+                            "type": "string"
+                        },
+                        "prodId": {
+                            "type": "string"
+                        },
+                        "providedTariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "redispatched": {
+                            "type": "boolean"
+                        },
+                        "requestedType": {
+                            "type": "string"
+                        },
+                        "sendDate": {
+                            "type": "string"
+                        },
+                        "serviceRoles": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "serviceStatus": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "serviceStatusReason": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "supplier": {
+                            "$ref": "#/definitions/Supplier"
+                        },
+                        "tariff": {
+                            "$ref": "#/definitions/Amount"
+                        },
+                        "tariffType": {
+                            "type": "string"
+                        },
+                        "tariffZone": {
+                            "type": "string"
+                        },
+                        "towTruck": {
+                            "type": "boolean"
+                        },
+                        "transportReason": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "urgentTransport": {
+                            "type": "boolean"
+                        },
+                        "userInitials": {
+                            "type": "string"
+                        },
+                        "version": {
+                            "type": "string"
+                        }
+                    },
+                    "title": "TransportService"
+                }
+            ]
+        },
+        "Vehicle": {
+            "type": "object",
+            "properties": {
+                "breakdownType": {
+                    "$ref": "#/definitions/MultiValueItem"
+                },
+                "carManufacturer": {
+                    "$ref": "#/definitions/CarManufacturer"
+                },
+                "carModel": {
+                    "$ref": "#/definitions/CarModel"
+                },
+                "color": {
+                    "$ref": "#/definitions/Color"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "coverageStartDate": {
+                    "type": "string"
+                },
+                "cycleRack": {
+                    "type": "boolean"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "documentPlace": {
+                    "$ref": "#/definitions/DocumentPlace"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "endKilometer": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "engineCode": {
+                    "type": "string"
+                },
+                "expertiseDate": {
+                    "type": "string"
+                },
+                "fuelLevel": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "gearType": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "height": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "insurance": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "insurer": {
+                    "$ref": "#/definitions/ContactAddress"
+                },
+                "keyPlace": {
+                    "$ref": "#/definitions/KeyPlace"
+                },
+                "length": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "licensePlate": {
+                    "$ref": "#/definitions/LicensePlate"
+                },
+                "licensePlatePlace": {
+                    "$ref": "#/definitions/LicensePlatePlace"
+                },
+                "lowered": {
+                    "type": "boolean"
+                },
+                "notMovable": {
+                    "type": "boolean"
+                },
+                "notStartable": {
+                    "type": "boolean"
+                },
+                "odometer": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "osmNb": {
+                    "type": "string"
+                },
+                "registrationDate": {
+                    "type": "string"
+                },
+                "rented": {
+                    "type": "boolean"
+                },
+                "roofRack": {
+                    "type": "boolean"
+                },
+                "steeringDamaged": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "userInitials": {
+                    "type": "string"
+                },
+                "vehicleTypeCode": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "vin": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "width": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            },
+            "title": "Vehicle"
+        },
+        "ZipCode": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "additional": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "parentCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "ZipCode"
+        },
+        "HighwayPoi": {
+            "type": "object",
+            "properties": {
+                "poiId": {
+                    "type": "string"
+                },
+                "poiName": {
+                    "type": "string"
+                },
+                "poiType": {
+                    "type": "string"
+                },
+                "addressType": {
+                    "type": "string"
+                },
+                "addressCountry": {
+                    "type": "string"
+                },
+                "addressHighwayName": {
+                    "type": "string"
+                },
+                "addressHighwayDirection": {
+                    "type": "string"
+                },
+                "addressHighwaySegment": {
+                    "type": "string"
+                },
+                "addressHighwayDescription": {
+                    "type": "string"
+                },
+                "addressHighwayMileage": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "addressHighwayCoordinates": {
+                    "$ref": "#/definitions/GeoPosition"
+                },
+                "deleted": {
+                    "type": "boolean"
+                }
+            },
+            "title": "HighwayPoi"
+        },
+        "AddressAliasPoi": {
+            "type": "object",
+            "properties": {
+                "poiId": {
+                    "type": "string"
+                },
+                "poiName": {
+                    "type": "string"
+                },
+                "poiType": {
+                    "type": "string"
+                },
+                "poiComment": {
+                    "type": "string"
+                },
+                "addressId": {
+                    "type": "string"
+                },
+                "addressType": {
+                    "type": "string"
+                },
+                "addressEgid": {
+                    "type": "string"
+                },
+                "addressEdid": {
+                    "type": "string"
+                },
+                "addressCountry": {
+                    "type": "string"
+                },
+                "addressNpa": {
+                    "type": "string"
+                },
+                "addressLocality": {
+                    "type": "string"
+                },
+                "addressState": {
+                    "type": "string"
+                },
+                "addressHouseDescription": {
+                    "type": "string"
+                },
+                "addressPoBox": {
+                    "type": "string"
+                },
+                "addressStreet": {
+                    "type": "string"
+                },
+                "addressStreetNumber": {
+                    "type": "string"
+                },
+                "addressCoordinates": {
+                    "$ref": "#/definitions/GeoPosition"
+                },
+                "deleted": {
+                    "type": "boolean"
+                }
+            },
+            "title": "AddressAliasPoi"
+        },
+        "GarageTariff": {
+            "type": "object",
+            "properties": {
+                "zoneTariff": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ZoneTariff"
+                    }
+                }
+            },
+            "title": "GarageTariff"
+        },
+        "ZoneTariff": {
+            "type": "object",
+            "properties": {
+                "zone": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "tariffType": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "normalTariff": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "emptyTariff": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "highwayTariff": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "highwayEmptyTariff": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "serviceMobilTariff": {
+                    "type": "number",
+                    "format": "double"
+                }
+            },
+            "title": "ZoneTariff"
+        },
+        "GarageBrand": {
+            "type": "object",
+            "properties": {
+                "manufacturerId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "servicerCode": {
+                    "type": "string"
+                },
+                "carManufacturerName": {
+                    "type": "string"
+                }
+            },
+            "title": "GarageBrand"
+        },
+        "GarageTariffZone": {
+            "type": "object",
+            "properties": {
+                "garageId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "tariffType": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "tariffSubType": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "zone": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "tariff": {
+                    "$ref": "#/definitions/Amount"
+                }
+            },
+            "title": "GarageTariffZone"
+        }
+    }
+}

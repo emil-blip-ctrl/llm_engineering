@@ -1,0 +1,17 @@
+
+
+CREATE COMPUTE MODULE financeAccountingIntegrationInvoicesSapfi_setBusinessIdentifiers
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		set OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputLocalEnvironment."business-identifiers" = UNKNOWN;
+		SET OutputLocalEnvironment."business-identifiers".INVOICE_NUMBER = InputRoot.JSON.Data.Item."invoice-number".Item.content; 
+		SET OutputLocalEnvironment."business-identifiers".PRECEDING_INVOICE_REFERENCE = InputRoot.JSON.Data.Item."preceding-invoice-reference".Item."preceding-invoice-reference".content;
+		SET OutputLocalEnvironment."business-identifiers".PROCESS_CONTROL = InputRoot.JSON.Data.Item."process-control"."specification-identifier".Item.content;
+		
+		SET OutputRoot = InputRoot;
+		-- CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+END MODULE;

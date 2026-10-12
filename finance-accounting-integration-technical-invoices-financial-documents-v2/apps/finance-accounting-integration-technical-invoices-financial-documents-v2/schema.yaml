@@ -1,0 +1,108 @@
+openapi: 3.0.3
+info:
+   title: finance-accounting-integration-technical-invoices-financial-documents-v2
+   version: 1.0.0
+servers:
+-  url: /finance-accounting/v2/financial-documents
+paths:
+   /health:
+      get:
+         tags:
+         - System
+         operationId: health
+         summary: Check service health status
+         responses:
+            '200':
+               description: Successful
+               content:
+                  application/json:
+                     example: {}
+            '400':
+               description: Bad Request
+            '401':
+               description: Unauthorized
+            '403':
+               description: Forbidden
+            '404':
+               description: Not Found
+            '429':
+               description: Too Many Requests
+            '500':
+               description: Internal Server Error
+            '501':
+               description: Not Implemented
+            '502':
+               description: Bad Gateway
+            '503':
+               description: Service Unavailable
+   /receivable-documents:
+      post:
+         requestBody:
+            required: true
+            content:
+               application/json:
+                  example: {}
+         responses:
+            '201':
+               description: Created
+            '202':
+               description: Accepted
+            '400':
+               description: Bad Request
+            '401':
+               description: Unauthorized
+            '403':
+               description: Forbidden
+            '404':
+               description: Not Found
+            '422':
+               description: Unprocessable Entity
+            '429':
+               description: Too Many Requests
+            '500':
+               description: Internal Server Error
+            '501':
+               description: Not Implemented
+            '502':
+               description: Bad Gateway
+            '503':
+               description: Service Unavailable
+            default:
+               description: Unexpected Error
+   /payable-documents:
+      post:
+         description: Submit a financial document representing a payable transaction.
+         tags:
+         - Payables
+         requestBody:
+            required: true
+            content:
+               application/json:
+                  example: {}
+         responses:
+            '201':
+               description: Created
+            '202':
+               description: Accepted
+            '400':
+               description: Bad Request
+            '401':
+               description: Unauthorized
+            '403':
+               description: Forbidden
+            '404':
+               description: Not Found
+            '422':
+               description: Unprocessable Entity
+            '429':
+               description: Too Many Requests
+            '500':
+               description: Internal Server Error
+            '501':
+               description: Not Implemented
+            '502':
+               description: Bad Gateway
+            '503':
+               description: Service Unavailable
+            default:
+               description: Unexpected Error

@@ -1,0 +1,10 @@
+BROKER SCHEMA common
+
+CREATE FUNCTION checkIdReferenceCaseFormat(IN idReference CHARACTER) RETURNS BOOLEAN
+BEGIN
+	IF COALESCE(idReference, '') <> '' AND LENGTH(idReference) = 9 AND CAST(idReference AS INT DEFAULT NULL) IS NOT NULL
+	THEN
+		RETURN TRUE;
+	END IF;
+	RETURN FALSE;
+END;

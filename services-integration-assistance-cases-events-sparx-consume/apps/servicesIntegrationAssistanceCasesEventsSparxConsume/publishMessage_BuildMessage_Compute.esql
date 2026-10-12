@@ -1,0 +1,37 @@
+
+CREATE COMPUTE MODULE publishMessage_BuildMessage_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE errorDescription CHARACTER;
+		SET OutputRoot.Properties = InputRoot.Properties;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		SET errorDescription = 'Message: ' || InputRoot.JSON.Data.httpMessage || '-' || 'Details: ' || InputRoot.JSON.Data.moreInformation;
+
+		CREATE FIELD OutputRoot.JSON.Data."event-received".(JSON.Array)naturesOfChanges;
+		CALL CommonHelper.transformStringToListDefinedSeparator(Environment.Variables.MessageIn.MQRFH2.usr.UDnaturesOfChanges,';',OutputRoot.JSON.Data."event-received".(JSON.Array)naturesOfChanges,false);
+		CREATE FIELD OutputRoot.JSON.Data."event-received".(JSON.Array)contextsOfEvent;
+		CALL CommonHelper.transformStringToListDefinedSeparator(Environment.Variables.MessageIn.MQRFH2.usr.UDcontextsOfEvent,';',OutputRoot.JSON.Data."event-received".(JSON.Array)contextsOfEvent,false);
+		SET OutputRoot.JSON.Data."event-received".eventInitiator = COALESCE(Environment.Variables.MessageIn.MQRFH2.usr.UDeventInitiator, '');
+		SET OutputRoot.JSON.Data."event-received".eventForwarder = COALESCE(Environment.Variables.MessageIn.MQRFH2.usr.UDeventForwarder, '');
+
+		SET OutputRoot.JSON.Data."execution-context".global_transaction_id = COALESCE(Environment.Variables."X-Global-Transaction-Id", '');
+		SET OutputRoot.JSON.Data."execution-context".x_correlation_id = COALESCE(Environment.Variables."X-Correlation-Id", '');
+		SET OutputRoot.JSON.Data."execution-context".datetime = CAST(CURRENT_TIMESTAMP AS CHAR FORMAT 'I');
+		SET OutputRoot.JSON.Data."execution-context".http_status_code = CAST(COALESCE(InputRoot.JSON.Data.httpCode,InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code") AS INTEGER DEFAULT NULL);
+		SET OutputRoot.JSON.Data."execution-context".x_caller_code = COALESCE(Environment.Variables.MessageIn.MQRFH2.usr.callerCode, '');
+		SET OutputRoot.JSON.Data."execution-context".x_origin_caller_code = COALESCE(Environment.Variables.MessageIn.MQRFH2.usr.originCallerCode, '');
+		SET OutputRoot.JSON.Data."execution-context".target_system = 'SPARX';
+
+		CREATE FIELD OutputRoot.JSON.Data."external-references" IDENTITY (JSON.Array)"external-references";
+		SET OutputRoot.JSON.Data."external-references".Item[1].origin_record_id = COALESCE(Environment.Variables.TCSLog.context."business-identifiers".InterfaceLink, '');
+		SET OutputRoot.JSON.Data."external-references".Item[1].origin_object_type = 'Case';
+		SET OutputRoot.JSON.Data."external-references".Item[1].origin_object_id = COALESCE(Environment.Variables.TCSLog.context."business-identifiers".CaseReference, '');
+		SET OutputRoot.JSON.Data."external-references".Item[1].target_object_type = 'Case';
+		SET OutputRoot.JSON.Data."external-references".Item[1].target_object_id = COALESCE(Environment.Variables.Sparx.Info.CaseId, '');
+		SET OutputRoot.JSON.Data."external-references".Item[1].target_object_code = '';
+		SET OutputRoot.JSON.Data."external-references".Item[1].error_code = COALESCE(InputRoot.JSON.Data.httpCode, '');
+		SET OutputRoot.JSON.Data."external-references".Item[1].error_message = COALESCE(errorDescription, ''); 
+		RETURN TRUE;
+	END;
+END MODULE;

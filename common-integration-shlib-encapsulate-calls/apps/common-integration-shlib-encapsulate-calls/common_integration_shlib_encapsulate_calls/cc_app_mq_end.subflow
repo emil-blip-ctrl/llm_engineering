@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmMQReply.msgnode="ComIbmMQReply.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:common_integration_shlib_wrap_message_messageRecover.subflow="common_integration_shlib_wrap_message/messageRecover.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
+    xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_app_mq_end.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_app_mq_end.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.MQReply" name="MQReply" lowerBound="1" defaultValueLiteral="false">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.validateMaster" name="validateMaster" lowerBound="1" eType="//%" defaultValueLiteral="inherit"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.validateFailureAction" name="validateFailureAction" lowerBound="1" eType="//%.1" defaultValueLiteral="exception"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.persistenceMode" name="persistenceMode" lowerBound="1" eType="//%.2" defaultValueLiteral="automatic"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.segmentationAllowed" name="segmentationAllowed" lowerBound="1" defaultValueLiteral="false">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.segmentationAllowed.internal_npcompiler" name="segmentationAllowed.internal_npcompiler">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.transactionMode" name="transactionMode" lowerBound="1" eType="//%.3" defaultValueLiteral="automatic"/>
+    <translation xmi:type="utility:TranslatableString" key="cc_app_mq_end" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_end" pluginId="common-integration-shlib-encapsulate-calls"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj16/cc_app_mq_end.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj30/cc_app_mq_end.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Used at the end in a MQ Application flow to set up context for monitoring"/>
+    <longDescription xmi:type="utility:ConstantString" string="When using a MQ Application flow, add this this subflow at the end of the design flow. This set differents informations based on the input message (X-Caller-Code, X-Global-Transaction-Id etc..) to &#xD;&#xA;- populate environment variables used to create entries in ELK &#xD;&#xA;&#xD;&#xA;Before this subflow, if business-identifiers has to be defined in TCS monitoring, please create this input tree&#xD;&#xA;&#xD;&#xA;LocalEnvironment.&quot;business-identifiers&quot;.key1 = 'Value1';&#xD;&#xA;LocalEnvironment.&quot;business-identifiers&quot;.key2 = 'Value2';"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="20,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_end" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="157,29" dataSource="ACE_CONTEXTREFERENCE_DB" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_app_mq_end_ExitPoint.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ExitPoint"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="ExitPoint.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$LocalEnvironment/business-identifiers" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="370,24">
+        <translation xmi:type="utility:ConstantString" string="Pass through"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="231,75" policyUrl="{GlobalMQPolicies}:RemoteMQPolicies">
+        <translation xmi:type="utility:ConstantString" string="MQ Reply"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="MQ Reply.terminal.out" eventIdentity="MQ Reply success">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="MQ Reply success"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="351,169" queueName="QL.RECORDREPLAY.IN">
+        <translation xmi:type="utility:ConstantString" string="MQ Output"/>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="MQ Output.terminal.failure" eventIdentity="FAIL: Publish for Record in DB">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Publish for Record in DB"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="MQ Output.terminal.in" eventIdentity="START: Publish for Record in DB">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START: Publish for Record in DB"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="MQ Output.terminal.out" eventIdentity="END:  Publish for Record in DB">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="END:  Publish for Record in DB"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="434,173">
+        <translation xmi:type="utility:ConstantString" string="Pass through1"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_wrap_message_messageRecover.subflow:FCMComposite_1" xmi:id="FCMComposite_1_6" location="252,169">
+        <translation xmi:type="utility:ConstantString" string="messageRecover"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.MQReply">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.MQReply" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_end" pluginId="common-integration-shlib-encapsulate-calls"/>
+        <propertyDescriptor groupName="Group.MQreply" configurable="true" describedAttribute="Property.validateMaster">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.validateMaster" bundleName="ComIbmMQReply" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+          <propertyDescriptor groupName="Group.MQreply" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.ValidateMasterListenerPropertyEditor" describedAttribute="Property.validateFailureAction">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.validateFailureAction" bundleName="ComIbmMQReply" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+            <propertyDescriptor groupName="Group.MQreply" describedAttribute="Property.persistenceMode">
+              <propertyName xmi:type="utility:TranslatableString" key="Property.persistenceMode" bundleName="ComIbmMQReply" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+              <propertyDescriptor groupName="Group.MQreply" compiler="com.ibm.etools.mft.ibmnodes.compilers.BooleanPropertyCompiler" describedAttribute="Property.segmentationAllowed">
+                <propertyName xmi:type="utility:TranslatableString" key="Property.segmentationAllowed" bundleName="ComIbmMQReply" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+                <propertyDescriptor groupName="Group.InternalRuntimeGroup" readOnly="true" hidden="true" userDefined="true" describedAttribute="Property.segmentationAllowed.internal_npcompiler">
+                  <propertyName xmi:type="utility:TranslatableString" key="Property.segmentationAllowed.internal_npcompiler" bundleName="common_integration_shlib_encapsulate_calls/cc_app_mq_end" pluginId="common-integration-shlib-encapsulate-calls"/>
+                  <propertyDescriptor groupName="Group.MQreply" describedAttribute="Property.transactionMode">
+                    <propertyName xmi:type="utility:TranslatableString" key="Property.transactionMode" bundleName="ComIbmMQReply" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+                  </propertyDescriptor>
+                </propertyDescriptor>
+              </propertyDescriptor>
+            </propertyDescriptor>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.validateMaster" overriddenNodes="FCMComposite_1_3">
+      <overriddenAttribute href="ComIbmMQReply.msgnode#Property.validateMaster"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.validateFailureAction" overriddenNodes="FCMComposite_1_3">
+      <overriddenAttribute href="ComIbmMQReply.msgnode#Property.validateFailureAction"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.persistenceMode" overriddenNodes="FCMComposite_1_3">
+      <overriddenAttribute href="ComIbmMQReply.msgnode#Property.persistenceMode"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.segmentationAllowed" overriddenNodes="FCMComposite_1_3">
+      <overriddenAttribute href="ComIbmMQReply.msgnode#Property.segmentationAllowed"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.transactionMode" overriddenNodes="FCMComposite_1_3">
+      <overriddenAttribute href="ComIbmMQReply.msgnode#Property.transactionMode"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+  <eClassifiers xmi:type="ecore:EEnum">
+    <eLiterals xmi:id="validateMaster.none" name="none"/>
+    <eLiterals xmi:id="validateMaster.contentAndValue" name="contentAndValue" value="1"/>
+    <eLiterals xmi:id="validateMaster.content" name="content" value="2"/>
+    <eLiterals xmi:id="validateMaster.inherit" name="inherit" value="3"/>
+  </eClassifiers>
+  <eClassifiers xmi:type="ecore:EEnum">
+    <eLiterals xmi:id="validateFailureAction.userTrace" name="userTrace"/>
+    <eLiterals xmi:id="validateFailureAction.localError" name="localError" value="1"/>
+    <eLiterals xmi:id="validateFailureAction.exception" name="exception" value="2"/>
+    <eLiterals xmi:id="validateFailureAction.exceptionList" name="exceptionList" value="3"/>
+  </eClassifiers>
+  <eClassifiers xmi:type="ecore:EEnum">
+    <eLiterals xmi:id="persistenceMode.automatic" name="automatic"/>
+    <eLiterals xmi:id="persistenceMode.yes" name="yes" value="1"/>
+    <eLiterals xmi:id="persistenceMode.no" name="no" value="2"/>
+    <eLiterals xmi:id="persistenceMode.asQdef" name="asQdef" value="3"/>
+  </eClassifiers>
+  <eClassifiers xmi:type="ecore:EEnum">
+    <eLiterals xmi:id="transactionMode.automatic" name="automatic"/>
+    <eLiterals xmi:id="transactionMode.yes" name="yes" value="1"/>
+    <eLiterals xmi:id="transactionMode.no" name="no" value="2"/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,92 @@
+
+
+CREATE COMPUTE MODULE health_health_response
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		set OutputLocalEnvironment.Destination = InputRoot.ComIbmGroupCompleteNode.Group.Context;
+		set OutputRoot.JSON.Data.status = 'pass';-- override after if error
+		set OutputRoot.JSON.Data.api = ApplicationLabel;
+		set OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP as CHAR FORMAT 'I');
+		
+		create field OutputRoot.JSON.Data.(JSON.Array)checks;
+		declare RefOut,ProviderResp REFERENCE TO OutputRoot.JSON.Data.checks;
+		if EXISTS(InputExceptionList.*[]) then
+			set OutputRoot.JSON.Data.status = 'error';
+			CREATE LASTCHILD OF OutputRoot.JSON.Data.checks as RefOut NAME 'Item'; 
+			set RefOut.component  = 'all';
+			set RefOut.details = 'error to map healtcheck providers response because of catch generated in ace code';
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 500; 
+			return true;
+		end if;
+	
+		for ProviderResp as InputRoot.ComIbmGroupCompleteNode.Group.Replies.*[] do 
+			CREATE LASTCHILD OF OutputRoot.JSON.Data.checks as RefOut NAME 'Item'; 
+			DECLARE ProviderName CHAR FIELDNAME(ProviderResp);
+			set RefOut.component  = ProviderName;
+			DECLARE ccsid INT COALESCE(ProviderResp.Properties.CodedCharSetId, 1208);
+			DECLARE encoding INT COALESCE(ProviderResp.Properties.Encoding, 546);
+			if lower(ProviderName) = 'sapfi' then
+				DECLARE jsonSapfi ROW;
+				CREATE LASTCHILD OF jsonSapfi DOMAIN 'JSON' PARSE(ProviderResp.Reply.Root.BLOB.BLOB CCSID ccsid);
+				/*
+				{
+                    "return": {
+                        "sap": {
+                            "SapBapiUserExistenceCheck": {
+                                "SapReturn": {
+                                    "TYPE": "I",
+                                    "ID": "01",
+                                    "NUMBER": "088",
+                                    "MESSAGE": "User NIP_SERVICE exists",
+                                    "LOG_MSG_NO": "000000",
+                                    "MESSAGE_V1": "NIP_SERVICE",
+                                    "ROW": 0,
+                                    "SYSTEM": "DS4CLNT100"
+                                }
+                            }
+                        },
+                        "status": "success"
+                    }
+                }
+                */
+				
+				if jsonSapfi.JSON.Data.return.status = 'success'  then
+					set RefOut.status = 'pass';
+				else
+					SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 500;
+					set OutputRoot.JSON.Data.status = 'error';
+					set RefOut.status = 'error';
+				end if;
+				set RefOut.details = cast(ProviderResp.Reply.Root.BLOB.BLOB as CHARACTER CCSID ccsid ENCODING encoding);
+			else
+				DECLARE "X-Original-HTTP-Status-Code" INT COALESCE(ProviderResp.Reply.Root.HTTPResponseHeader."X-Original-HTTP-Status-Code", 500);
+				if not("X-Original-HTTP-Status-Code" = 200) then
+					set OutputRoot.JSON.Data.status = 'error';
+					set RefOut.status = 'error';
+					set RefOut.details = cast(ProviderResp.Reply.Root.BLOB.BLOB as CHARACTER CCSID ccsid ENCODING encoding);
+					SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 500;
+					
+				else
+					set RefOut.status = 'pass';
+					if EXISTS(ProviderResp.JSON.Data[]) then
+						set RefOut.details = InputRoot.JSON.Data;
+					elseif EXISTS(ProviderResp.Reply.Root.BLOB.BLOB[]) then
+						set RefOut.details = cast(ProviderResp.Reply.Root.BLOB.BLOB as CHARACTER CCSID ccsid ENCODING encoding);
+					end if;
+				end if;
+			end if;
+		end for; 
+		for ProviderResp as InputRoot.ComIbmGroupCompleteNode.Group.OutstandingReplies.*[] do 
+			set OutputRoot.JSON.Data.status = 'error';
+			CREATE LASTCHILD OF OutputRoot.JSON.Data.checks as RefOut NAME 'Item'; 
+			DECLARE ProviderName CHAR FIELDNAME(ProviderResp);
+			set RefOut.component  = ProviderName;
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 500;
+			set RefOut.status = 'error';
+			set RefOut.details = 'timeout';
+		end for;
+			
+		
+		RETURN TRUE;
+	END;
+END MODULE;

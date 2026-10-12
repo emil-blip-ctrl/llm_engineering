@@ -1,0 +1,32 @@
+PATH Shlib_PoliciesReader;
+
+CREATE FILTER MODULE update_case_IsAssys_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sfcasActivated CHARACTER gestionPolicy('{services-integration-policies-credentials}:SfcasCredentialsPolicy', 'sfcas-activated');
+		DECLARE paylaodRef REFERENCE TO Root.JSON.Data;
+
+		IF UPPER(COALESCE(sfcasActivated, '')) = 'FALSE' OR checkTCSReference(paylaodRef) = TRUE OR common.checkIdReferenceCaseFormat(paylaodRef.Id) = TRUE
+		THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+
+	CREATE FUNCTION checkTCSReference(IN payloadRef REFERENCE) RETURNS BOOLEAN
+	BEGIN
+		DECLARE caseItemRef REFERENCE TO payloadRef.CaseReferenceList.Item[1];
+
+		WHILE LASTMOVE(caseItemRef)
+	    DO
+	   		IF UPPER(caseItemRef.Organisation.Name) = 'TCS' AND common.checkIdReferenceCaseFormat(caseItemRef.Reference)
+	   		THEN
+	   			RETURN TRUE;
+	   		END IF;
+			MOVE caseItemRef NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+
+		RETURN FALSE;
+	END;
+END MODULE;

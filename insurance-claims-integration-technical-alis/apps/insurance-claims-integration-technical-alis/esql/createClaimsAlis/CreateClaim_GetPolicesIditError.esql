@@ -1,0 +1,12 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+CREATE COMPUTE MODULE CreateClaim_GetPolicesIditError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables.HttpReturnCode = 500;
+		THROW USER EXCEPTION VALUES('An error occured when trying to read Policy values! Please check if the needed Policies [APICHost, ClaimIdit] are correctly deployed and configured.'); 		
+		RETURN FALSE;
+	END;	
+END MODULE;

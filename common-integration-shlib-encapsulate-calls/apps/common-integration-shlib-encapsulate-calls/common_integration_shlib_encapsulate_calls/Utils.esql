@@ -1,0 +1,38 @@
+BROKER SCHEMA common_integration_shlib_encapsulate_calls
+
+CREATE PROCEDURE GetContext(IN UserContext REFERENCE,IN Environment REFERENCE, IN OutputLocalEnvironment REFERENCE,IN InputLocalEnvironment REFERENCE ) BEGIN
+	DECLARE Context ROW;
+	CREATE LASTCHILD OF Context DOMAIN('JSON') PARSE(UserContext);
+	SET Environment = Context.JSON.Data.Environment;
+	SET OutputLocalEnvironment = Context.JSON.Data.LocalEnvironment;
+
+	FOR BlocUp AS InputLocalEnvironment.*[] DO
+		FOR BlocDown AS BlocUp.*[] DO
+			FOR Child AS BlocDown.*[] DO
+				SET OutputLocalEnvironment.{FIELDNAME(BlocUp)}.{FIELDNAME(BlocDown)}.{FIELDNAME(Child)} = Child;
+			END FOR;
+		END FOR;
+	END FOR;
+END;
+
+CREATE PROCEDURE getFormatErrorExceptionDetail(IN InputTree REFERENCE,OUT messageNumber INTEGER, OUT messageText CHARACTER)
+BEGIN
+	-- Create a reference to the first child of the exception list
+	DECLARE ptrException REFERENCE TO InputTree.*[1];
+	-- keep looping while the moves to the child of exception list work
+	WHILE lastmove(ptrException) DO
+		-- store the current values for the error number and text
+		IF ptrException.Number IS NOT NULL THEN
+			SET messageNumber = ptrException.Number;
+			SET messageText = ptrException.Text||': ';
+
+			DECLARE i INTEGER 0;
+			WHILE ptrException.Insert[i+1].Text IS NOT NULL DO
+				SET messageText = messageText || ptrException.Insert[i+1].Text;
+				SET i = i+1;
+			END WHILE;
+		END IF;
+		-- now move to the last child which should be the next exceptionlist
+		MOVE ptrException LASTCHILD;
+	END WHILE;
+END;

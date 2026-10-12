@@ -1,0 +1,9 @@
+
+
+CREATE COMPUTE MODULE financeAccountingIntegrationInvoicesSapfi_ELK
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		/* just to use monitoring */
+		RETURN TRUE;
+	END;
+END MODULE;

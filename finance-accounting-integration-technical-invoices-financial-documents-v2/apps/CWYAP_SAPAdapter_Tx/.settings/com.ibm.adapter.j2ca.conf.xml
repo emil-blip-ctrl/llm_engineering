@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration xmlns="http://j2ca.adapter.ibm.com">
+            
+    
+        
+    
+        
+    
+        
+    
+    
+
+    <systemEntry uri="C:\SAP\SAP jco\sapjco3.dll"/>
+    <systemEntry uri="C:\SAP\SAP jco\sapjco3.jar"/>
+    <systemEntry uri="C:\SAP\SAP jco\sapidoc3.jar"/>
+    <systemEntry uri="C:\SAP\SAP jco\msvcr71.dll"/>
+    <systemEntry uri="C:\SAP\SAP jco\msvcr71.dll"/>
+</configuration>

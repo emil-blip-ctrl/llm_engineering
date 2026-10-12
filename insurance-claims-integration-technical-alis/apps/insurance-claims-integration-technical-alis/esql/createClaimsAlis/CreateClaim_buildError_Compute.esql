@@ -1,0 +1,42 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+CREATE COMPUTE MODULE CreateClaim_buildError_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- parse the exception list tree (if there is one) in order to fill the http response returned afterwards
+		IF EXISTS(InputExceptionList.*[]) THEN
+			CALL parseExceptionList(InputExceptionList, Environment.Variables.ExceptionNumber, Environment.Variables.ExceptionMessage, Environment.Variables.ExceptionStackTrace);
+		END IF;
+		if EXISTS(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code"[]) then
+			DECLARE jsonAsBlob BLOB;
+			if EXISTS (InputRoot.BLOB.BLOB[]) then
+				set jsonAsBlob  = InputRoot.BLOB.BLOB;
+			elseif EXISTS (InputRoot.JSON.Data[]) then
+				set jsonAsBlob  = ASBITSTREAM(InputRoot.JSON.Data CCSID COALESCE(InputRoot.Properties.CodedCharSetId,1208));
+			end if;
+			DECLARE jsonAsChar CHAR CAST(jsonAsBlob AS CHAR CCSID 1208);
+			set Environment.Variables.ExceptionStackTrace = jsonAsChar;
+		end if;
+		-- check provider, if empty this means that it's necessarily ACE that is causing the error 
+		SET Environment.Variables.ErrorProviderName = COALESCE(Environment.Variables.ErrorProviderName, 'ACE');
+		
+		-- check if the environment contains an http status error code to return (if not by default we return 500) 
+		IF Environment.Variables.HttpReturnCode IS NULL OR CARDINALITY(Environment.Variables.HttpReturnCode[]) = 0 THEN
+			SET Environment.Variables.HttpReturnCode = COALESCE(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code",500);
+			if Environment.Variables.ErrorProviderName = 'APIC' and Environment.Variables.HttpReturnCode = 401 then
+				set Environment.Variables.ErrorRefApp = 'ACETECH0011';
+			end if;
+		END IF;
+		-- create the http response (http status & body)
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = Environment.Variables.HttpReturnCode;
+		SET OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'I');
+		SET OutputRoot.JSON.Data.httpCode = Environment.Variables.ErrorProviderName || ' : ' || CAST(COALESCE(Environment.Variables.ErrorProviderHttpReturnCode, Environment.Variables.HttpReturnCode) AS CHARACTER);
+		SET OutputRoot.JSON.Data.httpMessage = Environment.Variables.ErrorProviderName || ' : ' || COALESCE(Environment.Variables.ExceptionMessage, COALESCE(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Line",'No exception message !'));
+		SET OutputRoot.JSON.Data.refAppError = Environment.Variables.ErrorRefApp;
+		SET OutputRoot.JSON.Data.gtid = Environment.Variables.logging.envelope.GTID;
+		SET OutputRoot.JSON.Data.moreInformation = COALESCE(Environment.Variables.ExceptionStackTrace, '');
+
+		RETURN TRUE;
+	END;
+END MODULE;

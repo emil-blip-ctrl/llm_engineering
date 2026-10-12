@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFilter.msgnode="ComIbmFilter.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:TranslatorSparxBom_TranslateBomToSparxCase.subflow="TranslatorSparxBom/TranslateBomToSparxCase.subflow" xmlns:TranslatorSparxBom_sendMessageToSparx.subflow="TranslatorSparxBom/sendMessageToSparx.subflow"
+    xmlns:common_integration_shlib_encapsulate_calls_cc_app_mq_end.subflow="common_integration_shlib_encapsulate_calls/cc_app_mq_end.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_app_mq_start.subflow="common_integration_shlib_encapsulate_calls/cc_app_mq_start.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:publishMessage.subflow="publishMessage.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
+    nsURI="processEventFromQueueSparx.msgflow" nsPrefix="processEventFromQueueSparx.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="processEventFromQueueSparx" bundleName="processEventFromQueueSparx" pluginId="servicesIntegrationAssistanceCasesEventsSparxConsume"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCasesEventsSparxConsume/icons/full/obj16/processEventFromQueueSparx.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCasesEventsSparxConsume/icons/full/obj30/processEventFromQueueSparx.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="200,257" messageDomain="JSON" resetMessageDomain="true" resetMessageSet="true" resetMessageType="true" messageFormat="&lt;Check the box to change the value. Default is empty string>" resetMessageFormat="true" validateTiming="immediate">
+        <translation xmi:type="utility:ConstantString" string="JSON"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_app_mq_start.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="27,328" BackoutThreshold="0" queueName="A.SERVICES_MQ_INCOMING_SPARX_CASES_EVENTS_1">
+        <translation xmi:type="utility:ConstantString" string="cc_app_mq_start1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFilter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="575,264" filterExpression="esql://routine/#processEventFromQueueSparx_IsMessageForSPARX_Filter.Main">
+        <translation xmi:type="utility:ConstantString" string="IsMessageForSPARX"/>
+        <monitorEvents eventSourceDescription="True terminal" eventSourceName="IsMessageForSPARX.terminal.true" eventIdentity="Message for Sparx">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Message for Sparx"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="766,164">
+        <translation xmi:type="utility:ConstantString" string="NotForSparx"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="NotForSparx.terminal.in" eventIdentity="Message NotForSparx">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Message NotForSparx"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="TranslatorSparxBom_TranslateBomToSparxCase.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="747,275">
+        <translation xmi:type="utility:ConstantString" string="BomToSparxCase"/>
+      </nodes>
+      <nodes xmi:type="TranslatorSparxBom_sendMessageToSparx.subflow:FCMComposite_1" xmi:id="FCMComposite_1_14" location="1204,214">
+        <translation xmi:type="utility:ConstantString" string="sendMessageToSparx"/>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="934,328">
+        <translation xmi:type="utility:ConstantString" string="NotForSparx1"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="NotForSparx1.terminal.in" eventIdentity="Message NotForSparx">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Message NotForSparx"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="463,263" computeExpression="esql://routine/#processEventFromQueueSparx_TracePayload_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="TracePayload"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="TracePayload.terminal.out" eventIdentity="INFO: Bom message">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Bom message"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_26" location="1082,214" computeExpression="esql://routine/#processEventFromQueueSparx_TracePayload_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="TracePayload1"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="TracePayload1.terminal.out" eventIdentity="INFO: Sparx request">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Sparx request"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_app_mq_end.subflow:FCMComposite_1" xmi:id="FCMComposite_1_27" location="2133,142">
+        <translation xmi:type="utility:ConstantString" string="cc_app_mq_end"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_31" location="1569,274" computeExpression="esql://routine/#processEventFromQueueSparx_ErrorHander_Compute.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="ErrorHandler"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="ErrorHandler.terminal.in" eventIdentity="START: Build exception.InTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START: Build exception.InTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="ErrorHandler.terminal.out" eventIdentity="INFO: END: Build exception.OutTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Error/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: END: Build exception.OutTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="ErrorHandler.terminal.failure" eventIdentity="FAIL: Build exception.FailureTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Build exception.FailureTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_33" location="1553,140" computeExpression="esql://routine/#processEventFromQueueSparx_TracePayload_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="TracePayload2"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="TracePayload2.terminal.out" eventIdentity="INFO: Sparx response">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Sparx response"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_36" location="1550,59" computeExpression="esql://routine/#processEventFromQueueSparx_ErrorHander_Compute.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ErrorHandler1"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="ErrorHandler1.terminal.in" eventIdentity="START: Build exception.InTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START: Build exception.InTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="ErrorHandler1.terminal.out" eventIdentity="INFO: END: Build exception.OutTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Error/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: END: Build exception.OutTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="ErrorHandler1.terminal.failure" eventIdentity="FAIL: Build exception.FailureTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Build exception.FailureTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_39" location="296,262" computeExpression="esql://routine/#processEventFromQueueSparx_SetBusinessIdentifier_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="SetBusinessIdentifier"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SetBusinessIdentifier.terminal.out" eventIdentity="SUP: Start processing">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/business-identifiers" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: Start processing"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_40" location="1741,140" computeExpression="esql://routine/#processEventFromQueueSparx_CheckIdentifier_Compute.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="CheckIdentifier"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="CheckIdentifier.terminal.in" eventIdentity="INFO: Retrieve Sparx CaseId">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Sparx/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Retrieve Sparx CaseId"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_41" location="1909,57">
+        <translation xmi:type="utility:ConstantString" string="CaseIDNotReceived"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="CaseIDNotReceived.terminal.in" eventIdentity="Case ID has not been received from Sparx">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Case ID has not been received from Sparx"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="1386,137" messageDomain="JSON" resetMessageDomain="true" resetMessageSet="true" resetMessageType="true" messageFormat="&lt;Check the box to change the value. Default is empty string>" resetMessageFormat="true" validateTiming="immediate">
+        <translation xmi:type="utility:ConstantString" string="ToJSON"/>
+      </nodes>
+      <nodes xmi:type="publishMessage.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="1868,275" TopicName="cases-outcomes-error">
+        <translation xmi:type="utility:ConstantString" string="publishMessage - outcomes-error"/>
+      </nodes>
+      <nodes xmi:type="publishMessage.subflow:FCMComposite_1" xmi:id="FCMComposite_1_20" location="1850,141" TopicName="cases-outcomes-references">
+        <translation xmi:type="utility:ConstantString" string="publishMessage - outcomes-references"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_21" location="1378,219" computeExpression="esql://routine/#processEventFromQueueSparx_TracePayload_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="TracePayload3"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="TracePayload3.terminal.out" eventIdentity="INFO: Sparx response">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Sparx response"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="945,211" messageDomain="JSON" resetMessageDomain="true" resetMessageSet="true" resetMessageType="true" messageFormat="&lt;Check the box to change the value. Default is empty string>" resetMessageFormat="true">
+        <translation xmi:type="utility:ConstantString" string="toJSON"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="1741,275" computeExpression="esql://routine/#processEventFromQueueSparx_TracePayload_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="TracePayload4"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="TracePayload4.terminal.out" eventIdentity="INFO: Error message">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Error message"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_app_mq_end.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="913,106">
+        <translation xmi:type="utility:ConstantString" string="cc_app_mq_end1"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_app_mq_end.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="1066,328">
+        <translation xmi:type="utility:ConstantString" string="cc_app_mq_end2"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.false" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.true" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.Output2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_49" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_26" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_61" targetNode="FCMComposite_1_31" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Catch" targetTerminalName="InTerminal.in">
+        <bendPoints>213,56,-903,116</bendPoints>
+        <bendPoints>954,58,-156,112</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_62" targetNode="FCMComposite_1_31" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in">
+        <bendPoints>207,68,-909,128</bendPoints>
+        <bendPoints>957,71,-153,125</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_65" targetNode="FCMComposite_1_31" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_70" targetNode="FCMComposite_1_36" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+        <bendPoints>185,-213,-1308,-13</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_73" targetNode="FCMComposite_1_36" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+        <bendPoints>212,-206,-871,1</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_76" targetNode="FCMComposite_1_39" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_77" targetNode="FCMComposite_1_18" sourceNode="FCMComposite_1_39" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_78" targetNode="FCMComposite_1_40" sourceNode="FCMComposite_1_33" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_80" targetNode="FCMComposite_1_41" sourceNode="FCMComposite_1_40" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_81" targetNode="FCMComposite_1_27" sourceNode="FCMComposite_1_41" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_88" targetNode="FCMComposite_1_27" sourceNode="FCMComposite_1_40" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.Input">
+        <bendPoints>107,-39,-276,-40</bendPoints>
+        <bendPoints>255,-40,-128,-41</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_33" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_36" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_26" targetNode="FCMComposite_1_27" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_27" targetNode="FCMComposite_1_20" sourceNode="FCMComposite_1_40" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_29" targetNode="FCMComposite_1_27" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_30" targetNode="FCMComposite_1_21" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_31" targetNode="FCMComposite_1_31" sourceNode="FCMComposite_1_21" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_36" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+        <bendPoints>187,-146,-561,8</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_36" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_31" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_26" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

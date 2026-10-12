@@ -1,0 +1,155 @@
+BROKER SCHEMA esql.createClaimsAlis
+/**
+   Check the fields mandatory Idit
+**/
+
+CREATE COMPUTE MODULE CreateClaim_CheckFiledsIditMandatory
+	CREATE FUNCTION Main() RETURNS BOOLEAN	
+		BEGIN	
+			    DECLARE inRef REFERENCE TO InputRoot.JSON.Data;   	    
+			    --event/description
+				IF COALESCE(inRef.event.description,'') = '' THEN
+					SET Environment.Variables.HttpReturnCode = 400;
+					THROW USER EXCEPTION VALUES('The field event/description is missing'); 			
+					RETURN FALSE;		
+				END IF;
+					
+				--event/primary-cause-of-loss-extcode
+				IF COALESCE(inRef.event."primary-cause-of-loss-extcode", '') = '' THEN
+					SET Environment.Variables.HttpReturnCode = 400;
+					THROW USER EXCEPTION VALUES('The field event/primary-cause-of-loss-extcode is missing'); 			
+					RETURN FALSE;		
+				END IF;
+				
+				--claimed-cover/claimed-damages/functional-id
+				DECLARE codeCover CHARACTER ''; 
+				SET codeCover = getCodeCouverture(inRef);
+				IF COALESCE(codeCover, '') = '' THEN
+					SET Environment.Variables.HttpReturnCode = 400;
+					THROW USER EXCEPTION VALUES('The field claimed-cover/claimed-damages/functional-id is missing'); 			
+					RETURN FALSE;		
+				END IF;
+				--Check fields mandatory per product code			
+				DECLARE productCode CHAR  
+				CASE
+					WHEN STARTSWITH(UPPER(inRef."policy-number"),'PO') THEN SUBSTRING(UPPER(inRef."policy-number") FROM 13 FOR 3)
+				END;
+				CASE productCode
+				WHEN '103' THEN --product ETI
+				 		IF EXISTS(inRef."claimed-cover".Item[]) THEN 
+				 			FOR claimCoverRef AS inRef."claimed-cover".Item[] DO
+				 				IF EXISTS(inRef."claimed-damages".Item[]) THEN
+				 					FOR claimedDamagesRef AS inRef."claimed-damages".Item[] DO
+				 						--Check field mandatory for travel-infos
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details"."travel-infos"."travel-booking-date", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('One of travel-infos/travel-booking-date is missing');
+											RETURN FALSE;
+				 						END IF;	
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details"."travel-infos"."planned-travel-departure-date", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('One of travel-infos/planned-travel-departure-date is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details"."travel-infos"."planned-travel-return-date", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('One of travel-infos/planned-travel-return-date is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details"."travel-infos"."impediment-date", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('One of travel-infos/impediment-date is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF (claimedDamagesRef."functional-id" = '1000039' ) THEN 
+					 						--Check field mandatory for CDW
+					 						IF COALESCE(claimedDamagesRef."damaged-objects-details"."CDW"."vehicule-type-one", '') = '' THEN
+					 							SET Environment.Variables.HttpReturnCode = 400;
+												THROW USER EXCEPTION VALUES('One of CDW/vehicule-type-one is missing');
+												RETURN FALSE;
+					 						END IF;
+					 						IF COALESCE(claimedDamagesRef."damaged-objects-details"."CDW"."damage-type-one", '') = '' THEN
+					 							SET Environment.Variables.HttpReturnCode = 400;
+												THROW USER EXCEPTION VALUES('One of CDW/damage-type-one is missing');
+												RETURN FALSE;
+					 						END IF;
+				 						END IF;	
+				 					END FOR;
+				 				END IF;
+				 			END FOR;
+				 		END IF;					 				    
+				WHEN '105' THEN --Product bike
+				 	 	IF EXISTS(inRef."claimed-cover".Item[]) THEN 
+				 			FOR claimCoverRef AS inRef."claimed-cover".Item[] DO
+				 				IF EXISTS(inRef."claimed-damages".Item[]) THEN
+				 					FOR claimedDamagesRef AS inRef."claimed-damages".Item[] DO
+				 						--Check field mandatory for bike
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike.type, '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/type is missing');
+											RETURN FALSE;
+				 						END IF;	
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike.brand, '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/brand is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike.color, '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/color is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike.frame, '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/frame is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike."25km-more", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/25km-more is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike.plate, '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/plate is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike."purchase-date", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/purchase-date is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike."first-reg-date", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/first-reg-date is missing');
+											RETURN FALSE;
+				 						END IF;
+				 						IF COALESCE(claimedDamagesRef."damaged-objects-details".bike."purchase-value", '') = '' THEN
+				 							SET Environment.Variables.HttpReturnCode = 400;
+											THROW USER EXCEPTION VALUES('The target bike/purchase-value is missing');
+											RETURN FALSE;
+				 						END IF;	
+				 					END FOR;
+				 				END IF;
+				 			END FOR;
+				 		END IF;
+				 	 	
+				END CASE;	 	
+				 								
+				RETURN TRUE;
+			END;
+	
+	
+		CREATE FUNCTION getCodeCouverture(IN data_in REFERENCE) RETURNS CHARACTER
+			BEGIN
+				IF EXISTS(data_in."claimed-cover".Item[]) THEN
+					IF EXISTS (data_in."claimed-cover".Item[1]."claimed-damages".Item[]) THEN
+					   RETURN data_in."claimed-cover".Item[1]."claimed-damages".Item[1]."functional-id";
+			        ELSE
+			           RETURN '';
+			        END IF;   
+			    ELSE
+			    	RETURN '';
+			    END IF; 	   	
+			END;
+END MODULE;

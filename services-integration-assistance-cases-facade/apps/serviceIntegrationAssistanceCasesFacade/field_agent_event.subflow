@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCallableFlowInvoke.msgnode="ComIbmCallableFlowInvoke.msgnode" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmRoute.msgnode="ComIbmRoute.msgnode" xmlns:CommonError_traceErrorAndReturnStatus.subflow="CommonError/traceErrorAndReturnStatus.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_end.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="field_agent_event.subflow" nsPrefix="field_agent_event.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="field_agent_event" bundleName="field_agent_event" pluginId="serviceIntegrationAssistanceCasesFacade"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/serviceIntegrationAssistanceCasesFacade/icons/full/obj16/field_agent_event.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/serviceIntegrationAssistanceCasesFacade/icons/full/obj30/field_agent_event.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="26,118">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="field_agent_event" pluginId="serviceIntegrationAssistanceCasesFacade"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="1012,120">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="field_agent_event" pluginId="serviceIntegrationAssistanceCasesFacade"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowInvoke.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="419,119" targetApplication="servicesIntegrationAssistanceCasesFieldAgentsPublish" targetEndpointName="CALLABLE_ASSISTANCE_FIELD_AGENT_EVENT">
+        <translation xmi:type="utility:ConstantString" string="CALL_FIELD_AGENT_EVENT"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="CALL_FIELD_AGENT_EVENT.terminal.in" eventIdentity="SUP: REQUEST Callable Field Agent Event">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: REQUEST Callable Field Agent Event"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="CALL_FIELD_AGENT_EVENT.terminal.failure" eventIdentity="FAIL: REQUEST Callable Field Agent Event">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: REQUEST Callable Field Agent Event"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Error terminal" eventSourceName="CALL_FIELD_AGENT_EVENT.terminal.error" eventIdentity="FAIL: REQUEST Callable Field Agent Event Error">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: REQUEST Callable Field Agent Event Error"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="CALL_FIELD_AGENT_EVENT.terminal.out" eventIdentity="REQUEST Callable Field Agent Event Out">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="REQUEST Callable Field Agent Event Out"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="644,120" distributionMode="first">
+        <outTerminals terminalNodeID="Match" dynamic="true" label="Match"/>
+        <translation xmi:type="utility:ConstantString" string="CheckError"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Check the LocalEnvironment structure for error returned by the caller."/>
+        <filterTable filterPattern="count( $LocalEnvironment/Variables/TCSError/*) > 0" routingOutputTerminal="Match"/>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="CheckError.terminal.failure" eventIdentity="FAIL: Check exists error">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Check exists error"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Default terminal" eventSourceName="CheckError.terminal.default" eventIdentity="CheckError : no error found">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="CheckError : no error found"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Match terminal" eventSourceName="CheckError.terminal.Match" eventIdentity="CheckError : one error found">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$LocalEnvironment/Variables/TCSLog/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="CheckError : one error found"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="CommonError_traceErrorAndReturnStatus.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="830,24">
+        <translation xmi:type="utility:ConstantString" string="traceErrorAndReturnStatus"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow:FCMComposite_1" xmi:id="FCMComposite_1_6" location="117,118">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_start"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_rest_api_end.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="864,121">
+        <translation xmi:type="utility:ConstantString" string="cc_rest_api_end"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="255,119" computeExpression="esql://routine/#field_agent_event_SetBusinessIdentifier_Compute.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="SetBusinessIdentifier"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SetBusinessIdentifier.terminal.out" eventIdentity="INFO: FindParameters">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$LocalEnvironment/Variables/businessIdentifier/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: FindParameters"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="729,121" computeExpression="esql://routine/#field_agent_event_PrepareResponse_Compute.Main">
+        <translation xmi:type="utility:ConstantString" string="PrepareResponse"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="Match" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_6" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

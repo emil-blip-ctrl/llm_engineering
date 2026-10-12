@@ -1,0 +1,223 @@
+DECLARE ns NAMESPACE 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsncmpinvoice';
+
+
+CREATE COMPUTE MODULE invoice_split_and_send_invoices
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--set OutputLocalEnvironment = InputLocalEnvironment;
+	    
+	    DECLARE invoice REFERENCE TO InputRoot.JSON.Data.Item[1];
+	    DECLARE log REFERENCE TO Environment.Variables.logging.envelope.log;
+	    
+	    if CARDINALITY(InputRoot.JSON.Data.Item[]) > 1 then
+			set Environment.Variables.ErrorRefApp = 'ACEFONC0015';
+			SET Environment.Variables.HttpReturnCode = '422';
+			set Environment.Variables.ErrorProviderName = 'ACE';
+			SET Environment.Variables.ExceptionMessage = 'Receiver system does not support array of many object, provide an array of one object only';
+			propagate to label 'error';
+			return false;	    	
+	    end if;
+	    
+	    if length(InputRoot.JSON.Data.Item[1]."invoice-type-code".content) = 0 then
+	    	set OutputRoot = InputRoot;
+	    	CREATE FIELD  Environment.Variables.logging.envelope.log;
+			SET Environment.Variables.logging.logContent = TRUE;
+			DECLARE log REFERENCE TO Environment.Variables.logging.envelope.log;
+			SET log.severity = 'ERROR';
+			SET log.sourceSystem = 'ACE';
+			SET log.targetSystem = 'ACE';
+			SET log.message = 'ERROR_VALIDATE_PAYMENT';
+			SET log.errorLocation = null;
+			propagate to label 'log-elk';	    	
+	    	set OutputRoot = InputRoot;
+			set Environment.Variables.ErrorRefApp = 'ACEFONC0016';
+			SET Environment.Variables.HttpReturnCode = '422';
+			set Environment.Variables.ErrorProviderName = 'ACE';
+			SET Environment.Variables.ExceptionMessage = 'invoice-type-code has to be filled in';			
+			set Environment.Variables.ExceptionStackTrace = ''; 
+	    	propagate to label 'error-label';
+			return false;
+	    elseif length(COALESCE(Environment.Variables.Policies."finance-accounting-integration-invoices-policy-project".{'typeflow_' || InputRoot.JSON.Data.Item[1]."invoice-type-code".content},'')) = 0 then
+	    	set OutputRoot = InputRoot;
+	    	CREATE FIELD  Environment.Variables.logging.envelope.log;
+			SET Environment.Variables.logging.logContent = TRUE;
+			DECLARE log REFERENCE TO Environment.Variables.logging.envelope.log;
+			SET log.severity = 'ERROR';
+			SET log.sourceSystem = 'ACE';
+			SET log.targetSystem = 'ACE';
+			SET log.message = 'ERROR_VALIDATE_PAYMENT';
+			SET log.errorLocation = null;
+			propagate to label 'log-elk';
+						
+			set OutputRoot = InputRoot;
+			set Environment.Variables.ErrorRefApp = 'ACEFONC0016';
+			SET Environment.Variables.HttpReturnCode = '422';
+			set Environment.Variables.ErrorProviderName = 'ACE';
+			SET Environment.Variables.ExceptionMessage = 'unknown invoice-type-code reference value : ' || InputRoot.JSON.Data.Item[1]."invoice-type-code".content ;			
+			set Environment.Variables.ExceptionStackTrace = ''; 
+			
+			propagate to label 'error-label';
+			return false;
+	    elseif not EXISTS(select invoiceNote."invoice-note-text".content from InputRoot.JSON.Data.Item[1]."invoice-note".Item[] as invoiceNote where invoiceNote."invoice-note-subject-code".content = '7402') then
+	    	set OutputRoot = InputRoot;
+	    	CREATE FIELD  Environment.Variables.logging.envelope.log;
+			SET Environment.Variables.logging.logContent = TRUE;
+			DECLARE log REFERENCE TO Environment.Variables.logging.envelope.log;
+			SET log.severity = 'ERROR';
+			SET log.sourceSystem = 'ACE';
+			SET log.targetSystem = 'ACE';
+			SET log.message = 'ERROR_VALIDATE_PAYMENT';
+			SET log.errorLocation = null;
+			propagate to label 'log-elk';
+	    	
+	    	set OutputRoot = InputRoot;
+			set Environment.Variables.ErrorRefApp = 'ACEFONC0001';
+			SET Environment.Variables.HttpReturnCode = '422';
+			set Environment.Variables.ErrorProviderName = 'ACE';
+			SET Environment.Variables.ExceptionMessage = 'internal camping-care identifier mandatory in  : invoice-note-subject-code.invoice-note-subject-code.content = 7402';			
+			set Environment.Variables.ExceptionStackTrace = ''; 
+			propagate to label 'error-label';
+			return false;
+	    	
+	    end if;
+	     
+	    CREATE FIELD OutputRoot.DataObject.ns:SapZwsNcmpInvoice;
+	    DECLARE RefOut,RefOutInvoiceLine REFERENCE TO OutputRoot.DataObject.ns:SapZwsNcmpInvoice;
+	    
+	    --CREATE FIELD OutputRoot.JSON.Data;
+	    --DECLARE RefOut, RefOutInvoiceLine  REFERENCE TO OutputRoot.JSON.Data;
+	    
+	    for RefIn as InputRoot.JSON.Data.Item[] do 
+	    	set RefOut.OBJECT_SYSTEM = 'CC';
+	    	set RefOut.X_GLOBAL_TRANSACTION_ID = Environment.Variables.logging.envelope.GTID;
+
+			-- Check if "invoice-number" exists and has content
+			IF CARDINALITY(RefIn."invoice-number".Item[]) > 0 THEN
+			    IF LENGTH(RefIn."invoice-number".Item.content) > 0 THEN
+			        -- Set the INVOICE_NUMBER if it exists and has content
+			        set RefOut.SapNcmpInv.SapInvoice.SapHeader.INVOICE_NUMBER = LEFT(RefIn."invoice-number".Item.content, 16);
+			    ELSE
+			        -- Throw a 400 error if "invoice-number" content is missing or empty
+			        SET Environment.Variables.ErrorRefApp = 'ACEFONC0016'; 
+			        SET Environment.Variables.HttpReturnCode = '400';
+			        SET Environment.Variables.ErrorProviderName = 'ACE';
+			        SET Environment.Variables.ExceptionMessage = 'Invoice Number is missing or empty.';
+			        PROPAGATE TO LABEL 'error-label';
+			        RETURN FALSE;
+			    END IF;
+			ELSE
+			    -- Throw a 400 error if "invoice-number" field is missing entirely
+			    SET Environment.Variables.ErrorRefApp = 'ACEFONC0017'; 
+			    SET Environment.Variables.HttpReturnCode = '400';
+			    SET Environment.Variables.ErrorProviderName = 'ACE';
+			    SET Environment.Variables.ExceptionMessage = 'Invoice Number is missing in the payload.';
+			    PROPAGATE TO LABEL 'error-label';
+			    RETURN FALSE;
+			END IF;
+
+			-- Check if invoice-type-code is '380' or '381'
+			IF InputRoot.JSON.Data.Item[1]."invoice-type-code".content IN ('380', '381') THEN
+			    -- Check if preceding-invoice-reference exists
+			    IF CARDINALITY(RefIn."preceding-invoice-reference".Item[]) > 0 THEN
+			        -- Declare reference and check content
+			        DECLARE refPrecedingInvoiceReference REFERENCE TO RefIn."preceding-invoice-reference".Item[1]."preceding-invoice-reference";
+			        IF LENGTH(refPrecedingInvoiceReference.content) > 0 THEN
+			            -- Set ORG_INVOICE_NUMBER from the content of the first element
+			            SET RefOut.SapNcmpInv.SapInvoice.SapHeader.ORG_INVOICE_NUMBER = LEFT(refPrecedingInvoiceReference.content, 16);
+			        ELSE
+			            -- Throw a 400 error if content is missing
+			            SET Environment.Variables.ErrorRefApp = 'ACEFONC0016'; 
+			            SET Environment.Variables.HttpReturnCode = '400';
+			            SET Environment.Variables.ErrorProviderName = 'ACE';
+			            SET Environment.Variables.ExceptionMessage = 'Preceding Invoice Number is missing for invoice-type-code 380 or 381.';
+			            PROPAGATE TO LABEL 'error-label';
+			            RETURN FALSE;
+			        END IF;
+			    ELSE
+			        -- Throw error if preceding-invoice-reference array is empty
+			        SET Environment.Variables.ErrorRefApp = 'ACEFONC0016';
+			        SET Environment.Variables.HttpReturnCode = '400';
+			        SET Environment.Variables.ErrorProviderName = 'ACE';
+			        SET Environment.Variables.ExceptionMessage = 'Preceding Invoice Number is missing for invoice-type-code 380 or 381.';
+			        PROPAGATE TO LABEL 'error-label';
+			        RETURN FALSE;
+			    END IF;
+			ELSE
+			    -- For other invoice-type-codes, set ORG_INVOICE_NUMBER if preceding-invoice-reference exists
+			    IF CARDINALITY(RefIn."preceding-invoice-reference".Item[]) > 0 THEN
+			        DECLARE refPrecedingInvoiceReference REFERENCE TO RefIn."preceding-invoice-reference".Item[1]."preceding-invoice-reference";
+			        IF LENGTH(refPrecedingInvoiceReference.content) > 0 THEN
+			            SET RefOut.SapNcmpInv.SapInvoice.SapHeader.ORG_INVOICE_NUMBER = LEFT(refPrecedingInvoiceReference.content, 16);
+			        ELSE
+			            SET RefOut.SapNcmpInv.SapInvoice.SapHeader.ORG_INVOICE_NUMBER = NULL;
+			        END IF;
+			    ELSE
+			        SET RefOut.SapNcmpInv.SapInvoice.SapHeader.ORG_INVOICE_NUMBER = NULL;
+			    END IF;
+			END IF;
+			-- Check if "invoice-note" exists and has content
+			IF CARDINALITY(RefIn."invoice-note".Item[]) > 0 THEN
+			    -- Reference the first "invoice-note" item
+			    DECLARE refInvoiceNote REFERENCE TO RefIn."invoice-note".Item[1];
+			    
+			    -- Check if the invoice-note-subject-code is '7402'
+			    IF refInvoiceNote."invoice-note-subject-code".content = '7402' THEN
+			        -- Validate if "invoice-note-text" content is missing or empty
+			        IF LENGTH(refInvoiceNote."invoice-note-text".content) = 0 THEN
+			            -- Throw an error if "invoice-note-text" is empty
+			            SET Environment.Variables.ErrorRefApp = 'ACEFONC0016';
+			            SET Environment.Variables.HttpReturnCode = '400';
+			            SET Environment.Variables.ErrorProviderName = 'ACE';
+			            SET Environment.Variables.ExceptionMessage = 'Invoice note text is required for invoice-note-subject-code 7402.';
+			            PROPAGATE TO LABEL 'error-label';
+			            RETURN FALSE;
+			        END IF;
+			    END IF;
+			END IF;
+
+		    set RefOut.SapNcmpInv.SapInvoice.SapHeader.RESERVATION_NUMBER  = left(RefIn."sales-order-reference".content,32);
+		    set RefOut.SapNcmpInv.SapInvoice.SapHeader.RESERVATION_DATE  = RefIn."invoice-issue-date".content;
+			-- Directly map the content of invoicing-period-start-date and invoicing-period-end-date
+			set RefOut.SapNcmpInv.SapInvoice.SapHeader.START_DATE_STAY = RefIn."delivery-information"."invoicing-period"."invoicing-period-start-date".content;
+			set RefOut.SapNcmpInv.SapInvoice.SapHeader.END_DATE_STAY = RefIn."delivery-information"."invoicing-period"."invoicing-period-end-date".content;
+
+		    set RefOut.SapNcmpInv.SapInvoice.SapHeader.KOSTL = left(RefIn."delivery-information"."deliver-to-location-identifier".Item.content,10);
+		    set RefOut.SapNcmpInv.SapInvoice.SapHeader.DEVISE = left(RefIn."invoice-currency-code".content,5);
+		    set RefOut.SapNcmpInv.SapInvoice.SapHeader.TYPE_FLOW = left(Environment.Variables.Policies."finance-accounting-integration-invoices-policy-project".{'typeflow_' || InputRoot.JSON.Data.Item[1]."invoice-type-code".content},3);
+ 
+		    set RefOut.SapNcmpInv.SapInvoice.SapCustomer.CUSTOMER_1= left(the(select item buyerIdentifier.content from RefIn.buyer."buyer-identifier".Item[] as buyerIdentifier where TRANSLATE(lower(buyerIdentifier."scheme-identifier"),' ','') = 'camping_care'),10);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.CUSTOMER_2= left(the(select item buyerIdentifier.content from RefIn.buyer."buyer-identifier".Item[] as buyerIdentifier where TRANSLATE(lower(buyerIdentifier."scheme-identifier"),' ','') = 'multicamp'),10);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.CUSTOMER_3= left(the(select item buyerIdentifier.content from RefIn.buyer."buyer-identifier".Item[] as buyerIdentifier where TRANSLATE(lower(buyerIdentifier."scheme-identifier"),' ','') = 'tcs_crm_sfdc_customer_number'),10);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.NAME= left(TRIM(SUBSTRING(RefIn.buyer."buyer-name".content BEFORE ',')),40);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.NAME_2= left(TRIM(SUBSTRING(RefIn.buyer."buyer-name".content AFTER ',')),40);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.CITY= left(TRIM(RefIn.buyer."buyer-postal-address".city.content),40);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.POSTL_COD1= left(TRIM(RefIn.buyer."buyer-postal-address"."post-code".content),10);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.STREET=left(TRIM(RefIn.buyer."buyer-postal-address"."address-line-1".content),60);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.STREET2=left(TRIM(RefIn.buyer."buyer-postal-address"."address-line-2".content),40);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.HOUSE_NO=left(TRIM(RefIn.buyer."buyer-postal-address"."address-line-3".content),10);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.TEL1_NUMBR=left(TRIM(RefIn.buyer."buyer-contact"."contact-telephone-number".content),30);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.E_MAIL=left(TRIM(RefIn.buyer."buyer-contact"."contact-email-address".content),241);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.COUNTRYISO=left(TRIM(RefIn.buyer."buyer-postal-address"."country-code".content),3);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.CUSTUMER_LANGUAGE_ISO=left(the (select item additionalSupportingDocuments."supporting-document-description".content from  RefIn."additional-supporting-documents".Item[] as additionalSupportingDocuments where additionalSupportingDocuments."supporting-document-reference".content='CUSTOMER_LANGUAGE_ISO'),2);
+			set RefOut.SapNcmpInv.SapInvoice.SapCustomer.IBAN=left(RefIn."payment-instructions"."credit-transfer".Item."payment-account-identifier".Item."content",34);
+					 
+			for SapDetailIn as RefIn."invoice-line".Item[] do
+				CREATE LASTCHILD OF	RefOut.SapNcmpInv.SapInvoice as RefOutInvoiceLine NAME 'SapDetail' ;
+				set RefOutInvoiceLine.ARTICLE = left(SapDetailIn."item-information"."item-sellers-identifier".Item.content,100);
+				set RefOutInvoiceLine.QUANTITY = ROUND(cast(SapDetailIn."invoiced-quantity".content as DECIMAL), 2 MODE ROUND_DOWN);
+				set RefOutInvoiceLine.MONTANT_TTC = ROUND(cast(SapDetailIn."invoiced-line-net-amount".content as DECIMAL) , 2 MODE ROUND_DOWN);
+			end for;
+			
+			set Environment.Variable."invoice-number" = RefIn."invoice-number".Item.content;
+			SET Environment.Variables.logging.envelope.custom.messageBusinessIdentifiers.Identifier.identifierKey = 'Invoice-number';
+			SET Environment.Variables.logging.envelope.custom.messageBusinessIdentifiers.Identifier.identifierValue = Environment.Variable."invoice-number";
+	    
+			propagate;
+			
+		end for;
+		
+	    
+
+		RETURN false;
+	END;
+END MODULE;

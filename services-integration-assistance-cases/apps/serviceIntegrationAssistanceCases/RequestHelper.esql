@@ -1,0 +1,49 @@
+
+	CREATE FUNCTION PrepareRequestHeaders (IN OutputRoot REFERENCE, IN refEnvironment REFERENCE)
+	BEGIN
+
+		SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/json; charset=utf-8';
+		SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';
+		SET OutputRoot.HTTPRequestHeader."Accept-Encoding" = 'identity';
+		
+		SET OutputRoot.HTTPRequestHeader."X-IBM-Client-id" = Shlib_PoliciesReader.gestionPolicy('{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy', 'client_id');
+		SET OutputRoot.HTTPRequestHeader."X-IBM-Client-secret" = Shlib_PoliciesReader.gestionPolicy('{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy', 'client_secret');
+		
+		SET OutputRoot.HTTPRequestHeader."X-Correlation-Id" = refEnvironment.Variables.TCSLog.context."correlation-id";
+		SET OutputRoot.HTTPRequestHeader."X-Global-Transaction-Id" = refEnvironment.Variables.TCSLog.context."global-transaction-id";
+		SET OutputRoot.HTTPRequestHeader."X-Caller-Code" = refEnvironment.Variables.TCSLog.context."caller-code";
+		
+		DECLARE refHeaders REFERENCE TO OutputRoot.HTTPRequestHeader;
+		DETACH refHeaders;
+		ATTACH refHeaders TO OutputRoot.BLOB AS PREVIOUSSIBLING;
+	END;
+
+	CREATE FUNCTION PrepareUrlForRequest(IN OutputLocalEnvironment REFERENCE, IN InputLocalEnvironment REFERENCE, IN ServicePath CHARACTER, IN RequestMethod CHARACTER)
+	BEGIN
+		DECLARE urlCalled CHARACTER;
+		DECLARE fldName  CHARACTER;
+		DECLARE fldValue  CHARACTER;
+		
+		-- get endpoint from global policy
+		SET urlCalled = Shlib_PoliciesReader.gestionPolicy('{GlobalEndpointsPolicies}:GlobalEndpointsPolicy', 'apic-host');
+		SET urlCalled = urlCalled || Shlib_PoliciesReader.gestionPolicy('{CommonAssistancePolicies}:APICEndPointV2Policy', 'basepath-services-api-technical-assistance-cases');
+		SET urlCalled = urlCalled || ServicePath;
+		-- replace parameters
+		SET fldName = '{case-id}';		
+		IF CONTAINS(urlCalled, fldName) THEN
+			SET fldValue = InputLocalEnvironment.REST.Input.Parameters."case-id";
+			SET urlCalled = REPLACE (urlCalled, fldName, fldValue);
+		END IF; 	
+		SET fldName = '{srvc-id}';		
+		IF CONTAINS(urlCalled, fldName) THEN
+		SET fldValue = InputLocalEnvironment.REST.Input.Parameters."service-delivery-id";
+			SET urlCalled = REPLACE (urlCalled, fldName, fldValue);
+		END IF; 	
+
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = urlCalled;
+		SET OutputLocalEnvironment.Destination.HTTP.RequestLine.Method = RequestMethod;
+		
+		-- keep REST parameters from request for Translation back
+		SET OutputLocalEnvironment.REST = InputLocalEnvironment.REST;
+	END;
+

@@ -1,0 +1,67 @@
+
+CREATE COMPUTE MODULE invoice_handling_error
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+
+		SET OutputRoot.HTTPReplyHeader."X-Correlation-ID" = Environment.Variables.XCorrelationID;
+
+		SET Environment.Variables.HttpReturnCode = Environment.Variables.statusCode;
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = Environment.Variables.HttpReturnCode;
+		SET OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'I');
+		SET OutputRoot.JSON.Data.httpCode = '500';
+		SET OutputRoot.JSON.Data.httpMessage = 'ACE : Internal Server Error';
+		SET OutputRoot.JSON.Data.contexteCode = '';
+		SET OutputRoot.JSON.Data.id = Environment.Variables."X-Global-Transaction-Id";
+		SET OutputRoot.JSON.Data.moreInformation = GetDeepestInsertTextsSafe(InputExceptionList);
+
+		SET OutputLocalEnvironment.Error = true;
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = '500';
+		SET OutputLocalEnvironment.Destination.HTTP.RequestIdentifier= Environment.Variables.RequestIdentifier;
+		SET OutputLocalEnvironment.Environment= Environment;
+
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541';
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541';
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.Variables.In.XCallerCode;
+		SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.In.targeturl;
+		SET Environment.Variables.TCSLog.context."error-message" = OutputRoot.JSON.Data.statusMessage || '. ' || OutputRoot.JSON.Data.moreInformation;
+		SET Environment.Variables.TCSLog.context."error-code" = OutputRoot.JSON.Data.statusCode;		
+		
+		RETURN TRUE;
+	END;			
+
+
+	CREATE FUNCTION GetDeepestInsertTextsSafe(exceptionTree REFERENCE) RETURNS CHARACTER
+	BEGIN
+		DECLARE result CHARACTER '';
+		DECLARE recovarableException REFERENCE TO exceptionTree.RecoverableException;
+
+		IF LASTMOVE(recovarableException) THEN
+			RETURN GetDeepestInsertTextsSafe(recovarableException);
+		END IF;
+		
+		SET result = exceptionTree.Text || ': ';
+		DECLARE insertElement REFERENCE TO exceptionTree.Insert[1];
+
+		WHILE LASTMOVE(insertElement) DO
+			IF FIELDNAME(insertElement.Text) IS NOT NULL THEN
+				SET result = result || '|' || insertElement.Text;
+			END IF;
+			MOVE insertElement NEXTSIBLING;
+		END WHILE;
+		
+		RETURN result || '|';
+
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+END MODULE;

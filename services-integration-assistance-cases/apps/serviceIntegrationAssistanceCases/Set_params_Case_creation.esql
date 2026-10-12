@@ -1,0 +1,16 @@
+
+
+CREATE COMPUTE MODULE Set_params_Case_creation_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		CALL PrepareRequestHeaders (OutputRoot, InputLocalEnvironment);
+		CALL PrepareUrlForRequest ( OutputLocalEnvironment, InputLocalEnvironment,  '/cases', 'POST');
+
+		RETURN TRUE;
+	END;
+	
+
+END MODULE;

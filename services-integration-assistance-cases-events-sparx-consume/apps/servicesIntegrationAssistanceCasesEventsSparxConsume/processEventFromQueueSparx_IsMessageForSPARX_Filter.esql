@@ -1,0 +1,44 @@
+
+CREATE FILTER MODULE processEventFromQueueSparx_IsMessageForSPARX_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE contextsOfEvent CHARACTER 'FOREIGN_SERVICE_NOT_CONCERNED, FOREIGN_SERVICE_UNAVAILABLE';
+
+		IF NOT isAnyTokenInList(Environment.Variables.MessageIn.MQRFH2.usr.UDcontextsOfEvent, contextsOfEvent)
+		THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+
+	CREATE FUNCTION isAnyTokenInList(IN tokenList CHARACTER, IN allowedValues CHARACTER) RETURNS BOOLEAN
+	BEGIN
+		SET tokenList = SUBSTRING(tokenList FROM 2);
+		DECLARE pos INTEGER;
+		DECLARE token CHARACTER;
+		DECLARE found BOOLEAN FALSE;
+		DECLARE paddedY CHARACTER ',' || REPLACE(allowedValues, ' ', '') || ',';
+
+		WHILE LENGTH(tokenList) > 0 AND found = FALSE
+		DO
+		    SET pos = POSITION(';' IN tokenList);
+		    IF pos > 0 THEN
+		        SET token = SUBSTRING(tokenList FROM 1 FOR pos - 1);
+		        SET tokenList = SUBSTRING(tokenList FROM pos + 1);
+		    ELSE
+		        SET token = tokenList;
+		        SET tokenList = '';
+		    END IF;
+
+		    SET token = TRIM(token);
+
+		    IF POSITION(',' || token || ',' IN paddedY) > 0 THEN
+        		SET found = TRUE;
+   			END IF;
+		END WHILE;
+
+		RETURN found;
+	END;
+
+END MODULE;

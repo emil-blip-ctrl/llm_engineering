@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:sapasi="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata" xmlns:sapdata1333925805="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdata1333925805" xmlns:sapmeta528807181="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapmeta528807181" xmlns:saptechnicalreponse="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/saptechnicalreponse568329194" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/saptechnicalreponse568329194">
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapmeta528807181" schemaLocation="SapMeta528807181.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdata1333925805" schemaLocation="SapData1333925805.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability">
+<info:resourceAdapter xmlns:info="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability" version="7.5.0.5_IF10"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="commonj.connector.asi">
+<asi:annotationSet xmlns:asi="commonj.connector.asi" asiNSURI="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:complexType name="SapTechnicalReponse">
+    
+    <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIBusinessObjectTypeMetadata>
+</sapasi:sapBAPIBusinessObjectTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+    
+    <xsd:sequence maxOccurs="1" minOccurs="1">
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="SapMeta" nillable="true" type="sapmeta528807181:SapMeta">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>META</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_DOC_S_META</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>OUT</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="SapData" nillable="true" type="sapdata1333925805:SapData">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>DATA</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_DOC_S_DATA</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>OUT</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+    </xsd:sequence>
+    
+  </xsd:complexType>
+  
+</xsd:schema>

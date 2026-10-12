@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:sapasi="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata" xmlns:sapfindoc1249096900="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapfindoc1249096900" xmlns:sapreturn1478768624="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapreturn1478768624" xmlns:saptechnicalreponse568329194="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/saptechnicalreponse568329194" xmlns:sapzwsfindoc="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsfindoc" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsfindoc">
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapfindoc1249096900" schemaLocation="SapFinDoc1249096900.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/saptechnicalreponse568329194" schemaLocation="SapTechnicalReponse568329194.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapreturn1478768624" schemaLocation="SapReturn1478768624.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability">
+<info:resourceAdapter xmlns:info="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability" version="7.5.0.5_IF10"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="commonj.connector.asi">
+<asi:annotationSet xmlns:asi="commonj.connector.asi" asiNSURI="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:complexType name="SapZwsFinDoc">
+    
+    <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIBusinessObjectTypeMetadata>
+<sapasi:Type>BAPI</sapasi:Type>
+<sapasi:Operation>
+<sapasi:MethodName>ZWS_FIN_DOC</sapasi:MethodName>
+<sapasi:Name>Execute</sapasi:Name>
+</sapasi:Operation>
+</sapasi:sapBAPIBusinessObjectTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+    
+    <xsd:sequence maxOccurs="1" minOccurs="1">
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="OBJECT_SYSTEM" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>OBJECT_SYSTEM</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>10</sapasi:MaxLength>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="10"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="PROCESS_CONTROL" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>PROCESS_CONTROL</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>50</sapasi:MaxLength>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="50"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="PROCESS_ID" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>PROCESS_ID</sapasi:FieldName>
+<sapasi:FieldType>NUM</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>16</sapasi:MaxLength>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="16"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="PRODUCER_APP" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>PRODUCER_APP</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>10</sapasi:MaxLength>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="10"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="X_GLOBAL_TRANSACTION_ID" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>X_GLOBAL_TRANSACTION_ID</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>50</sapasi:MaxLength>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="50"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="IDOC_NUMBER" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>IDOC_NUMBER</sapasi:FieldName>
+<sapasi:FieldType>NUM</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>16</sapasi:MaxLength>
+<sapasi:ParameterType>OUT</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="16"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="SapFinDoc" nillable="true" type="sapfindoc1249096900:SapFinDoc">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>FIN_DOC</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_S_DOC_T</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="SapTechnicalReponse" nillable="true" type="saptechnicalreponse568329194:SapTechnicalReponse">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>TECHNICAL_REPONSE</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_DOC_S_TECH_RESP</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:ParameterType>OUT</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="unbounded" minOccurs="1" name="SapReturn" nillable="true" type="sapreturn1478768624:SapReturn">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>RETURN</sapasi:FieldName>
+<sapasi:FieldType>BAPIRET2</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:ParameterType>INOUT</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+    </xsd:sequence>
+    
+  </xsd:complexType>
+      
+  <xsd:element ibmSchExtn:docRoot="true" name="SapZwsFinDoc" type="sapzwsfindoc:SapZwsFinDoc"/>
+  
+</xsd:schema>

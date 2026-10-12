@@ -1,0 +1,11 @@
+
+
+CREATE COMPUTE MODULE health_health_response
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		set OutputRoot.JSON.Data.return.sap = InputRoot.DataObject;
+		set OutputRoot.JSON.Data.return.status = 'success';
+		RETURN TRUE;
+	END;
+
+END MODULE;

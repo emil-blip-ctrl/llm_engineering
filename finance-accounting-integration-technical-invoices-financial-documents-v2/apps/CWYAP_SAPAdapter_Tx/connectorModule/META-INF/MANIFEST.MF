@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Specification-Title: Adapter
+Specification-Vendor: IBM Corp.
+Specification-Version: 1.5
+Build-Timestamp: 2025-09-17T14:28:22.384+0100
+Build-Revision: aebb24ecfaf5b08673f1ec342d5541500d17981f
+Created-By: Gradle 8.7
+Build-JDK: 11.0.20 - IBM Corporation openj9-0.40.0
+Name: com/ibm/j2ca/sap
+Implementation-Title: IBM WebSphere Adapter for SAP Software
+Implementation-Vendor: International Business Machines Corporation
+Implementation-Version: 7.5.0.5_IF35
+

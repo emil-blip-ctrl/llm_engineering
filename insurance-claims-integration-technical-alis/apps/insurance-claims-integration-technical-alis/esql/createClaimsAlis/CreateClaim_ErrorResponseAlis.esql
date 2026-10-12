@@ -1,0 +1,30 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+CREATE COMPUTE MODULE CreateClaim_ErrorResponseAlisAsync
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		IF InputRoot.BLOB.BLOB IS NOT NULL THEN
+			DECLARE errorMessage ROW;
+		    CREATE LASTCHILD OF errorMessage DOMAIN('JSON') PARSE(CAST(InputRoot.BLOB.BLOB AS BLOB));
+		    DECLARE errorMessageString CHARACTER CAST(InputRoot.BLOB.BLOB AS CHARACTER CCSID 1208);
+		
+		    IF errorMessage.JSON.Data.httpCode IS NOT NULL THEN
+		        SET Environment.Variables.Error.httpCode = errorMessage.JSON.Data.httpCode;
+		        SET Environment.Variables.Error.httpMessage = 'APIC : ' || errorMessage.JSON.Data.httpMessage;
+	            SET Environment.Variables.Error.moreInformation = errorMessage.JSON.Data.moreInformation;
+		    ELSE
+		        SET Environment.Variables.Error.httpCode = InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code";
+		        SET Environment.Variables.Error.httpMessage = 'ALIS : ' || errorMessage.JSON.Data.statusIVO.message;
+	            SET Environment.Variables.Error.moreInformation = errorMessageString;
+		    END IF;
+		ELSE	
+			SET Environment.Variables.Error.httpCode = 500;
+			SET Environment.Variables.Error.httpMessage = 'ACE : Internal Server Error';
+	        SET Environment.Variables.Error.moreInformation = 'Error Calling ALIS';
+		END IF;	
+		
+		THROW USER EXCEPTION; 		
+		RETURN FALSE;	
+	END;
+	
+END MODULE;		

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<groupId>ch.tcs.nip.pom</groupId>
+		<artifactId>tcs-pom-ace</artifactId>
+		<version>1.0.10</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>ch.tcs.nip.ace</groupId>
+	<artifactId>finance-accounting-integration-invoices-v2</artifactId>
+	<version>1.0.4-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<properties>
+		<ibm.plugin.version>1.39.0</ibm.plugin.version>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>ch.tcs.nip.ibm.maven.plugin</groupId>
+				<artifactId>ibm-maven-plugin</artifactId>
+				<version>${ibm.plugin.version}</version>
+			</plugin>
+			<plugin>
+				<groupId>external.atlassian.jgitflow</groupId>
+				<artifactId>jgitflow-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>

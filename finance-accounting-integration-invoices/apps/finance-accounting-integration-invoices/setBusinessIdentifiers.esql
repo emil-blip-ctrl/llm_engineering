@@ -1,0 +1,19 @@
+
+
+CREATE COMPUTE MODULE setBusinessIdentifiers
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		
+		--Business Identifiers
+		DECLARE Invoice REFERENCE TO InputRoot.JSON.Data.Item[1];
+		IF UCASE(InputRoot.HTTPInputHeader."X-Origin-Caller-Code") = 'IDIT' THEN
+		    SET Environment.Variables.Info.PROCESS_CONTROL = Invoice."process-control"."specification-identifier".Item."scheme-identifier";
+		ELSE
+			SET Environment.Variables.Info.PROCESS_CONTROL = Invoice."process-control"."specification-identifier".Item."content";       	
+		END IF;	
+		 
+		RETURN TRUE;
+	END;
+END MODULE;

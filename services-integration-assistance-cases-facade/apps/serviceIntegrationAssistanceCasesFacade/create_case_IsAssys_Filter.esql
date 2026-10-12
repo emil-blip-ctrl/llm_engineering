@@ -1,0 +1,16 @@
+PATH Shlib_PoliciesReader;
+
+CREATE FILTER MODULE create_case_IsAssys_Filter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sfcasActivated CHARACTER gestionPolicy('{services-integration-policies-credentials}:SfcasCredentialsPolicy', 'sfcas-activated');
+
+		IF UPPER(COALESCE(sfcasActivated, '')) = 'FALSE'
+		THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+
+END MODULE;

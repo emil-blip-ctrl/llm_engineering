@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="common_integration_shlib_encapsulate_calls/cc_rest_api_start.subflow" nsPrefix="common_integration_shlib_encapsulate_calls_cc_rest_api_start.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.cmdb-id-source" name="cmdb-id-source" lowerBound="1" defaultValueLiteral="default">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="cc_rest_api_start" bundleName="common_integration_shlib_encapsulate_calls/cc_rest_api_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj16/cc_rest_api_start.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/common-integration-shlib-encapsulate-calls/icons/full/obj30/cc_rest_api_start.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Used at the beginning in a REST API flow to set up context for monitoring"/>
+    <longDescription xmi:type="utility:ConstantString" string="When using a REST API flow, add this this subflow at the beginning of the desing flow. Thi set differents informations based on the input message (X-Caller-Code, X-Global-Transaction-Id etc..) to populate environment variables used to create entries in ELK&#xD;&#xA;&#xD;&#xA;Before this subflow, if business-identifiers has to be defined in TCS monitoring, please create this input tree&#xD;&#xA;&#xD;&#xA;LocalEnvironment.&quot;business-identifiers&quot;.key1 = 'Value1';&#xD;&#xA;LocalEnvironment.&quot;business-identifiers&quot;.key2 = 'Value2';"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="20,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="common_integration_shlib_encapsulate_calls/cc_rest_api_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="320,20">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="common_integration_shlib_encapsulate_calls/cc_rest_api_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="105,29" computeExpression="esql://routine/common_integration_shlib_encapsulate_calls#cc_rest_api_start_SetMonitoringEnvContextRestApi.Main">
+        <translation xmi:type="utility:ConstantString" string="SetMonitoringEnvContextRestApi"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SetMonitoringEnvContextRestApi.terminal.out" eventIdentity="$Environment/Variables/MonitoringMessage">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$LocalEnvironment/business-identifiers" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator dataLocation="$Root/HTTPInputHeader/X-Correlation-Id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator dataLocation="$Environment/Variables/trackID" eventCorrelation="dataLocation"/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName dataLocation="$Environment/Variables/MonitoringMessage" isXPath="true"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.cmdb-id-source">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.cmdb-id-source" bundleName="common_integration_shlib_encapsulate_calls/cc_rest_api_start" pluginId="common-integration-shlib-encapsulate-calls"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

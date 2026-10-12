@@ -1,0 +1,2059 @@
+---
+swagger: "2.0"
+info:
+  description: "services-api-assistance-cases"
+  version: "1.0.0"
+  title: "services-api-assistance-cases"
+  contact:
+    email: "05_IT_Applications_Solutions@tcs.ch"
+externalDocs:
+  description: "Public API for Assistance Cases"
+  url: "https://confluence.tcsgroup.ch/x/hBC-Ig"
+basePath: "/services/v1/integration/assistance/facade/cases"
+schemes:
+- "https"
+paths:
+  /:
+    post:
+      summary: "create an assistance case"
+      description: "create an assistance case"
+      operationId: "create_case"
+      parameters:
+      - name: "fullCase"
+        in: "body"
+        required: true
+        description: "full case description"
+        schema:
+          $ref: "#/definitions/case"
+      responses:
+        "200":
+          description: "ok"
+          schema:
+            $ref: "#/definitions/case"
+        "400":
+          description: "One or all of the mandatory parameters are incorrectly formatted\
+            \ or missing"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+        "401":
+          description: "Unauthorized"
+          schema:
+            type: "string"
+        "404":
+          description: "the client was able to communicate with a given server, but\
+            \ the server could not find what was requested"
+          schema:
+            type: "string"
+        "408":
+          description: "Attempts to access the service fail repeatedly"
+          schema:
+            type: "string"
+        "429":
+          description: "The rate limit has been exceeded"
+          schema:
+            type: "string"
+        "500":
+          description: "The service is either unreachable or the service encountered\
+            \ a fatal error"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+  /{case-id}:
+    put:
+      summary: "update an assistance case"
+      description: "update an assistance case"
+      operationId: "update_case"
+      parameters:
+      - name: "case-id"
+        in: "path"
+        required: true
+        description: "case reference number"
+        type: "string"
+      - name: "fullCase"
+        in: "body"
+        required: true
+        description: "full case description"
+        schema:
+          $ref: "#/definitions/case"
+      responses:
+        "200":
+          description: "ok"
+          schema:
+            $ref: "#/definitions/case"
+        "400":
+          description: "One or all of the mandatory parameters are incorrectly formatted\
+            \ or missing"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+        "401":
+          description: "Unauthorized"
+          schema:
+            type: "string"
+        "404":
+          description: "the client was able to communicate with a given server, but\
+            \ the server could not find what was requested"
+          schema:
+            type: "string"
+        "408":
+          description: "Attempts to access the service fail repeatedly"
+          schema:
+            type: "string"
+        "429":
+          description: "The rate limit has been exceeded"
+          schema:
+            type: "string"
+        "500":
+          description: "The service is either unreachable or the service encountered\
+            \ a fatal error"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+  /{case-id}/services-deliveries:
+    post:
+      summary: "create a new assistance service"
+      description: "create a new assistance service for the given case identifier"
+      operationId: "create_service"
+      parameters:
+      - name: "case-id"
+        in: "path"
+        required: true
+        description: "case reference number"
+        type: "string"
+      - name: "serviceAssistance"
+        in: "body"
+        required: true
+        description: "full assistance service"
+        schema:
+          $ref: "#/definitions/servicedelivery"
+      responses:
+        "200":
+          description: "ok"
+          schema:
+            $ref: "#/definitions/servicedelivery"
+        "400":
+          description: "One or all of the mandatory parameters are incorrectly formatted\
+            \ or missing"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+        "401":
+          description: "Unauthorized"
+          schema:
+            type: "string"
+        "404":
+          description: "the client was able to communicate with a given server, but\
+            \ the server could not find what was requested"
+          schema:
+            type: "string"
+        "408":
+          description: "Attempts to access the service fail repeatedly"
+          schema:
+            type: "string"
+        "429":
+          description: "The rate limit has been exceeded"
+          schema:
+            type: "string"
+        "500":
+          description: "The service is either unreachable or the service encountered\
+            \ a fatal error"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+  /{case-id}/services-deliveries/{service-delivery-id}:
+    put:
+      summary: "update an assistance service"
+      description: "update an assistance service"
+      operationId: "update_service"
+      parameters:
+      - name: "case-id"
+        in: "path"
+        required: true
+        description: "case reference number"
+        type: "string"
+      - name: "service-delivery-id"
+        in: "path"
+        required: true
+        description: "service identifier"
+        type: "string"
+      - name: "serviceAssistance"
+        in: "body"
+        required: true
+        description: "full assistance service"
+        schema:
+          $ref: "#/definitions/servicedelivery"
+      responses:
+        "200":
+          description: "ok"
+          schema:
+            $ref: "#/definitions/servicedelivery"
+        "400":
+          description: "One or all of the mandatory parameters are incorrectly formatted\
+            \ or missing"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+        "401":
+          description: "Unauthorized"
+          schema:
+            type: "string"
+        "404":
+          description: "the client was able to communicate with a given server, but\
+            \ the server could not find what was requested"
+          schema:
+            type: "string"
+        "408":
+          description: "Attempts to access the service fail repeatedly"
+          schema:
+            type: "string"
+        "429":
+          description: "The rate limit has been exceeded"
+          schema:
+            type: "string"
+        "500":
+          description: "The service is either unreachable or the service encountered\
+            \ a fatal error"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+  /{case-id}/services-deliveries/{service-delivery-id}/field-agents/{field-agent-id}/events:
+    post:
+      operationId: "field_agent_event"
+      responses:
+        "200":
+          description: "The operation was successful."
+        "400":
+          description: "One or all of the mandatory parameters are incorrectly formatted\
+            \ or missing"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+        "401":
+          description: "Unauthorized"
+        "404":
+          description: "the client was able to communicate with a given server, but\
+            \ the server could not find what was requested"
+        "408":
+          description: "Attempts to access the service fail repeatedly"
+        "429":
+          description: "The rate limit has been exceeded"
+        "500":
+          description: "The service is either unreachable or the service encountered\
+            \ a fatal error"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Error"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      description: "notify a change on the field agent dispatched on an assistance\
+        \ service"
+      parameters:
+      - required: true
+        name: "case-id"
+        in: "path"
+        type: "string"
+        description: "case reference number"
+      - required: true
+        name: "service-delivery-id"
+        in: "path"
+        type: "string"
+        description: "service identifier"
+      - required: true
+        name: "field-agent-id"
+        in: "path"
+        type: "string"
+        description: "field agent identifier"
+      - name: "body"
+        in: "body"
+        schema:
+          $ref: "#/definitions/event"
+        description: "The request body for the operation"
+        required: true
+  /history:
+    get:
+      summary: "Retrieve the cases history for a given client personal reference"
+      description: "Retrieve the cases history for a given client personal reference"
+      operationId: "history_case"
+      parameters:
+      - name: "personalreference"
+        in: "query"
+        required: true
+        type: "integer"
+        maximum: 999999999
+        description: "personal reference"
+      responses:
+        "200":
+          description: "Simplified case with only some attributes (but in the common\
+            \ structure)"
+          schema:
+            $ref: "#/definitions/case"
+        "400":
+          description: "One or all of the mandatory parameters are incorrectly formatted\
+            \ or missing"
+          schema:
+            type: "string"
+        "401":
+          description: "Unauthorized"
+          schema:
+            type: "string"
+        "500":
+          description: "The service is either unreachable or the service encountered\
+            \ a fatal error"
+          schema:
+            type: "string"
+definitions:
+  activity:
+    type: "object"
+    description: "Activity provided by a Field Agent in a Case context for Assistance\
+      \ delivery."
+    properties:
+      ServiceDeliveryId:
+        type: "number"
+      Name:
+        type: "string"
+        description: "Repair/Towing/etc.. "
+      ExecutionDateTime:
+        type: "string"
+        format: "datetime"
+        description: "When happend "
+      Reference:
+        type: "number"
+        description: "Reference number "
+      Reason:
+        type: "string"
+        description: "Reason of activity "
+      Comment:
+        $ref: "#/definitions/note"
+        description: "Note/Remarks "
+      Status:
+        type: "string"
+        description: "Activity Status "
+      SparePartList:
+        type: "array"
+        items:
+          $ref: "#/definitions/sparepart"
+        description: "SpareParts used  "
+      Active:
+        type: "boolean"
+  address:
+    type: "object"
+    description: "Adress information for a building or street or highway "
+    properties:
+      Id:
+        type: "string"
+      EGID:
+        type: "string"
+        description: "GWR Address Id "
+      EDID:
+        type: "string"
+        description: "GWR House Entrance Id "
+        example: "0"
+      Type:
+        type: "string"
+        description: "ASSYS-5108 - lov name: addresstype "
+        example: "Address, Highway, Street"
+      Country:
+        type: "string"
+        description: "lov name: countryiso "
+        example: "CH"
+      Canton:
+        type: "string"
+        description: "lov name: swissstate "
+        example: "BE"
+      City:
+        type: "string"
+        description: "Locality name  "
+        example: "Urtenen-Schönbühl"
+      ZipCode:
+        type: "string"
+        example: "3322"
+      Street:
+        type: "string"
+        description: "Streetname "
+        example: "Bahnhofstrasse"
+      HouseNb:
+        type: "string"
+        description: "House number  "
+        example: "5"
+      AdditionalInformation:
+        type: "string"
+        description: "Also used to name foreign highways "
+      POBox:
+        type: "boolean"
+        description: "PO Box with number to use in the future for billing purpose,\
+          \ otherwise POBox without number. "
+      POBoxNumber:
+        type: "string"
+      Coordinate:
+        $ref: "#/definitions/coordinate"
+        description: "Also used for Highway Nodes "
+      HWName:
+        type: "string"
+        description: "In a POI, Name of a swiss highway "
+        example: "A1 Bern - Zürich"
+      HWSegment:
+        type: "string"
+        description: "In a POI, Segment of a swiss highway "
+        example: "Schönbühl - Luterbach"
+      HWDirection:
+        type: "string"
+        description: "In a POI, Driving direction on the swiss highway "
+        example: "Rudolf/Zürich [Luterbach]"
+      HWNodeMilestone:
+        type: "number"
+        description: "In a POI, Mileage in unit KM for swiss highway "
+        example: "15.5"
+      HWNodeDescription:
+        type: "string"
+        description: "In a POI, Description of a highway mileage node for swiss highway "
+        example: "Kirchberg - Einfahrt"
+  amount:
+    type: "object"
+    description: "Amount information for the authorized amount of a service delivery."
+    properties:
+      AmountCH:
+        type: "number"
+        description: "TTC "
+        example: "134.1"
+      AmountForeignCurrency:
+        type: "number"
+        description: "TTC "
+        example: "123.55"
+      ForeignCurrency:
+        type: "string"
+        description: "lov name: currency "
+        example: "EUR"
+      Date:
+        type: "string"
+        format: "datetime"
+      ExchangeRate:
+        type: "number"
+  b2bpartnership:
+    type: "object"
+    description: "B2B Partnership used in POI"
+    properties:
+      Partnership:
+        type: "string"
+        description: "uniquement *(POI B2B) dans la liste carmanufacturer! - lov name:\
+          \ carmanufacturer "
+      Dealercode:
+        type: "string"
+        example: "51600"
+  backofficeinformation:
+    type: "object"
+    description: "Backoffice information"
+    properties:
+      SupplierReference:
+        type: "string"
+        example: "910066"
+      PartnerReference:
+        type: "string"
+      SalesforceReference:
+        type: "string"
+      PaymentType:
+        type: "string"
+        description: "lov name: paymenttype "
+      SubjectToVAT:
+        type: "boolean"
+      VATNumber:
+        type: "string"
+        example: "CHE-105.974.329"
+      AutomaticBookingAllowed:
+        type: "boolean"
+      HeadOffice:
+        $ref: "#/definitions/legalperson"
+      BillingAddress:
+        $ref: "#/definitions/address"
+  batterydiagnostic:
+    type: "object"
+    description: "Check the battery state by performing a diagnostic check."
+    properties:
+      DiagnosticDate:
+        type: "string"
+        format: "datetime"
+        description: "Date of diagnostic extractionZeit=16:22:58 Datum=01.01.1970\
+          \ - CDM TCS V1.1: n/a - Interface-Assys Spec.: diagnosticDate "
+      SettingType:
+        type: "string"
+        description: "Batterietyp=Blei - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ settingType "
+      SettingStandard:
+        type: "string"
+        description: "Batterienorm=EN - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ settingStandard "
+      SettingCCARating:
+        type: "string"
+        description: "Kaltstartstrom=600 A - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ settingCCARating "
+      SettingCapacity:
+        type: "string"
+        description: "Kapazitaet=60 Ah - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ settingCapacity "
+      SettingAge:
+        type: "string"
+        description: "Alter=2 Jahre - CDM TCS V1.1: n/a - Interface-Assys Spec.: settingAge "
+      BatteryVoltage:
+        type: "string"
+        description: "Spannung=12,64 V - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ batteryTestVoltage "
+      BatteryCCARating:
+        type: "string"
+        description: "Kaltstartstrom=532 A - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ batteryTestCCARating "
+      BatteryTemperature:
+        type: "string"
+        description: "Temperatur=22,36 °C - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ batteryTestTemperature "
+      BatterySOC:
+        type: "string"
+        description: "SOC=93,9% - CDM TCS V1.1: n/a - Interface-Assys Spec.: batteryTestSOC "
+      BatterySOH:
+        type: "string"
+        description: "SOH=66,6% - CDM TCS V1.1: n/a - Interface-Assys Spec.: batteryTestSOH "
+      BatteryResult:
+        type: "string"
+        description: "Ergebnis=Batterie in Ordnung. Batterie nachladen. - CDM TCS\
+          \ V1.1: n/a - Interface-Assys Spec.: batteryTestResult "
+      StarterVoltage:
+        type: "string"
+        description: "Starterspannung=11,60 V - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: startTestStartVoltage "
+      StarterPowerconsumption:
+        type: "string"
+        description: "Stromaufnahme=86,7 A - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ startTestPowerConsumption "
+      StarterTime:
+        type: "string"
+        format: "datetime"
+        description: "Zeit=2,87 s - CDM TCS V1.1: n/a - Interface-Assys Spec.: startTestTime "
+      StarterResult:
+        type: "string"
+        description: "Ergebnis=Batterie-Startspannung i.O. - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: startTestResult "
+      GeneratorNeutralwithoutgas:
+        type: "string"
+        description: "LeerlaufOhneLast=14,75 V / 12,20 A - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: generatorTestNeutralWithoutGas "
+      GeneratorNeutralwithgas:
+        type: "string"
+        description: "LeerlaufMitLast=14,63 V / 8,80 A - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: generatorTestNeutralWithGas "
+      GeneratorRPMwithoutgas:
+        type: "string"
+        description: "DrehzahlOhneLast=14,69 V / 9,60 A - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: generatorTestRpmWithoutGas "
+      GeneratorRPMwithgas:
+        type: "string"
+        description: "DrehzahlMitLast=14,64 V / 9,00 A - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: generatorTestRpmWithGas "
+      GeneratorResult:
+        type: "string"
+        description: "Ergebnis=Batterie-Startspannung i.O. - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: generatorTestResult "
+      StandbyCurrent:
+        type: "string"
+        description: "Ruhestrom=-3,50 A - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ standbyCurrentTest "
+  branddealer:
+    type: "object"
+    description: "Partner information fields for garages."
+    properties:
+      Brand:
+        type: "string"
+        description: "e.g. Audi, Opel - lov name: carmanufacturer "
+      Dealercode:
+        type: "string"
+        description: "External dealer (garage) reference "
+        example: "51600"
+  case:
+    type: "object"
+    description: "Base object for all TCS incident cases. The document of an incident\
+      \ created by the Service requestor (TCS, assistance organisation, automotive\
+      \ club etc.)"
+    required:
+    - "IncidentDateTime"
+    properties:
+      Id:
+        type: "string"
+      CaseReferenceList:
+        type: "array"
+        items:
+          $ref: "#/definitions/reference"
+        description: "Needs to be defined for each consumer of the case (Assys, Sparx,\
+          \ mLogistics, etc) "
+        example: "193001234"
+      IncidentDateTime:
+        type: "string"
+        format: "datetime"
+        description: "Format: 2019-07-19 10:52:00.00000 "
+      IncidentLocation:
+        $ref: "#/definitions/location"
+      CaseOwner:
+        $ref: "#/definitions/legalperson"
+        description: "Organisation identified by case creation channel - CDM TCS V1.1:\
+          \ CdmCase.Owner "
+      CaseClient:
+        $ref: "#/definitions/client"
+        description: "e g member of TCS or other club, B2B client - Interface-Assys\
+          \ Spec.: ClientId "
+      Caller:
+        $ref: "#/definitions/person"
+        description: "case client or 3rd party (e g Police) "
+      MainCause:
+        type: "string"
+        description: "lov name: casecause - CDM TCS V1.1: CdmCase.IncidentType - Interface-Assys\
+          \ Spec.: MainCause "
+      ItemsUsedList:
+        type: "array"
+        items:
+          $ref: "#/definitions/item"
+        description: "List of vehicles (e g car, bicycle) or devices ( eg charging\
+          \ station) - CDM TCS V1.1: CdmCase.Vehicle "
+      ServiceDeliveryList:
+        type: "array"
+        items:
+          $ref: "#/definitions/servicedelivery"
+      CaseStatus:
+        type: "string"
+        description: "lov name: casestatus - Interface-Assys Spec.: IncidentStatus "
+      NoteList:
+        type: "array"
+        items:
+          $ref: "#/definitions/note"
+        description: "Persisted notes/remarks from different users added during case\
+          \ live cycle - CDM TCS V1.1: list of Notes "
+      Comment:
+        type: "string"
+        description: "Remarks on case "
+      MeasuredPerformanceList:
+        type: "array"
+        items:
+          $ref: "#/definitions/measuredperformance"
+      Priority:
+        type: "integer"
+        description: "Key 4200x are replaced by the same key - 42000 "
+      ContextList:
+        type: "array"
+        items:
+          $ref: "#/definitions/context"
+        description: "List of context objects meant to provide contextual information\
+          \ (process, source, etc.) - CDM TCS V1.1: list of Contexts "
+  client:
+    type: "object"
+    description: "Legal or natural person covered (contract holder or beneficiary)\
+      \ identified for the case"
+    properties:
+      ReferenceList:
+        type: "array"
+        items:
+          $ref: "#/definitions/reference"
+      TowingRefused:
+        type: "boolean"
+      AllowSurvey:
+        type: "boolean"
+      Person:
+        $ref: "#/definitions/person"
+        example: "LegalPerson or NaturalPerson"
+  component:
+    type: "object"
+    description: "Faulty component of a vehicle"
+    properties:
+      Component:
+        type: "string"
+        description: "ARC Component type - lov name: arcbreakdowncomponent - CDM TCS\
+          \ V1.1: CdmVehicleFault.ComponentCode - Interface-Assys Spec.: arcBreakComponentId "
+        example: "123"
+      Module:
+        type: "string"
+        description: "ARC Component category type - lov name: arcbreakdowncategory\
+          \ - CDM TCS V1.1: derived from component - Interface-Assys Spec.: ComponentCategory "
+        example: "1"
+  componentfault:
+    type: "object"
+    description: "A defected component announced by the driver or identified during\
+      \ roadside assistance service."
+    properties:
+      Component:
+        $ref: "#/definitions/component"
+      Faulttype:
+        type: "string"
+        description: "lov name: arcbreakdownfault - CDM TCS V1.1: CdmVehicleFault.FaultCode\
+          \ - Interface-Assys Spec.: arcBreakFaultId "
+      OutcomeType:
+        type: "string"
+        description: "lov name: arcoutcome - CDM TCS V1.1: CdmVehicleFault.OutcomeCode\
+          \ - Interface-Assys Spec.: arcBreakOutcomeId "
+      MainreasonB2B:
+        type: "string"
+        description: "lov name: ereportarccause - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: mainReasonB2B "
+      InterventionReason:
+        type: "string"
+        description: "ASSYS-5258  - lov name: interventionreason - CDM TCS V1.1: n/a\
+          \ - Interface-Assys Spec.: InterventionReason "
+      DataProvider:
+        type: "string"
+        description: "ServiceExecutor, ServiceRequestor, ServiceProvider - lov name:\
+          \ servicerole "
+      Comment:
+        type: "string"
+        description: "BreakdownDescriptionCustomer - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: VehicleConditionComment "
+  context:
+    type: "object"
+    description: "Key ,value pair which describes the context of the request"
+    properties:
+      ContextElementTypeKey:
+        type: "string"
+      ContextElementValue:
+        type: "string"
+  coordinate:
+    type: "object"
+    description: "GPS Position of a location for the geographic Information System\
+      \ (GIS) using WGS-84 as reference coordinate system"
+    properties:
+      Latitude:
+        type: "number"
+        description: "Latitude (WGS84) decimal degrees. Y "
+        example: "46.951081"
+      Longitude:
+        type: "number"
+        description: "Longitude (WGS84) decimal degrees. X "
+        example: "7.438637"
+  coverage:
+    type: "object"
+    description: "A contract signed or paid between a person (natural or legal) and\
+      \ the TCS. The contract has at least one contract version. It is used as a general\
+      \ term to refer both assistance contracts and insurance policies."
+    properties:
+      Coverage:
+        type: "boolean"
+      Client:
+        $ref: "#/definitions/client"
+      Product:
+        $ref: "#/definitions/product"
+      PlateNb:
+        type: "string"
+      ClientNb:
+        type: "string"
+      Comment:
+        type: "string"
+  device:
+    allOf:
+    - $ref: "#/definitions/item"
+    - type: "object"
+      description: "Extends item  - Any electric/electronic device to be repaired\
+        \ (service extended to home devices also)"
+      properties:
+        Name:
+          type: "string"
+          example: "Tesla charging station, Protoscar"
+        Type:
+          type: "string"
+          example: "e.g. charging station, heating system etc…"
+        Category:
+          type: "string"
+          example: "e.g. charging station 22KW "
+  document:
+    type: "object"
+    description: "Object representing a document"
+    required:
+    - "Name"
+    - "Type"
+    properties:
+      Path:
+        type: "string"
+      Name:
+        type: "string"
+      CreatedBy:
+        $ref: "#/definitions/naturalperson"
+      Active:
+        type: "boolean"
+      Type:
+        type: "string"
+        description: "lov name: documenttype "
+  equipment:
+    type: "object"
+    description: "Physical Material needed in the context of field services (FSM)\
+      \ to provide an Assistance. "
+    properties:
+      Name:
+        type: "string"
+      Type:
+        type: "string"
+        description: "lov name: equipmenttype "
+      Source:
+        type: "string"
+        description: "lov name: datasource "
+        example: "Commfleet"
+      Status:
+        type: "string"
+        description: "e.g. available or booked "
+      ExternalId:
+        type: "number"
+      Category:
+        type: "string"
+      TypeOfVehicle:
+        type: "string"
+      LicensePlate:
+        type: "number"
+      BrandModel:
+        type: "string"
+      ChassisNumber:
+        type: "string"
+      MaxWeighLoad:
+        type: "number"
+      DriverLicenseCategory:
+        type: "string"
+      TrailerCoupling:
+        type: "string"
+      Active:
+        type: "boolean"
+  event:
+    type: "object"
+    description: ""
+    properties:
+      EventType:
+        type: "string"
+        description: "lov name: eventtype "
+        example: "01- Field Agent Status Update, 02 - Location Update"
+      Session:
+        type: "string"
+      EventDate:
+        type: "string"
+        format: "datetime"
+      FieldAgent:
+        $ref: "#/definitions/fieldagent"
+  expertise:
+    allOf:
+    - $ref: "#/definitions/onsiteservicedelivery"
+    - type: "object"
+      description: "Extends onsiteservicedelivery  - Domain of expertise provided\
+        \ by the service delivery"
+      properties:
+        Domain:
+          type: "string"
+          example: "e.g. Baloise"
+  fieldagent:
+    allOf:
+    - $ref: "#/definitions/naturalperson"
+    - type: "object"
+      description: "Extends naturalperson  - Physical person on the field, an employee\
+        \ of TCS or of a Partner and who is executing Work Orders."
+      properties:
+        ServiceExecutor:
+          $ref: "#/definitions/serviceexecutor"
+        EmployeeId:
+          type: "number"
+        UsedEquipmentList:
+          type: "array"
+          items:
+            $ref: "#/definitions/equipment"
+          description: "Vehicle used by a field agent during execution. Sparx "
+        Status:
+          type: "string"
+          description: "Frei, Besetzt, Pause  --- Jira Cancelled Sparx - lov name:\
+            \ fieldagentstatus "
+          example: "ASSYS-5262"
+        SubStatus:
+          type: "string"
+          description: "lov name: fieldagentsubstatus "
+          example: "ASSYS-5252"
+        CurrentCoordinate:
+          $ref: "#/definitions/coordinate"
+          description: "Sparx "
+        TimeReportLogList:
+          type: "array"
+          items:
+            $ref: "#/definitions/timereportlog"
+        OperationalReference:
+          type: "number"
+          example: "e.g. TCS PatrolCraftNumber, exemple: 1008"
+        ActivityList:
+          type: "array"
+          items:
+            $ref: "#/definitions/activity"
+        LastSubStatusUpdatedDate:
+          type: "string"
+          format: "datetime"
+  interventionzone:
+    type: "object"
+    description: "Type of a Geographical Zone. Assistance delivery are associated\
+      \ to an intervention zone into which some Service Executors are planned to provide\
+      \ the assistance service."
+    properties:
+      Type:
+        type: "string"
+        description: "lov name: interventionzonetype "
+      Reference:
+        type: "string"
+  item:
+    type: "object"
+    discriminator: "TypeOfItem"
+    description: "Overall name to describe any vehicle, vehicle status or any device\
+      \ covered by a service"
+    required:
+    - "TypeOfItem"
+    - "ItemType"
+    properties:
+      TypeOfItem:
+        type: "string"
+        description: "Used to store the Java Class Name "
+      ItemType:
+        type: "string"
+        description: "Vehicle or Device or Vehicle Mofis - ASSYS LOV assisteditemtype\
+          \ - lov name: assisteditemtype "
+        example: "ASSYS-5167"
+      Location:
+        $ref: "#/definitions/location"
+      Owner:
+        $ref: "#/definitions/person"
+      Description:
+        type: "string"
+      Active:
+        type: "boolean"
+  legalperson:
+    allOf:
+    - $ref: "#/definitions/person"
+    - type: "object"
+      description: "Extends person  - This object represents a legal person"
+      properties:
+        OpeningHours:
+          $ref: "#/definitions/openinghours"
+        Comment:
+          type: "string"
+        PartnerInformation:
+          $ref: "#/definitions/partnerinformation"
+          description: "e g extension for garages "
+        FieldAgentList:
+          type: "array"
+          items:
+            $ref: "#/definitions/fieldagent"
+        Homepage:
+          type: "string"
+  location:
+    type: "object"
+    description: "It indicates the geographical location (as described by the caller)\
+      \ of the incident."
+    properties:
+      Id:
+        type: "string"
+      Type:
+        type: "string"
+        description: "lov name: contactaddresstype - CDM TCS V1.1: CdmLocation.LocationType\
+          \ - Interface-Assys Spec.: Contact.Type "
+      Address:
+        $ref: "#/definitions/address"
+        description: "CDM TCS V1.1: CdmLocation.Address "
+      Comment:
+        type: "string"
+        description: "CDM TCS V1.1: CdmLocation.Comment "
+      PointOfInterest:
+        $ref: "#/definitions/pointofinterest"
+      LocationName:
+        type: "string"
+        description: "Added for ASSYS-673 "
+      LocationZone:
+        type: "string"
+        description: "Reference of a polygon "
+  measuredperformance:
+    type: "object"
+    description: "A measure describes how a ServiceExecutor performed for a specific\
+      \ metric."
+    properties:
+      Key:
+        type: "string"
+        description: "Identifies the metric - To Extend the model to add the Status\
+          \ change historization - lov name: perfmeasurement "
+        example: "ETAR"
+      Value:
+        type: "string"
+        description: "Measured value based on the key LOV value "
+      MeasuredBy:
+        type: "string"
+        description: "Organisation / human resource which delivered the measure "
+      Source:
+        type: "string"
+        description: "System name / reference --> To clarify   Assys (Device) ou User? "
+      MeasuredDate:
+        type: "string"
+        format: "datetime"
+  mileagereport:
+    type: "object"
+    description: "Contains the mileage value, source and time at which the value was\
+      \ taken."
+    properties:
+      Value:
+        type: "number"
+        description: "Unit: kilometer (km) - CDM TCS V1.1: CdmMilegeReport.Value -\
+          \ Interface-Assys Spec.: VehicleMileage "
+        example: "12345"
+      Timestamp:
+        type: "string"
+        format: "datetime"
+        description: "Format: 2019-07-19 10:52:00.00000 "
+      DataProvider:
+        type: "string"
+        description: "ServiceExecutor, ServiceRequestor, ServiceProvider - lov name:\
+          \ servicerole "
+      Active:
+        type: "boolean"
+  movingservicedelivery:
+    allOf:
+    - $ref: "#/definitions/servicedelivery"
+    - type: "object"
+      description: "Extends servicedelivery  - Contains all details of a Service that\
+        \ makes it possible for the Beneficiary to receive assistance to move items\
+        \ or persons to another location"
+      properties:
+        PickupLocation:
+          $ref: "#/definitions/location"
+        PickupDeadline:
+          type: "string"
+          format: "datetime"
+        PickupReadyDate:
+          type: "string"
+          format: "datetime"
+        DeliveryLocation:
+          $ref: "#/definitions/location"
+        DeliveryDeadLine:
+          type: "string"
+          format: "datetime"
+        FinalDestination:
+          $ref: "#/definitions/location"
+        OperationalProcedure:
+          type: "string"
+          description: "lov name: operationalprocedure - CDM TCS V1.1: CdmService.OperationalProcedureIdentifier "
+  naturalperson:
+    allOf:
+    - $ref: "#/definitions/person"
+    - type: "object"
+      description: "Extends person  - This object represents a natural person"
+      properties:
+        Title:
+          type: "string"
+          description: "lov name: title "
+        TCSEmployee:
+          type: "boolean"
+  note:
+    type: "object"
+    description: "Text information added during case lifecycle."
+    properties:
+      Content:
+        type: "string"
+      Important:
+        type: "boolean"
+  obdiagnostic:
+    type: "object"
+    description: "Results obtained during a diagnostic."
+    properties:
+      DiagnosticDate:
+        type: "string"
+        format: "datetime"
+        description: "Date of diagnostic extraction - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: diagnosticDate "
+      ManufacturerDescription:
+        type: "string"
+        description: "OBD Description of manufacturer - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: OBDManufacturerDescription "
+      ModelDescription:
+        type: "string"
+        description: "OBD Description of model - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: OBDModelDescription "
+      System:
+        type: "string"
+        description: "OBD System description - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: OBDSystem "
+      ErrorCode:
+        type: "string"
+        description: "OBD Error Number - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+          \ OBDErrorCode "
+        example: "P0301, 16705"
+      ErrorComponent:
+        type: "string"
+        description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: OBDComponent "
+        example: "zundspule 2"
+      ErrorDescription:
+        type: "string"
+        description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: OBDErrorDescription "
+        example: "- keine funktion feststellbar"
+      ErrorIsDeleted:
+        type: "boolean"
+        description: "Indicates that the error code has been deleted in the vehicle\
+          \ computer - CDM TCS V1.1: n/a - Interface-Assys Spec.: OBDErrorIsDeleted "
+  onsiteservicedelivery:
+    allOf:
+    - $ref: "#/definitions/servicedelivery"
+    - type: "object"
+      description: "Extends servicedelivery  - Contains all details of a Service that\
+        \ makes it possible for the Beneficiary to receive assistance to an item at\
+        \ an intervention location"
+      properties:
+        OperationalProcedure:
+          type: "string"
+          description: "lov name: operationalprocedure - CDM TCS V1.1: CdmService.OperationalProcedureIdentifier "
+          example: "ASSYS-5510"
+        InterventionLocation:
+          $ref: "#/definitions/location"
+          description: "CDM TCS V1.1: CdmService.RequestedServiceLocation "
+        CalculatedTariffReference:
+          type: "string"
+        CalculatedTariffAmount:
+          $ref: "#/definitions/amount"
+        AgreedTariffZone:
+          type: "integer"
+        Appointment:
+          type: "string"
+          format: "datetime"
+          description: "Format: 2019-07-19 10:52:00.00000, only used for scheduled\
+            \ services. Should we add it to ASSYS.SERVICE? No -> INCIDENT. ?? "
+        SalesTariffAmount:
+          $ref: "#/definitions/amount"
+  openinghours:
+    type: "object"
+    description: "Day of week opening Hours"
+    properties:
+      MondayFrom1:
+        type: "string"
+        format: "time"
+      MondayTo1:
+        type: "string"
+        format: "time"
+        description: "greater than MondayFrom1 "
+      MondayFrom2:
+        type: "string"
+        format: "time"
+        description: "greater than MondayTo1 "
+      MondayTo2:
+        type: "string"
+        format: "time"
+        description: "greater than MondayFrom2 "
+      TuesdayFrom1:
+        type: "string"
+        format: "time"
+      TuesdayTo1:
+        type: "string"
+        format: "time"
+        description: "greater than TuesdayFrom1 "
+      TuesdayFrom2:
+        type: "string"
+        format: "time"
+        description: "greater than TuesdayTo1 "
+      TuesdayTo2:
+        type: "string"
+        format: "time"
+        description: "greater than TuesdayFrom2 "
+      WednesdayFrom1:
+        type: "string"
+        format: "time"
+      WednesdayTo1:
+        type: "string"
+        format: "time"
+        description: "greater than WednesdayFrom1 "
+      WednesdayFrom2:
+        type: "string"
+        format: "time"
+        description: "greater than WednesdayTo1 "
+      WednesdayTo2:
+        type: "string"
+        format: "time"
+        description: "greater than WednesdayFrom2 "
+      ThursdayFrom1:
+        type: "string"
+        format: "time"
+      ThursdayTo1:
+        type: "string"
+        format: "time"
+        description: "greater than ThursdayFrom1 "
+      ThursdayFrom2:
+        type: "string"
+        format: "time"
+        description: "greater than ThursdayTo1 "
+      ThursdayTo2:
+        type: "string"
+        format: "time"
+        description: "greater than ThursdayFrom2 "
+      FridayFrom1:
+        type: "string"
+        format: "time"
+      FridayTo1:
+        type: "string"
+        format: "time"
+        description: "greater than FridayFrom1 "
+      FridayFrom2:
+        type: "string"
+        format: "time"
+        description: "greater than FridayTo1 "
+      FridayTo2:
+        type: "string"
+        format: "time"
+        description: "greater than FridayFrom2 "
+      SaturdayFrom1:
+        type: "string"
+        format: "time"
+      SaturdayTo1:
+        type: "string"
+        format: "time"
+        description: "greater than SaturdayFrom1 "
+      SaturdayFrom2:
+        type: "string"
+        format: "time"
+        description: "greater than SaturdayTo1 "
+      SaturdayTo2:
+        type: "string"
+        format: "time"
+        description: "greater than SaturdayFrom2 "
+      SundayFrom1:
+        type: "string"
+        format: "time"
+      SundayTo1:
+        type: "string"
+        format: "time"
+        description: "greater than SundayFrom1 "
+      SundayFrom2:
+        type: "string"
+        format: "time"
+        description: "greater than SundayTo1 "
+      SundayTo2:
+        type: "string"
+        format: "time"
+        description: "greater than SundayFrom2 "
+  partnerinformation:
+    allOf:
+    - $ref: "#/definitions/legalperson"
+    - type: "object"
+      description: "Extends legalperson  - Garage partner information"
+      properties:
+        TCSGarageReference:
+          type: "string"
+        ShortName:
+          type: "string"
+        HeavyTruckAccess:
+          type: "boolean"
+          description: "New field "
+        OfficialBrandList:
+          type: "array"
+          items:
+            $ref: "#/definitions/branddealer"
+        B2BPartnershipList:
+          type: "array"
+          items:
+            $ref: "#/definitions/b2bpartnership"
+        ProvidedServiceList:
+          type: "array"
+          items:
+            $ref: "#/definitions/providedservice"
+        OncalldutyTelephoneNb:
+          type: "string"
+        TariffList:
+          type: "array"
+          items:
+            $ref: "#/definitions/tariff"
+          description: "Pour le service Care Taking "
+        ContactPerson:
+          $ref: "#/definitions/naturalperson"
+        ContactInfo:
+          type: "string"
+        useDRApp:
+          type: "boolean"
+        AlternateEmail:
+          type: "string"
+        OncalldutyTelephonePrivate:
+          type: "boolean"
+  person:
+    type: "object"
+    discriminator: "TypeOfPerson"
+    description: "Legal or natural person"
+    required:
+    - "TypeOfPerson"
+    - "PersonType"
+    - "Name"
+    properties:
+      TypeOfPerson:
+        type: "string"
+        description: "Used to store the Java Class Name "
+      PersonType:
+        type: "string"
+        description: "Natural or Legal - lov name: persontype "
+        example: "ASSYS-5222"
+      BackOfficeInformation:
+        $ref: "#/definitions/backofficeinformation"
+      Address:
+        $ref: "#/definitions/address"
+      Name:
+        type: "string"
+        description: "Name of a company or last name of a natural person "
+      Firstname:
+        type: "string"
+      PhoneNumber1:
+        type: "string"
+      PhoneNumber2:
+        type: "string"
+      MobileNumber1:
+        type: "string"
+      MobileNumber2:
+        type: "string"
+      FaxNumber1:
+        type: "string"
+      FaxNumber2:
+        type: "string"
+      Email:
+        type: "string"
+      Language:
+        type: "string"
+        description: "Communication language - lov name: language "
+  pointofinterest:
+    type: "object"
+    discriminator: "TypeOfPOI"
+    description: "A point of interest is a specific point location that someone may\
+      \ find useful or interesting. Most consumers use the term when referring to\
+      \ hotels, campsites, fuel stations or any other categories used in modern (automotive)\
+      \ navigation systems."
+    required:
+    - "TypeOfPOI"
+    - "POIType"
+    properties:
+      TypeOfPOI:
+        type: "string"
+        description: "Used to store the Java Class Name "
+      POIType:
+        type: "string"
+        description: "Legal Person, Address Alias or Highway Node - lov name: poikind "
+        example: "ASSYS-5166"
+      POISubType:
+        type: "integer"
+        description: "Used to store the original poi type "
+      Id:
+        type: "string"
+        description: "POFI_ID "
+      DataSource:
+        type: "string"
+        description: "ASSYS if coming from Assys "
+      Name:
+        type: "string"
+        description: "Name of the POI: Name of legal person, Name of an alias, Name\
+          \ of a high way node + type "
+      Address:
+        $ref: "#/definitions/address"
+      Comment:
+        type: "string"
+        description: "Utilisé par address alias "
+      Partner:
+        $ref: "#/definitions/legalperson"
+        description: "e g extension for garage - mandatory for a legal person "
+      Active:
+        type: "boolean"
+  product:
+    type: "object"
+    description: "Product means the insurance product: product providing refund and/or\
+      \ assistance services. Bundle of risks and benefits, branded as a single product\
+      \ for sale."
+    properties:
+      Name:
+        type: "string"
+      ServiceOfContractList:
+        type: "array"
+        items:
+          $ref: "#/definitions/service"
+      Skills:
+        type: "string"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+      Logo:
+        type: "string"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+      Category:
+        type: "string"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+      Material:
+        type: "string"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+      Conditions:
+        type: "string"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+      Actions:
+        type: "string"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+      AllowedZone:
+        type: "string"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+      Active:
+        type: "boolean"
+        description: "LogObject would ignore this field since product are managed\
+          \ in mLogisitcs "
+  providedservice:
+    type: "object"
+    description: "Provided Service by a garage"
+    properties:
+      Type:
+        type: "string"
+        description: "Taxi, Renting Agency, Garage - lov name: providedservicetype "
+        example: "ASSYS-5263"
+      Subtype:
+        type: "string"
+        description: "BD_TCS, BD_MG, BD_ACC-Blue, BD_AST, BD_FM, BD_MW, BD_MOT, BD_T,\
+          \ BD_TT, BD_Totalmobil, BD_ACC-Green, BD_BMW, ACC_TCS, ACC_FM, ACC_W15,\
+          \ ACC_W35 - lov name: providedservicesubtype "
+        example: "ASSYS-5264"
+      ServiceHours:
+        $ref: "#/definitions/openinghours"
+      TariffType:
+        type: "string"
+        description: "lov name: tarifftype "
+  reference:
+    type: "object"
+    description: "Reference data are data defining the set of permissible values to\
+      \ be used by other data fields, e g a list of Components. (Used by Case, ServiceDelivery,\
+      \ Client...)"
+    properties:
+      Organisation:
+        $ref: "#/definitions/person"
+        description: "eg TCS, ADAC, BMW, etc... "
+      Reference:
+        type: "string"
+        example: "193240123"
+      Initiator:
+        type: "string"
+        description: "ServiceExecutor, ServiceRequestor, ServiceProvider --- (Sparx)\
+          \ - lov name: servicerole "
+      Source:
+        type: "string"
+        description: "Assys, mLogistics, Sparx - lov name: datasource "
+      Active:
+        type: "boolean"
+  rsaservicedelivery:
+    allOf:
+    - $ref: "#/definitions/onsiteservicedelivery"
+    - type: "object"
+      description: "Extends onsiteservicedelivery  - Contains all details of a Service\
+        \ that makes it possible for the Beneficiary to receive assistance to his\
+        \ Vehicle at the side of the road"
+      properties:
+        PreferredVehiclerReceiver:
+          $ref: "#/definitions/legalperson"
+          description: "Identifed POI by dealercode from service requestor - CDM TCS\
+            \ V1.1: CdmRoadsideAssistanceService.PreferredVehicleReceiver "
+        Priority:
+          type: "number"
+          description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: Priority "
+  service:
+    type: "object"
+    description: "This object represents the services delivered within a contract"
+    properties:
+      Name:
+        type: "string"
+      Product:
+        $ref: "#/definitions/product"
+      CoverageService:
+        $ref: "#/definitions/servicedelivery"
+        example: "e.g. contracts sevice coverage (theft, live insurance)"
+      Definition:
+        type: "string"
+        example: "e.g. contracts conditions"
+      Active:
+        type: "boolean"
+  servicedelivery:
+    type: "object"
+    discriminator: "TypeOfService"
+    description: "Service delivered in a case context with Assistance delivery or\
+      \ reimboursements to the customer and may be invoiced to a third party in a\
+      \ B2B context."
+    required:
+    - "TypeOfService"
+    - "ServiceType"
+    properties:
+      TypeOfService:
+        type: "string"
+        description: "Used to store the Java Class Name "
+      CaseReference:
+        $ref: "#/definitions/reference"
+        description: "Reference of the case "
+      ServiceType:
+        type: "string"
+        description: "New lov - lov name: servicetypebom "
+        example: "ASSYS-5323"
+      Id:
+        type: "string"
+      ServiceReferenceList:
+        type: "array"
+        items:
+          $ref: "#/definitions/reference"
+        description: "e g Service Id from Assys, Sparx and Incident Action Id from\
+          \ mLogistics - CDM TCS V1.1: CdmService.ExternalReferences - Interface-Assys\
+          \ Spec.: Id "
+        example: "123456"
+      Product:
+        $ref: "#/definitions/product"
+        description: "Identification of product (FDDS) for all coverages - Interface-Assys\
+          \ Spec.: Product? "
+      Status:
+        type: "string"
+        description: "Workflow in https://confluence.tcsgroup.ch/pages/viewpage.action?pageId=26940506\
+          \ - lov name: servicestatus - CDM TCS V1.1: CdmService.Status - Interface-Assys\
+          \ Spec.: Status "
+      StatusReason:
+        type: "string"
+        description: "lov name: servicestatusreasons - CDM TCS V1.1: CdmServiceReason.Code "
+      ServiceForItem:
+        $ref: "#/definitions/item"
+        description: "e g vehicle to repair or to transport "
+      ServiceRequestor:
+        $ref: "#/definitions/servicerequestor"
+        description: "not relevant for FSM "
+      ServiceProvider:
+        $ref: "#/definitions/serviceprovider"
+        description: "not relevant for FSM "
+      ServiceExecutor:
+        $ref: "#/definitions/serviceexecutor"
+        description: "Organisation eg patrolcraft or garage → RSA, Transport as ServicePatrol\
+          \ - CDM TCS V1.1: CdmService.ServiceExecutor - Interface-Assys Spec.: RessourceId? "
+      ActivityList:
+        type: "array"
+        items:
+          $ref: "#/definitions/activity"
+        description: "Not in ASSYS. Maybe we should add them. (MME 18.18.2019) - CDM\
+          \ TCS V1.1: CdmService.PerformedAction? "
+      GuaranteedAmount:
+        $ref: "#/definitions/amount"
+      AgreedTariffAmount:
+        $ref: "#/definitions/amount"
+        description: "one tarif or list of cost items - CDM TCS V1.1: CdmService.IncurredCosts? "
+      MeasuredPerformanceList:
+        type: "array"
+        items:
+          $ref: "#/definitions/measuredperformance"
+        description: "Mesures depend on service type, e g estimated arrival time for\
+          \ RSA (ETAR) "
+      Comment:
+        type: "string"
+        description: "e g transport to next branded dealer, home dealer "
+      Businessunit:
+        type: "string"
+        description: "RSA, Transport, B2B → related to service dispatcher. New LOV.\
+          \ (ASSYS-5276) - lov name: businessunit "
+      ClientComment:
+        type: "string"
+        description: "Will be included in the report for the client "
+      ReportComplete:
+        type: "boolean"
+      DocumentList:
+        type: "array"
+        items:
+          $ref: "#/definitions/document"
+      Active:
+        type: "boolean"
+      PreferredServiceExecutor:
+        $ref: "#/definitions/serviceexecutor"
+        description: "Used when ASSYS need to force a known service executor "
+      WaitingTime:
+        type: "integer"
+        description: "Unit: minutes (min) "
+        example: "30"
+      ExtendedWaitingTimeList:
+        type: "array"
+        items:
+          type: "integer"
+        description: "Extended waiting times in minutes (min) "
+      IsCovered:
+        type: "boolean"
+      FieldAgent:
+        $ref: "#/definitions/fieldagent"
+      ServiceTrackingLink:
+        type: "string"
+        description: "Temporary URL to locate the field agent in realtime "
+      Coverage:
+        $ref: "#/definitions/coverage"
+  servicedispatcher:
+    allOf:
+    - $ref: "#/definitions/naturalperson"
+    - type: "object"
+      description: "Extends naturalperson  - Dispatchers are communications personnel\
+        \ responsible for receiving and transmitting pure and reliable messages, tracking\
+        \ vehicles and equipment, and recording other important information"
+      properties:
+        Id:
+          type: "string"
+  serviceexecutor:
+    allOf:
+    - $ref: "#/definitions/legalperson"
+    - type: "object"
+      description: "Extends legalperson  - This object represents the person (natural\
+        \ or legal) delivering the service."
+      properties:
+        Id:
+          type: "string"
+          description: "External Id in mLogistics. POFI_ID  = 15363 for TCS. "
+  serviceprovider:
+    allOf:
+    - $ref: "#/definitions/legalperson"
+    - type: "object"
+      description: "Extends legalperson  - Provider asked to deliver the service."
+      properties:
+        Id:
+          type: "string"
+  servicerequestor:
+    allOf:
+    - $ref: "#/definitions/legalperson"
+    - type: "object"
+      description: "Extends legalperson  - Requestor of the service."
+      properties:
+        Id:
+          type: "string"
+  sparepart:
+    type: "object"
+    description: "Physical Material that could be changed or added in the context\
+      \ of an Assistance."
+    properties:
+      Used:
+        type: "boolean"
+        example: "Spare parts used/sold yes/no"
+      Name:
+        type: "string"
+  tariff:
+    type: "object"
+    description: "Tariffs in CHF for up to 7 tariff zones and defined for each RSA\
+      \ contract"
+    properties:
+      TariffType:
+        type: "string"
+        description: "lov name: tarifftype "
+        example: "TCS Breakdown, TCS Accident, TM Breakdown, TM Accident, ReplacementCar,\
+          \ Transport, Care Taking - ASSYS-5513"
+      TariffKind:
+        type: "string"
+        description: "lov name: tariffkind "
+        example: "Opel, AMAG, BMW - Not needed in FSM 17.01.2020 - ASSYS-5511"
+      TariffSubType:
+        type: "string"
+        description: "lov name: tariffsubtype "
+        example: "RSA: ASSYS-5512  Transport: tbd"
+      TariffReference:
+        type: "string"
+        description: "GAGT_TARIFF_TYPE_TK + _ + POFI_ID + _+ GAGT_ZONE "
+        example: "PolygonId or Replacement Vehicle Category"
+      TariffAmount:
+        $ref: "#/definitions/amount"
+        description: "Includes VAT "
+  timereportlog:
+    type: "object"
+    description: "Time consumed during an assistance."
+    properties:
+      StartTime:
+        type: "string"
+        format: "datetime"
+        example: "DateTime : YYYY-MM-DD HH:MM:SS.ZZZZZ"
+      FieldAgent:
+        $ref: "#/definitions/fieldagent"
+      UserId:
+        type: "number"
+        example: "e.g. LDAP user Id"
+      AbsenceType:
+        type: "string"
+        example: "e.g. Ilness"
+      AbsenceDay:
+        type: "string"
+      EndTime:
+        type: "string"
+        format: "datetime"
+      Active:
+        type: "boolean"
+  vehicle:
+    allOf:
+    - $ref: "#/definitions/item"
+    - type: "object"
+      description: "Extends item  - Vehicle means any vehicle sold or operated by\
+        \ Assistance customers in the contract area."
+      properties:
+        VIN:
+          type: "string"
+          description: "Interface-Assys Spec.: VIN "
+          example: "WDD2132641A281037"
+        Category:
+          type: "string"
+          description: "Car, Bike, Bicycle - lov name: vehiclecategory - CDM TCS V1.1:\
+            \ n/a - Interface-Assys Spec.: Category "
+          example: "Car"
+        Brand:
+          type: "string"
+          description: "Depends on Category - lov name: carmanufacturer - CDM TCS\
+            \ V1.1: CdmVehicleDetails.Make - Interface-Assys Spec.: VehicleMake "
+          example: "Audi"
+        Model:
+          type: "string"
+          description: "Depends on VehicleMake - lov name: carmodel - CDM TCS V1.1:\
+            \ CdmVehicleDetails.Model - Interface-Assys Spec.: VehicleModel "
+          example: "A4"
+        ImmatriculationCountry:
+          type: "string"
+          description: "ISO country code, e g CH - lov name: countryiso - CDM TCS\
+            \ V1.1: CdmVehicleDetails.CurrentCountryOfRegistration - Interface-Assys\
+            \ Spec.: VehicleImmatriculationCountry "
+          example: "CH"
+        Numberplate:
+          type: "string"
+          description: "CDM TCS V1.1: CdmVehicleDetails.LicensePlate - Interface-Assys\
+            \ Spec.: VehicleNumberplate "
+          example: "FR123"
+        Color:
+          type: "string"
+          description: "lov name: vehiclecolor - CDM TCS V1.1: CdmVehicleDetails.Color\
+            \ - Interface-Assys Spec.: VehicleColor "
+          example: "red"
+        GearType:
+          type: "string"
+          description: "Difference between Assys & Sparx (1 list vs 2 lists) - lov\
+            \ name: cargear - CDM TCS V1.1: CdmVehicleDetails.TransmissionType - Interface-Assys\
+            \ Spec.: VehicleGearType "
+        DrivetrainType:
+          type: "string"
+          description: "ASSYS-5402 - lov name: drivetraintype - CDM TCS V1.1: CdmVehicleDetails.DrivetrainType "
+        Weight:
+          type: "number"
+          description: "Unit: kilogramm (kg) - CDM TCS V1.1: CdmDimensions.CurbWeight\
+            \ - Interface-Assys Spec.: VehicleWeight "
+          example: "1435"
+        Length:
+          type: "number"
+          description: "Unit: centimeter (cm) - CDM TCS V1.1: CdmDimensions.Length\
+            \ - Interface-Assys Spec.: VehicleLength "
+          example: "4320"
+        Width:
+          type: "number"
+          description: "Unit: centimeter (cm) - CDM TCS V1.1: CdmDimensions.Width\
+            \ - Interface-Assys Spec.: VehicleWidth "
+          example: "1760"
+        Height:
+          type: "number"
+          description: "Unit: centimeter (cm) - CDM TCS V1.1: CdmDimensions.Height\
+            \ - Interface-Assys Spec.: VehicleHeight "
+          example: "1420"
+        FirstRegistrationDate:
+          type: "string"
+          format: "datetime"
+          description: "CDM TCS V1.1: CdmVehicleDetails.FirstDateOfRegistration -\
+            \ Interface-Assys Spec.: VehicleFirstRegistrationDt "
+        TS_TR:
+          type: "string"
+          description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: TS/TR(Typenschein) "
+          example: "1BH835"
+        MKB:
+          type: "string"
+          description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: MKB(Motorkennbuchstaben) "
+          example: "B38B15A"
+        ContractNumber:
+          type: "string"
+          description: "Policy/contract number - CDM TCS V1.1: n/a - Interface-Assys\
+            \ Spec.: ContractId "
+          example: "09C/772968"
+        ThirdPartyInsurance:
+          type: "string"
+          description: "lov name: insurances - CDM TCS V1.1: n/a - Interface-Assys\
+            \ Spec.: InsuranceCompany "
+        Dealer:
+          $ref: "#/definitions/legalperson"
+          description: "Home dealer "
+        ExpertiseDate:
+          type: "string"
+          format: "datetime"
+          description: "CDM TCS V1.1: CdmVehicleDetails.LastDateOfInspection - Interface-Assys\
+            \ Spec.: VehicleExpertiseDT "
+        Rented:
+          type: "boolean"
+          description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: VehicleIsRented "
+        Type:
+          type: "string"
+          description: "lov name: cartype - CDM TCS V1.1: n/a - Interface-Assys Spec.:\
+            \ VehicleType "
+        CoverageStartDate:
+          type: "string"
+          format: "datetime"
+          description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: VehicleCoverageStartDt "
+        CoverageEndDate:
+          type: "string"
+          format: "datetime"
+          description: "based on CdmVehicleDetails.DaysToNextService ? - Interface-Assys\
+            \ Spec.: CoverageExpiryDT "
+        MileageLimit:
+          type: "string"
+          description: "based on CdmVehicleDetails.NextServiceMileage ? - Interface-Assys\
+            \ Spec.: MileageLimit "
+        LastVehicleStatus:
+          $ref: "#/definitions/vehiclestatus"
+        Driver:
+          $ref: "#/definitions/naturalperson"
+        HasRoofRack:
+          type: "boolean"
+        HasCycleRack:
+          type: "boolean"
+        FuelType:
+          type: "string"
+          description: "Gasoline, Diesel, Electric, … based on reference list from\
+            \ ASTRA - lov name: fueltype "
+  vehiclemofis:
+    allOf:
+    - $ref: "#/definitions/item"
+    - type: "object"
+      description: "Extends item  - Vehicle means any vehicle sold or operated by\
+        \ Assistance customers in the contract area."
+      properties:
+        MatriculeNumber:
+          type: "string"
+          description: "CDM TCS V1.1: n/a "
+        LicensePlate:
+          type: "string"
+          description: "CDM TCS V1.1: n/a "
+        VehicleClass:
+          type: "string"
+          description: "refers to ReferenceValue.code - lov name: MofisVehicleClass\
+            \ - CDM TCS V1.1: n/a "
+        VehicleCategoryType:
+          type: "string"
+          description: "refers to ReferenceValue.code - lov name: MofisVehicleCategoryType\
+            \ - CDM TCS V1.1: n/a "
+        BrandName:
+          type: "string"
+          description: "CDM TCS V1.1: n/a "
+        CompleteBrandModel:
+          type: "string"
+          description: "CDM TCS V1.1: n/a "
+        OfficialRegistrationNumber:
+          type: "string"
+          description: "CDM TCS V1.1: n/a "
+        FirstDateOfRegistration:
+          type: "string"
+          format: "datetime"
+          description: "CDM TCS V1.1: n/a "
+        Color:
+          type: "string"
+          description: "refers to ReferenceValue.code - lov name: MofisColor - CDM\
+            \ TCS V1.1: n/a "
+        EngineCapacity:
+          type: "number"
+          description: "CDM TCS V1.1: n/a "
+        HybridCode:
+          type: "string"
+          description: "refers to ReferenceValue.code - lov name: MofisHybridCode\
+            \ - CDM TCS V1.1: n/a "
+        GearTransmissionType:
+          type: "string"
+          description: "refers to ReferenceValue.code - lov name: MofisGearTransmissionType\
+            \ - CDM TCS V1.1: n/a "
+        GearDetailedTransmission:
+          type: "string"
+          description: "CDM TCS V1.1: n/a "
+        CombustibleType:
+          type: "string"
+          description: "refers to ReferenceValue.code - lov name: MofisCombustibleType\
+            \ - CDM TCS V1.1: n/a "
+        EngineTypeCode:
+          type: "string"
+          description: "CDM TCS V1.1: n/a "
+        VehicleType:
+          $ref: "#/definitions/vehiclemofistype"
+          description: "CDM TCS V1.1: n/a "
+  vehiclemofistype:
+    type: "object"
+    description: "Vehicle means any vehicle sold or operated by Assistance customers\
+      \ in the contract area."
+    properties:
+      ModelName:
+        type: "string"
+        description: "CDM TCS V1.1: n/a "
+      WidthMin:
+        type: "number"
+        description: "CDM TCS V1.1: n/a "
+      WidthMax:
+        type: "number"
+        description: "CDM TCS V1.1: n/a "
+      HeightMin:
+        type: "number"
+        description: "CDM TCS V1.1: n/a "
+      HeightMax:
+        type: "number"
+        description: "CDM TCS V1.1: n/a "
+      LengthMin:
+        type: "number"
+        description: "CDM TCS V1.1: n/a "
+      LengthMax:
+        type: "number"
+        description: "CDM TCS V1.1: n/a "
+      EngineCode:
+        type: "string"
+        description: "CDM TCS V1.1: n/a "
+      Weight:
+        type: "number"
+        description: "CDM TCS V1.1: n/a "
+  vehiclestatus:
+    type: "object"
+    description: "This object represents the status of a claimed vehicle including\
+      \ vehicle conditions, location and other relevant information related to a case."
+    properties:
+      VehicleId:
+        type: "string"
+        description: "technical Id for a vehicle record - Interface-Assys Spec.: Vehicle\
+          \ Id "
+        example: "12345"
+      DataProvider:
+        type: "string"
+        description: "ServiceExecutor, ServiceRequestor, ServiceProvider - lov name:\
+          \ servicerole "
+      TotalWeight:
+        type: "number"
+        description: "Unit: kilogramm (kg)Total of vehicle and vehicle items ( e g\
+          \ luggage) weight - CDM TCS V1.1: CdmDimensions.CurbWeight - Interface-Assys\
+          \ Spec.: VehicleWeight "
+        example: "1435"
+      TotalLength:
+        type: "number"
+        description: "Unit: milimeter (mm)Total of vehicle and vehicle items ( e g\
+          \ bicycle rack) length - CDM TCS V1.1: CdmDimensions.Length - Interface-Assys\
+          \ Spec.: VehicleLength "
+        example: "4320"
+      TotalWidth:
+        type: "number"
+        description: "Total of vehicle and vehicle items ( e g bicycle rack) width\
+          \ - CDM TCS V1.1: CdmDimensions.Width - Interface-Assys Spec.: VehicleWidth "
+        example: "1760"
+      TotalHeight:
+        type: "number"
+        description: "Total of vehicle and vehicle items ( e g roof rack) heigth -\
+          \ CDM TCS V1.1: CdmDimensions.Height - Interface-Assys Spec.: VehicleHeight "
+        example: "1420"
+      MileageReport:
+        $ref: "#/definitions/mileagereport"
+        description: "List of readings from a mileage meter provided by the customer\
+          \ or a field agent - CDM TCS V1.1: CdmMilegeReport.Value - Interface-Assys\
+          \ Spec.: VehicleMileage "
+      Steerable:
+        type: "boolean"
+        description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: Steerable "
+      EngineStartable:
+        type: "boolean"
+        description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: !DoNotStartEngine "
+      Rollable:
+        type: "boolean"
+        description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: Rollable "
+      Lowered:
+        type: "boolean"
+        description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: Lowered "
+      FuelLevel:
+        type: "number"
+        description: "null,0,1/8,2/8,3/8,4/8,5/8,6/8,7/8,1 - CDM TCS V1.1: n/a - Interface-Assys\
+          \ Spec.: FullLevel "
+        example: "0.125"
+      Comment:
+        type: "string"
+        description: "CDM TCS V1.1: n/a - Interface-Assys Spec.: VehicleConditionComment "
+      DefectedComponentsList:
+        type: "array"
+        items:
+          $ref: "#/definitions/componentfault"
+      OBDiagnosticList:
+        type: "array"
+        items:
+          $ref: "#/definitions/obdiagnostic"
+        description: "Rapport de panne "
+      BatteryDiagnosticList:
+        type: "array"
+        items:
+          $ref: "#/definitions/batterydiagnostic"
+      VehicleItems:
+        type: "string"
+        description: "Vehicle may have:roof rackcycle rackbike trailerluggage - CDM\
+          \ TCS V1.1: CdmVehicleItems.? - Interface-Assys Spec.: VehicleItems "
+      PrimaryFault:
+        type: "string"
+        description: "Text mapped with Assys LOV - lov name: breakdowntype - Interface-Assys\
+          \ Spec.: BreakdownType "
+  vehicletransportdelivery:
+    allOf:
+    - $ref: "#/definitions/movingservicedelivery"
+    - type: "object"
+      description: "Extends movingservicedelivery  - Contains all details of a Service\
+        \ that makes it possible for the Beneficiary to receive assistance to move\
+        \ his Vehicle to a new location"
+      properties:
+        TransportationType:
+          type: "string"
+          description: "Towing, Wheel lift truck Transport  (Refers to the vehicle\
+            \ transporting the other vehicle) - lov name: transportationtype "
+        PreferredVehicleReceiver:
+          $ref: "#/definitions/legalperson"
+          description: "CDM TCS V1.1: CdmRoadsideAssistanceService.PreferredVehicleReceiver "
+        AllowedLoadedDriveDistance:
+          type: "integer"
+        ActualLoadedDriveDistance:
+          type: "integer"
+          description: "Unit: km. Distance between pickup and delivery location "
+        ActualTotalDriveDistance:
+          type: "integer"
+          description: "Unit: km. Distance from truck position when accepting task\
+            \ to pickup location to delivery location "
+        AllowedTotalDriveDistance:
+          type: "integer"
+          description: "Unit: km. Authorized drive distance "
+        ActualStartlocation:
+          $ref: "#/definitions/location"
+          description: "Current truck location when task is accepted  "
+        ActualPickupLocation:
+          $ref: "#/definitions/location"
+        TransportationReason:
+          type: "string"
+          description: "lov name: transportationreason "
+        ServiceTrackingLink:
+          type: "string"
+          description: "Temporary URL to locate the field agent in realtime "
+        KeyPlace:
+          type: "string"
+          description: "Where the vehicle key is "
+        CalculatedTariffReference:
+          type: "string"
+        CalculatedTariffAmount:
+          $ref: "#/definitions/amount"
+        BlockedDueTo:
+          type: "string"
+          description: "Missing stuff preventing transport execution "
+        ContactList:
+          type: "array"
+          items:
+            $ref: "#/definitions/legalperson"
+          description: "Additional contacts for truck driver "
+        DistanceToFinalDestination:
+          type: "integer"
+          description: "Unit: km. Distance between pickup location and final destination "
+        UrgentTransport:
+          type: "boolean"
+          description: "Used to determine if its a normal or express transport "
+  Error:
+    description: "Error Structure Definition"
+    type: "object"
+    properties:
+      httpCode:
+        type: "string"
+      httpMessage:
+        type: "string"
+      moreInformation:
+        type: "string"
+    required:
+    - "httpCode"
+    - "httpMessage"
+    - "moreInformation"

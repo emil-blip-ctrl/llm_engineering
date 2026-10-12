@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:sapasi="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata" xmlns:sapdocs="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocs438412961" xmlns:sapdocumentlines901811010="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocumentlines901811010" xmlns:sapheader6103334="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheader6103334" xmlns:sappartner639908812="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappartner639908812" xmlns:sappaymentinstructions316354212="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappaymentinstructions316354212" xmlns:sapthirdparties366063943="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdparties366063943" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocs438412961">
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheader6103334" schemaLocation="SapHeader6103334.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappartner639908812" schemaLocation="SapPartner639908812.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdparties366063943" schemaLocation="SapThirdParties366063943.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappaymentinstructions316354212" schemaLocation="SapPaymentInstructions316354212.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocumentlines901811010" schemaLocation="SapDocumentLines901811010.xsd"/>
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability">
+<info:resourceAdapter xmlns:info="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability" version="7.5.0.5_IF10"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="commonj.connector.asi">
+<asi:annotationSet xmlns:asi="commonj.connector.asi" asiNSURI="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:complexType name="SapDocs">
+    
+    <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIBusinessObjectTypeMetadata>
+</sapasi:sapBAPIBusinessObjectTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+    
+    <xsd:sequence maxOccurs="1" minOccurs="1">
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="SapHeader" nillable="true" type="sapheader6103334:SapHeader">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>HEADER</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_S_DOC_HEADER</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="SapPartner" nillable="true" type="sappartner639908812:SapPartner">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>PARTNER</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_S_DOC_PARTNER</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="SapThirdParties" nillable="true" type="sapthirdparties366063943:SapThirdParties">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>THIRD_PARTIES</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_T_DOC_PARTNER</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="SapPaymentInstructions" nillable="true" type="sappaymentinstructions316354212:SapPaymentInstructions">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>PAYMENT_INSTRUCTIONS</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_S_DOC_PAY_INSTRUCTIONS</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="SapDocumentLines" nillable="true" type="sapdocumentlines901811010:SapDocumentLines">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>DOCUMENT_LINES</sapasi:FieldName>
+<sapasi:FieldType>ZFIN_T_DOC_LINE</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+      </xsd:element>
+      
+    </xsd:sequence>
+    
+  </xsd:complexType>
+  
+</xsd:schema>

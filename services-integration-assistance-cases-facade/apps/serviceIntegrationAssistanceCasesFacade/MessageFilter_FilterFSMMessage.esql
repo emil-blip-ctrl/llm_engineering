@@ -1,0 +1,21 @@
+
+
+CREATE FILTER MODULE MessageFilter_FilterFSMMessage
+	-- Return TRUE if the FSM is for FSM (blank or MLOG value in Consumer-Value)
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE returnValue BOOLEAN;
+		
+		SET returnValue = FALSE;
+		IF EXISTS(Root.JSON.Data.ContextList[]) THEN
+			FOR contextElement AS Root.JSON.Data.ContextList.Item[] DO
+				IF contextElement.ContextElementTypeKey = 'X-CONSUMER-NAME' AND 
+					(COALESCE(contextElement.ContextElementValue, '') = '' OR contextElement.ContextElementValue = 'MLOG') THEN
+					SET returnValue = TRUE;
+				END IF;    
+			END FOR;
+		END IF;
+		RETURN returnValue;
+	END;
+
+END MODULE;

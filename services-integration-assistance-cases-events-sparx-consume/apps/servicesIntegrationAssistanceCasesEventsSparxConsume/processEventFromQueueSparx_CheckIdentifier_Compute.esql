@@ -1,0 +1,42 @@
+
+
+CREATE COMPUTE MODULE processEventFromQueueSparx_CheckIdentifier_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.Properties = InputRoot.Properties;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		-- If sparxCaseId is not empty, it means the case already exists in SPARX. In this scenario, we update the existing case.
+		-- The interface link was already created during the initial case creation.
+		IF COALESCE(Environment.Variables.Sparx.Info.CaseId, '') = ''
+		THEN
+			IF COALESCE(InputRoot.JSON.Data.CaseId, '') = ''
+			THEN
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+			ELSE
+				SET OutputRoot.JSON.Data.id = InputRoot.JSON.Data.CaseId;
+				-- Log CaseId
+				SET Environment.Variables.Sparx.Info.CaseId = InputRoot.JSON.Data.CaseId;
+				RETURN TRUE;
+			END IF;
+		ELSE
+			PROPAGATE TO TERMINAL 'out2';
+			RETURN FALSE;
+		END IF;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

@@ -1,0 +1,16 @@
+
+
+CREATE COMPUTE MODULE flowHistory_prepare_request
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.personalreference = InputLocalEnvironment.HTTP.Input.QueryString.personalreference;
+		CALL PrepareRequestHeaders (OutputRoot, InputLocalEnvironment);
+		CALL PrepareUrlForRequest ( OutputLocalEnvironment, InputLocalEnvironment,  '/cases/history', 'GET');
+
+		RETURN TRUE;
+	END;
+	
+
+END MODULE;

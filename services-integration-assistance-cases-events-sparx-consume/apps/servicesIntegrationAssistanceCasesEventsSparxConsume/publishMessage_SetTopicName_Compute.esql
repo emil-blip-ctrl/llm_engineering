@@ -1,0 +1,25 @@
+DECLARE TopicName EXTERNAL CHARACTER 'default';
+
+CREATE COMPUTE MODULE publishMessage_SetTopicName_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputLocalEnvironment.Variables.Topic = Shlib_PoliciesReader.gestionPolicy('{services-integration-policies-endpoints}:TopicMqEndPoints',TopicName);
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

@@ -1,0 +1,31 @@
+
+
+CREATE COMPUTE MODULE SetLogContext
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment = InputLocalEnvironment.Environment;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputLocalEnvironment.Environment = UNKNOWN;		
+		SET Environment.Variables.RequestIdentifier = InputLocalEnvironment.Destination.HTTP.RequestIdentifier;
+		
+		SET OutputRoot = InputRoot;
+		
+		--Set variables in Env to trace in SUP Log
+		SET Environment.Variables.trackID = UUIDASCHAR;
+		SET Environment.Variables.XCorrelationID = InputRoot.HTTPInputHeader."X-Global-Transaction-Id";
+		SET Environment.Variables.In.XCallerCode = InputRoot.HTTPInputHeader."X-Caller-Code";
+		SET Environment.Variables.In.targeturl = InputLocalEnvironment.REST.Input.URI;
+		
+		SET Environment.Variables.TCSLog = UNKNOWN;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		SET Environment.Variables.TCSLog.context."caller-code" = InputRoot.HTTPInputHeader."X-Caller-Code";
+		SET Environment.Variables.TCSLog.context."target-url" = InputLocalEnvironment.REST.Input.URI;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP35361';
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP35361';
+		
+		
+        
+		RETURN TRUE;
+	END;
+END MODULE;
+

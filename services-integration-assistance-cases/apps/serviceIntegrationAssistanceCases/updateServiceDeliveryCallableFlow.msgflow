@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCallableFlowInput.msgnode="ComIbmCallableFlowInput.msgnode" xmlns:ComIbmCallableFlowReply.msgnode="ComIbmCallableFlowReply.msgnode" xmlns:CommonError_manageConnectionError.subflow="CommonError/manageConnectionError.subflow" xmlns:CommonError_manageOtherError.subflow="CommonError/manageOtherError.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:flowUpdateServiceDelivery.subflow="flowUpdateServiceDelivery.subflow"
+    xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="updateServiceDeliveryCallableFlow.msgflow" nsPrefix="updateServiceDeliveryCallableFlow.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="updateServiceDeliveryCallableFlow" bundleName="updateServiceDeliveryCallableFlow" pluginId="servicesIntegrationAssistanceCases"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj16/updateServiceDeliveryCallableFlow.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj30/updateServiceDeliveryCallableFlow.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCallableFlowInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="50,134" callableInputEndpoint="CALLABLE_UPDATE_SERVICE_DELIVERY">
+        <translation xmi:type="utility:ConstantString" string="CallableUpdateService"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Callable node for case creation. Used by service-integration-assistance-case-facade"/>
+        <monitorEvents eventSourceDescription="Transaction start" eventSourceName="CallableUpdateService.transaction.Start" eventIdentity="CallableUpdateService.TransactionStart">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="CallableUpdateService.TransactionStart"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Transaction end" eventSourceName="CallableUpdateService.transaction.End" eventIdentity="CallableUpdateService.TransactionEnd">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="CallableUpdateService.TransactionEnd"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Transaction rollback" eventSourceName="CallableUpdateService.transaction.Rollback" eventIdentity="CallableUpdateService.TransactionRollback">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="CallableUpdateService.TransactionRollback"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="CallableUpdateService.terminal.out" eventIdentity="SUP: Start callable update service">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator dataLocation="$LocalEnvironment/Variables/TCSLog/context/correlation-id" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: Start callable update service"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="CallableUpdateService.terminal.failure" eventIdentity="FAIL: Callable update service">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Callable update service"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Catch terminal" eventSourceName="CallableUpdateService.terminal.catch" eventIdentity="FAIL: CallableUpdateService.CatchTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: CallableUpdateService.CatchTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="732,121">
+        <translation xmi:type="utility:ConstantString" string="CallableUpdateServiceReply"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="CallableUpdateServiceReply.terminal.in" eventIdentity="START: CallableUpdateServiceReply">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START: CallableUpdateServiceReply"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="CallableUpdateServiceReply.terminal.failure" eventIdentity="FAIL: CallableUpdateServiceReply.Failure">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: CallableUpdateServiceReply.Failure"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="CallableUpdateServiceReply.terminal.out" eventIdentity="END: CallableUpdateServiceReply">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="END: CallableUpdateServiceReply"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="CommonError_manageOtherError.subflow:FCMComposite_1" xmi:id="FCMComposite_1_10" location="553,10">
+        <translation xmi:type="utility:ConstantString" string="manageOtherError"/>
+      </nodes>
+      <nodes xmi:type="CommonError_manageConnectionError.subflow:FCMComposite_1" xmi:id="FCMComposite_1_12" location="504,241">
+        <translation xmi:type="utility:ConstantString" string="manageConnectionError"/>
+      </nodes>
+      <nodes xmi:type="flowUpdateServiceDelivery.subflow:FCMComposite_1" xmi:id="FCMComposite_1_14" location="262,137">
+        <translation xmi:type="utility:ConstantString" string="flowUpdateServiceDelivery"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.OutputError" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.OutputConnect" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

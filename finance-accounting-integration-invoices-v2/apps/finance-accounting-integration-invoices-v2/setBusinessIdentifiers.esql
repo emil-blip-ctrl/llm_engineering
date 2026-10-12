@@ -1,0 +1,28 @@
+
+
+CREATE COMPUTE MODULE setBusinessIdentifiers
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		
+		--Business Identifiers
+		DECLARE Invoice REFERENCE TO InputRoot.JSON.Data.Item[1];
+		IF UCASE(InputRoot.HTTPInputHeader."X-Origin-Caller-Code") IN ('IDIT', 'IDITCLOUD') THEN
+		    SET Environment.Variables.Info.PROCESS_CONTROL = Invoice.processControl.specificationIdentifier.Item[1].schemeIdentifier;
+		ELSE
+			SET Environment.Variables.Info.PROCESS_CONTROL = Invoice.processControl.specificationIdentifier.Item[1].content;       	
+		END IF;			
+		
+		SET Environment.Variables.TCSLog = UNKNOWN;
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		SET Environment.Variables.TCSLog.context."caller-code" = InputRoot.HTTPInputHeader."X-Caller-Code";
+		SET Environment.Variables.TCSLog.context."target-url" = InputLocalEnvironment.REST.Input.URI;
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP35361';
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP35361';
+        
+        SET Environment.Variables.TCSLog.context."business-identifiers".PROCESS_CONTROL = Environment.Variables.Info.PROCESS_CONTROL;
+    
+		RETURN TRUE;
+	END;
+END MODULE;

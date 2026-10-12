@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFlowOrder.msgnode="ComIbmFlowOrder.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:SendDocumentsMetadataToArchivingProcessAlis.subflow="SendDocumentsMetadataToArchivingProcessAlis.subflow"
+    xmlns:SendEmailNotificationAlis.subflow="SendEmailNotificationAlis.subflow" xmlns:SendMessageToRetryAlis.subflow="SendMessageToRetryAlis.subflow" xmlns:common_integration_shlib_wrap_message_messageBuild.subflow="common_integration_shlib_wrap_message/messageBuild.subflow" xmlns:common_integration_shlib_wrap_message_messageExtract.subflow="common_integration_shlib_wrap_message/messageExtract.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
+    xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="CreateClaimAlisAsync.msgflow" nsPrefix="CreateClaimAlisAsync.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="CreateClaimAlisAsync" bundleName="CreateClaimAlisAsync" pluginId="insurance-claims-integration-technical-alis"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/insurance-claims-integration-technical-alis/icons/full/obj16/CreateClaimAlisAsync.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/insurance-claims-integration-technical-alis/icons/full/obj30/CreateClaimAlisAsync.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="383,20" computeExpression="esql://routine/esql.createClaimsAlis#CreateClaim_PostClaim_PrepareCallAlis.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PostClaim_PreparerCallAlis"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="PostClaim_PreparerCallAlis.terminal.out" eventIdentity="SUP: SEND request to ALIS">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SEND request to ALIS"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="PostClaim_PreparerCallAlis.terminal.in" eventIdentity="INFO: Send request to ALIS">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Send request to ALIS"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="678,101" computeExpression="esql://routine/esql.createClaimsAlis#CreateClaim_MappingResponseClaimToTCS.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MappingResponseClaimToTCS"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="MappingResponseClaimToTCS.terminal.in" eventIdentity="INFO: Response OK received from ALIS">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Response OK received from ALIS"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="MappingResponseClaimToTCS.terminal.out" eventIdentity="SUP: Response OK received from ALIS">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: Response OK received from ALIS"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="254,20" computeExpression="esql://routine/esql.createClaimsAlis#SetEnvironment.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="SetEnvironment"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="SetEnvironment.terminal.out" eventIdentity="SUP: RECEIVE claim message">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator dataLocation="$Environment/Variables/XCorrelationID" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator dataLocation="$Environment/Variables/trackID" eventCorrelation="dataLocation"/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: RECEIVE claim message"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="SetEnvironment.terminal.in" eventIdentity="Receive claim message from MQ">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Receive claim message from MQ"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="565,20" URLSpecifier="http://dummy" timeoutForServer="125" httpVersion="1.1" protocol="TLSv1.2" messageDomainProperty="JSON">
+        <translation xmi:type="utility:ConstantString" string="HTTP Request"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="711,182" computeExpression="esql://routine/esql.createClaimsAlis#CreateClaim_ErrorResponseAlisAsync.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ErrorResponseAlis"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="ErrorResponseAlis.terminal.in" eventIdentity="Error received from ALIS">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Error received from ALIS"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="10,20" queueName="A.CLAIMSTECHNICALALIS.PROCESS" messageDomainProperty="JSON" policyUrl="{GlobalMQPolicies}:RemoteMQPolicies">
+        <translation xmi:type="utility:ConstantString" string="MQ Input Alis"/>
+        <monitorEvents eventSourceDescription="Catch terminal" eventSourceName="MQ Input Alis.terminal.catch" eventIdentity="FAIL: Catch exception">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exception"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="MQ Input Alis.terminal.out" eventIdentity="Start Claim Alis">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator dataLocation="$Root/MQRFH2/usr/gtid" eventCorrelation="dataLocation"/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Start Claim Alis"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="704,20" computeExpression="esql://routine/esql.createClaimsAlis#CreateClaim_BuildFailureMessage.Main">
+        <translation xmi:type="utility:ConstantString" string="BuildFailureMessage"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="BuildFailureMessage.terminal.in" eventIdentity="FAIL: Catch exception">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exception"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="249,263" computeExpression="esql://routine/esql.createClaimsAlis#RetryOrSendToBO.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="RetryOrSendToBO"/>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="RetryOrSendToBO.terminal.out1" eventIdentity="SUP: RECEIVE fail response">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: RECEIVE fail response"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="RetryOrSendToBO.terminal.in" eventIdentity="INFO: Receive fail response">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Receive fail response"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="419,344">
+        <translation xmi:type="utility:ConstantString" string="Pass through"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="718,506" queueName="A.CLAIMSTECHNICALALIS.PROCESS.BO" policyUrl="{GlobalMQPolicies}:RemoteMQPolicies">
+        <translation xmi:type="utility:ConstantString" string="MQ Output BO"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="MQ Output BO.terminal.in" eventIdentity="INFO: Send message to BO">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Send message to BO"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="422,425">
+        <translation xmi:type="utility:ConstantString" string="Flow Order2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="878,101">
+        <translation xmi:type="utility:ConstantString" string="Flow Order1"/>
+      </nodes>
+      <nodes xmi:type="SendDocumentsMetadataToArchivingProcessAlis.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="982,101">
+        <translation xmi:type="utility:ConstantString" string="SendDocumentsMetadataToArchivingProcessAlis"/>
+      </nodes>
+      <nodes xmi:type="SendEmailNotificationAlis.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="1043,425">
+        <translation xmi:type="utility:ConstantString" string="SendEmailNotificationAlis"/>
+      </nodes>
+      <nodes xmi:type="SendMessageToRetryAlis.subflow:FCMComposite_1" xmi:id="FCMComposite_1_15" location="386,263">
+        <translation xmi:type="utility:ConstantString" string="SendMessageToRetryAlis"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_wrap_message_messageBuild.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="551,505">
+        <translation xmi:type="utility:ConstantString" string="messageBuild"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_wrap_message_messageExtract.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="126,20">
+        <translation xmi:type="utility:ConstantString" string="messageExtract"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_wrap_message_messageExtract.subflow:FCMComposite_1" xmi:id="FCMComposite_1_16" location="129,263">
+        <translation xmi:type="utility:ConstantString" string="messageExtract1"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_28" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_18" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.second" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.first" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.second" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.first" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

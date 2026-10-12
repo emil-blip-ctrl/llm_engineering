@@ -1,0 +1,31 @@
+path Shlib_PoliciesReader;
+
+CREATE COMPUTE MODULE CreateClaimAlisFromOnbase_CreateRequest
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE URLAPI char getPolicyProperty('{common-integration-policies-endpoints}:ApicEndpointsPolicy','apic-host');
+		DECLARE PATHAPI char getPolicyProperty('{insurance-integration-policies-endpoints}:ApicEndPointsPolicy','basepath-insurance-claims-api-technical-alis-post-claim') 
+		|| getPolicyProperty('{insurance-integration-policies-endpoints}:ApicEndPointsPolicy','path-technical-alis-document-link') ;
+		SET OutputRoot.HTTPRequestHeader."X-IBM-Client-Id" = getPolicyProperty('{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy','client_id');
+		SET OutputRoot.HTTPRequestHeader."X-IBM-Client-Secret" = getPolicyProperty('{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy','client_secret');
+		
+		DECLARE Auth CHARACTER BASE64ENCODE(getPolicyProperty('{insurance-integration-policies-credentials}:AlisCredentialsPolicy','ClientId') || ':' || getPolicyProperty('{insurance-integration-policies-credentials}:AlisCredentialsPolicy','ClientSecret'));
+		SET OutputRoot.HTTPRequestHeader.Authorization = 'Basic '|| Auth ;	
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = URLAPI || PATHAPI ;
+	    SET OutputLocalEnvironment.Destination.HTTP.RequestLine.Method = 'POST';	
+	    
+	    DECLARE TranscoDocType char ',' || getPolicyProperty('{insurance-claims-integration-policies-technical-alis}:transcoDocType','InOut') || ',';
+	    DECLARE DocTypeAlis CHAR SUBSTRING(SUBSTRING(TranscoDocType AFTER cast(InputRoot.JSON.Data."document-type" as char) || ':' ) BEFORE ',');
+		if LENGTH(DocTypeAlis) = 0 then
+			set OutputRoot = InputRoot;
+			set Environment.Variables.ContextCode = 'CMP22482_01';
+			propagate to terminal 2;
+			return true;
+		end if;
+	    set OutputRoot.JSON.Data.docId = InputRoot.JSON.Data."doc-id";
+	    set OutputRoot.JSON.Data.documentType = DocTypeAlis;
+	    set OutputRoot.JSON.Data.caseReference = Environment.Variables.MessageIn.MQRFH2.usr."BIclaim-number";
+		RETURN TRUE;
+	END;
+END MODULE;

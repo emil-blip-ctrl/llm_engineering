@@ -1,0 +1,178 @@
+BROKER SCHEMA common_integration_shlib_encapsulate_calls
+
+CREATE COMPUTE MODULE cc_callable_Failure
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DECLARE messageText CHARACTER;
+		DECLARE messageCode INTEGER;
+		CALL getFormatErrorExceptionDetail(InputExceptionList, messageCode, messageText);
+		SET OutputRoot = InputRoot;
+		IF Environment.Variables.TypeCall = 'async' THEN
+			IF NOT EXISTS(OutputRoot.Properties[])
+			THEN
+				CREATE FIRSTCHILD of OutputRoot domain 'Properties' NAME 'Properties';
+			END IF;
+			IF Environment.Variables.SetContext IS UNKNOWN AND Environment.Variables.SetContextCallable IS UNKNOWN THEN
+				SET Environment.Variables = Environment.CallableFlow.UserContext.Environment.Variables;
+				SET OutputLocalEnvironment = Environment.CallableFlow.UserContext.LocalEnvironment;
+			ELSE
+				SET Environment = InputLocalEnvironment.Environment;
+			END IF;
+		END IF;
+		DECLARE variablesRef REFERENCE TO Environment.Variables;
+		SET Environment.Variables.Error."error-code" = messageCode;
+		SET Environment.Variables.Error."error-message" = messageText;
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.TCSLog.context."error-code" = messageCode;
+		SET Environment.Variables.TCSLog.context."error-message" = messageText;
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE Callable response Failure  (' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName|| ')';
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'FAIL: Callable flow request failure exeption (' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName|| ')';
+
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_callable_async_call_Failure_Request
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE messageText CHARACTER;
+		DECLARE messageCode INTEGER;
+		CALL getFormatErrorExceptionDetail(InputExceptionList, messageCode, messageText);
+		SET Environment.Variables.TCSLog.context."error-code" = messageCode;
+		SET Environment.Variables.TCSLog.context."error-message" = messageText;
+		SET Environment.Variables.TCSLog.context.severity = 'ERROR';
+		SET Environment.Variables.Error."error-code" = messageCode;
+		SET Environment.Variables.Error."error-message" = messageText;
+
+		DECLARE variablesRef REFERENCE TO Environment.Variables;
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE Callable Flow request Failure (' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName || ')';
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+
+        SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'FAIL: Callable flow request failure exeption (' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName|| ')';
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_callable_Out
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		IF Environment.Variables.TypeCall = 'async' THEN
+			SET Environment = InputLocalEnvironment.Environment;
+		END IF;		
+		DECLARE variablesRef REFERENCE TO Environment.Variables;
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE Callable response from ' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName;
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+		DELETE FIELD Environment.Variables.TCSLog.context."error-code";
+		DELETE FIELD Environment.Variables.TCSLog.context."error-message";
+		SET Environment.Variables.MonitoringMessage = 'SUCCESS: Callable request (' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_callable_async_call_SetLogMonitoring
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		IF Environment.Variables.TypeCall NOT IN ('async','') THEN
+			THROW USER EXCEPTION VALUES('please use ''sync'' or ''async'' for type-call parameter');
+		END IF;
+		IF not(COALESCE(Environment.Variables.SetContext,false)) THEN
+			THROW USER EXCEPTION VALUES('please add subflow cc_*.*_start.subflow at the beginning of your flow');
+		END IF;
+		IF cast(COALESCE(InputLocalEnvironment.Destination.CallableFlow.Invoke.requestTimeout,-1) AS INT DEFAULT -1) = -1 THEN
+			THROW USER EXCEPTION VALUES('please provide requestTimeout in LocalEnvironment.Destination.CallableFlow.Invoke.requestTimeout');
+		END IF;
+		SET OutputRoot = InputRoot;
+		
+		SET OutputLocalEnvironment."X-Correlation-Id" = Environment.Variables."X-Correlation-Id";
+		SET OutputLocalEnvironment."X-Global-Transaction-Id" = Environment.Variables."X-Global-Transaction-Id";
+		SET OutputLocalEnvironment."X-Origin-Caller-Code" = Environment.Variables."X-Origin-Caller-Code";		
+		SET OutputLocalEnvironment."X-Caller-Code" = ApplicationLabel;
+		SET OutputLocalEnvironment."X-Source-System" = 'CMP05541'; -- ACE	
+		
+		-- set infos variables
+		DECLARE variablesRef REFERENCE TO Environment.Variables;
+		DELETE FIELD variablesRef.Info;		
+		SET variablesRef.Info.targetApplication = OutputLocalEnvironment.Destination.CallableFlow.Invoke.targetApplication;
+		SET variablesRef.Info.targetEndpointName = OutputLocalEnvironment.Destination.CallableFlow.Invoke.targetEndpointName;
+		SET variablesRef.Info."X-Caller-Code" = ApplicationLabel;
+		
+		-- set contextual variables
+		SET variablesRef.TCSLog.context."source-system" = 'CMP05541';
+		SET variablesRef.TCSLog.context."target-system" = 'CMP05541';
+		SET variablesRef.TCSLog.context."caller-code" = ApplicationLabel;
+		SET variablesRef.TCSLog.context.targetApplication = variablesRef.Info.targetApplication;
+		SET variablesRef.TCSLog.context.targetEndpointName = variablesRef.Info.targetEndpointName;
+		
+		SET Environment.Variables.MonitoringMessageInfo = 'INFO: SEND ' || Environment.Variables.TypeCall || ' request to callable ' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName;
+		SET Environment.Variables.MonitoringMessageSup = 'SUP: SEND ' || Environment.Variables.TypeCall || ' request to callable ' || variablesRef.Info.targetApplication || ' - ' || variablesRef.Info.targetEndpointName;
+
+		SET Environment.CallableFlow.UserContext.Environment.Variables = Environment.Variables;
+		SET Environment.CallableFlow.UserContext.LocalEnvironment = OutputLocalEnvironment;
+		SET OutputLocalEnvironment.Environment = Environment;
+		
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_callable_end_ExitPoint
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputLocalEnvironment.Environment = Environment;
+		IF NOT(COALESCE(Environment.Variables.SetContextCallable,FALSE)) THEN
+			THROW USER EXCEPTION VALUES('please add subflow cc_*.*_start.subflow at the beginning of your flow');
+		END IF;
+		SET OutputLocalEnvironment."X-Correlation-ID" =  Environment.Variables."X-Correlation-Id";
+		SET OutputLocalEnvironment."X-Origin-Caller-Code" = Environment.Variables."X-Origin-Caller-Code";
+		SET OutputLocalEnvironment."X-Caller-Code" = ApplicationLabel;
+		SET OutputLocalEnvironment."X-Global-Transaction-Id" = Environment.Variables."X-Global-Transaction-Id";
+		SET Environment.Variables.MonitoringMessage = 'SUP: SEND response to ' || Environment.Variables."X-Caller-Code-Callable";
+				
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE cc_callable_start_SetMonitoringEnvContextCallable
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment = InputLocalEnvironment.Environment;
+		SET Environment.Variables."cmdb-id-source" = "cmdb-id-source" ;
+		-- generate contextual id for tracking
+		SET Environment.Variables.trackID = UUIDASCHAR;				
+		SET Environment.Variables."X-Global-Transaction-Id" = COALESCE(InputLocalEnvironment."X-Global-Transaction-Id",'');
+		SET Environment.Variables."X-Correlation-Id" = COALESCE(InputLocalEnvironment."X-Correlation-Id",Environment.Variables."X-Global-Transaction-Id");	
+		SET Environment.Variables."X-Caller-Code" = COALESCE(InputLocalEnvironment."X-Caller-Code",'');
+		SET Environment.Variables."X-Caller-Code-Callable" = COALESCE(InputLocalEnvironment."X-Caller-Code",'');
+		SET Environment.Variables."X-Origin-Caller-Code" = COALESCE(InputLocalEnvironment."X-Origin-Caller-Code",COALESCE(InputRoot.HTTPInputHeader."X-Caller-Code",''));
+		SET Environment.Variables."Callable-Application" = InputLocalEnvironment.Destination.CallableFlow.Invoke.targetApplication || ' - ' || InputLocalEnvironment.Destination.CallableFlow.Invoke.targetEndpointName;
+			
+		-- set contextual variables to track them in SUP logs		
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		SET Environment.Variables.TCSLog.context."callable-application" = Environment.Variables."Callable-Application";
+		SET Environment.Variables.TCSLog.context."origin-caller" = Environment.Variables."X-Origin-Caller-Code";
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.Variables."X-Caller-Code";
+		SET Environment.Variables.TCSLog.context."correlation-id" = Environment.Variables."X-Correlation-Id";
+		SET Environment.Variables.TCSLog.context."global-transaction-id" = Environment.Variables."X-Global-Transaction-Id";	
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541'; -- ACE
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541'; -- ACE
+		SET Environment.Variables.SetContextCallable = TRUE;	
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE Callable request from ' || Environment.Variables."X-Caller-Code";		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

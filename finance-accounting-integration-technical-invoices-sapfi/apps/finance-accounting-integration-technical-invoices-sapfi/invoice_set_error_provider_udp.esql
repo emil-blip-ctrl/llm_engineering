@@ -1,0 +1,13 @@
+
+
+CREATE COMPUTE MODULE invoice_set_error_provider_udp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		set Environment.Variable.Error = true;
+		set Environment.Variable.ErrorProvider = 'ACE';
+		set Environment.Variable.refAppError = 'ACETECH0002';
+		propagate to label 'error';
+		RETURN false;
+	END;
+END MODULE;

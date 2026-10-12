@@ -1,0 +1,190 @@
+PATH Shlib_PoliciesReader;
+
+CREATE COMPUTE MODULE invoice_routage
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+	    SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		DECLARE multiple_targets_found BOOLEAN FALSE;
+		DECLARE invalid_targets_found BOOLEAN FALSE;
+		DECLARE previous_target CHAR '';
+		DECLARE current_target CHAR '';
+
+		DECLARE "finance-accounting-integration-invoices-policy-project" ROW;
+		CALL getAllPolicyProperties('finance-accounting-integration-invoices-policy-project','common',"finance-accounting-integration-invoices-policy-project");
+		IF EXISTS("finance-accounting-integration-invoices-policy-project".error[]) THEN	
+			SET Environment.Variables.ErrorRefApp = 'ACETECH0002';
+			SET Environment.Variables.HttpReturnCode = '422';
+			SET Environment.Variables.ErrorProviderName = 'ACE';
+			SET Environment.Variables.ExceptionMessage = "finance-accounting-integration-invoices-policy-project".error;			
+			SET Environment.Variables.ExceptionStackTrace = 'Problem to get Policy Project : {finance-accounting-integration-invoices-policy-project:common}'; 
+
+			PROPAGATE TO TERMINAL 2;
+			RETURN FALSE;
+		END IF;
+
+		--request params
+		DECLARE process_control CHAR '';
+		DECLARE sender_id CHAR COALESCE(Environment.Variables."X-Origin-Caller-Code" ,'UNKNWOWN');
+
+		--Get targets for each invoice object given, SET cmdb_in to one of the targets and compare to all to see if all have the correct target
+		DECLARE policyEndpoint CHAR;
+		DECLARE policyTimeout CHAR;
+		DECLARE policyCallType CHAR;
+		DECLARE policyApplication CHAR;
+		DECLARE policyHttpMethod CHAR;
+		DECLARE invoice REFERENCE TO OutputRoot.JSON.Data.Item[1];
+		WHILE (LASTMOVE(invoice) AND NOT multiple_targets_found AND NOT invalid_targets_found) DO
+			IF lower(sender_id) = 'idit' THEN
+			    SET process_control = invoice.processControl.specificationIdentifier.Item[1].schemeIdentifier;
+			ELSE
+				SET process_control = invoice.processControl.specificationIdentifier.Item[1].content;       	
+			END IF;	
+
+			IF process_control IS NULL THEN		
+				SET Environment.Variables.ErrorRefApp = 'ACEFONC0021';
+				SET Environment.Variables.HttpReturnCode = '422';
+				SET Environment.Variables.ErrorProviderName = 'ACE';
+				SET Environment.Variables.ExceptionMessage = 'Unprocessable Content';			
+				SET Environment.Variables.ExceptionStackTrace = 'Routing parameters missing.';
+
+				PROPAGATE TO TERMINAL 2;
+				RETURN FALSE;
+			ELSE	
+				SET policyEndpoint = "finance-accounting-integration-invoices-policy-project".{lower(sender_id || '_' || process_control || '_endpoint')};
+				SET policyTimeout = "finance-accounting-integration-invoices-policy-project".{lower(sender_id || '_' || process_control || '_timeout')};
+				SET policyCallType = "finance-accounting-integration-invoices-policy-project".{lower(sender_id || '_' || process_control || '_call')};
+				SET policyApplication = "finance-accounting-integration-invoices-policy-project".{lower(sender_id || '_' || process_control || '_application')};
+			    SET current_target = COALESCE("finance-accounting-integration-invoices-policy-project".{lower(sender_id || '_' || process_control || '_target')},'');
+			    SET Environment.Variables.In.CurrentTarget = current_target;
+			END IF;
+
+			--Each invoice must have a valid target
+			IF LENGTH(current_target) = 0 THEN
+				SET invalid_targets_found = TRUE;
+			END IF;
+
+			-- If previous_target has been SET already and is different from the target of this invoice, multiple targets have been found and an error is to be returned
+			-- Otherwise SET previous_target to the target of this invoice if it has not been SET yet
+			IF LENGTH(previous_target)>0 THEN
+				IF previous_target <> current_target THEN
+					SET multiple_targets_found = TRUE;
+				END IF;
+			ELSE
+				SET previous_target = current_target;
+			END IF;
+
+			MOVE invoice NEXTSIBLING;
+		END WHILE;
+
+		-- Logging error in case multiple targets were found
+		IF multiple_targets_found THEN	
+			SET Environment.Variables.ErrorRefApp = 'ACEFONC0020';
+			SET Environment.Variables.HttpReturnCode = '422';
+			SET Environment.Variables.ErrorProviderName = 'ACE';
+			SET Environment.Variables.ExceptionMessage = 'Unprocessable Content';			
+			SET Environment.Variables.ExceptionStackTrace = 'Multiple routing parameters.';
+
+			PROPAGATE TO TERMINAL 2;
+			RETURN FALSE;
+		-- Logging error in case one or more invalid targets were found
+		ELSEIF invalid_targets_found THEN	
+			SET Environment.Variables.ErrorRefApp = 'ACEFONC0020';
+			SET Environment.Variables.HttpReturnCode = '422';
+			SET Environment.Variables.ErrorProviderName = 'ACE';
+			SET Environment.Variables.ExceptionMessage = 'Unprocessable Content';
+			SET Environment.Variables.ExceptionStackTrace = 'Routing parameters incorrectly set.';			
+
+			PROPAGATE TO TERMINAL 2;
+			RETURN FALSE;
+		ELSE
+			DECLARE commonPolicy ROW "finance-accounting-integration-invoices-policy-project";
+			CALL getAllPolicyProperties('finance-accounting-integration-invoices-policy-project',UPPER(sender_id),"finance-accounting-integration-invoices-policy-project");
+			IF EXISTS("finance-accounting-integration-invoices-policy-project".error[]) THEN	
+				SET Environment.Variables.ErrorRefApp = 'ACETECH0002';
+				SET Environment.Variables.HttpReturnCode = '422';
+				SET Environment.Variables.ErrorProviderName = 'ACE';
+				SET Environment.Variables.ExceptionMessage = "finance-accounting-integration-invoices-policy-project".error;			
+				SET Environment.Variables.ExceptionStackTrace = 'Problem to get Policy Project : {finance-accounting-integration-invoices-policy-project:' || UPPER(sender_id)  ||'}'; 
+
+				PROPAGATE TO TERMINAL 2;
+				RETURN FALSE;
+			END IF;
+
+			DECLARE inputUri CHARACTER LCASE(COALESCE(InputLocalEnvironment.REST.Input.URI, ''));
+			IF inputUri <> ''
+			THEN
+				IF (CONTAINS(inputUri, 'receivable') AND CONTAINS(LCASE(process_control), 'payable')) 
+					OR (CONTAINS(inputUri, 'payable') AND CONTAINS(LCASE(process_control), 'receivable'))
+				THEN
+					SET Environment.Variables.ErrorRefApp = 'ACEFONC0022';
+					SET Environment.Variables.HttpReturnCode = '422';
+					SET Environment.Variables.ErrorProviderName = 'ACE';
+					SET Environment.Variables.ExceptionMessage = 'Invalid process control value';
+					SET Environment.Variables.ExceptionStackTrace = 'Invalid process control value.';			
+					PROPAGATE TO TERMINAL 2;
+					RETURN FALSE;
+				END IF;
+			END IF;
+
+			SET Environment.Variables.process_id = previous_target;
+			SET Environment.Variables.Policies."finance-accounting-integration-invoices-policy-project" = "finance-accounting-integration-invoices-policy-project";
+			SET Environment.Variables.Step = 'routage';
+
+			IF policyCallType = 'callableAsync'
+			THEN 
+				SET OutputLocalEnvironment.Destination.CallableFlow.Invoke.targetApplication = policyApplication;
+				SET OutputLocalEnvironment.Destination.CallableFlow.Invoke.targetEndpointName = policyEndpoint;
+				SET OutputLocalEnvironment.Destination.CallableFlow.Invoke.requestTimeout = policyTimeout;
+				PROPAGATE TO TERMINAL 1;
+				RETURN FALSE;
+			ELSEIF (policyCallType = 'httpAsync')
+			THEN
+				DECLARE baseUrl CHAR;
+				DECLARE "common-integration-policies-endpoints" ROW;
+				CALL getAllPolicyProperties('common-integration-policies-endpoints','AceEndpointsPolicy',"common-integration-policies-endpoints");
+				IF EXISTS("common-integration-policies-endpoints".error[]) THEN	
+					SET Environment.Variables.ErrorRefApp = 'ACETECH0002';
+					SET Environment.Variables.HttpReturnCode = '422';
+					SET Environment.Variables.ErrorProviderName = 'ACE';
+					SET Environment.Variables.ExceptionMessage = "common-integration-policies-endpoints".error;			
+					SET Environment.Variables.ExceptionStackTrace = 'Problem to get Policy Project : {common-integration-policies-endpoints: AceEndpointsPolicy}'; 
+					PROPAGATE TO TERMINAL 2;
+					RETURN FALSE;
+				END IF;				
+				SET baseUrl = "common-integration-policies-endpoints".{'ace-host-'||policyEndpoint};
+
+				DECLARE operationPath CHAR;
+				DECLARE financePolicyEndpoints ROW;
+				CALL getAllPolicyProperties('finance-integration-policies-endpoints', 'AceEndPointsPolicy', financePolicyEndpoints);
+				IF EXISTS("common-integration-policies-endpoints".error[]) THEN	
+					SET Environment.Variables.ErrorRefApp = 'ACETECH0002';
+					SET Environment.Variables.HttpReturnCode = '422';
+					SET Environment.Variables.ErrorProviderName = 'ACE';
+					SET Environment.Variables.ExceptionMessage = "common-integration-policies-endpoints".error;			
+					SET Environment.Variables.ExceptionStackTrace = 'Problem to get Policy Project : {finance-integration-policies-endpoints: AceEndPointsPolicy}'; 
+					PROPAGATE TO TERMINAL 2;
+					RETURN FALSE;
+				END IF;
+				SET operationPath = financePolicyEndpoints.{'path-' || policyApplication };
+
+				SET OutputLocalEnvironment.Destination.HTTP.RequestURL = baseUrl || operationPath;
+    			SET OutputLocalEnvironment.Destination.HTTP.Timeout = policyTimeout;
+    			SET OutputLocalEnvironment.Destination.HTTP.RequestLine.Method = 'POST';
+				PROPAGATE TO TERMINAL 3;
+				RETURN FALSE;
+			ELSE 
+				SET Environment.Variables.ErrorRefApp = 'ACEFONC0020';
+				SET Environment.Variables.HttpReturnCode = '422';
+				SET Environment.Variables.ErrorProviderName = 'ACE';
+				SET Environment.Variables.ExceptionMessage = 'Unprocessable Content';			
+				SET Environment.Variables.ExceptionStackTrace = 'Incorrect call type in policy';	
+				PROPAGATE TO TERMINAL 2;
+				RETURN FALSE;
+			END IF;
+
+		END IF;	
+		RETURN TRUE;
+	END;
+END MODULE;

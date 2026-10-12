@@ -1,0 +1,10 @@
+DECLARE ns6 NAMESPACE 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapbapiuserexistencecheck';
+
+
+CREATE COMPUTE MODULE health_callSap
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		set OutputRoot.DataObject.ns6:SapBapiUserExistenceCheck.USERNAME = 'NIP_SERVICE';
+		RETURN TRUE;
+	END;
+END MODULE;

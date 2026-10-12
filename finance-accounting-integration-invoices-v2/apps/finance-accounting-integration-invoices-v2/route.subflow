@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:common_integration_shlib_encapsulate_calls_cc_callable_async_call.subflow="common_integration_shlib_encapsulate_calls/cc_callable_async_call.subflow" xmlns:common_integration_shlib_encapsulate_calls_cc_http_async_call.subflow="common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
+    xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="route.subflow" nsPrefix="route.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.identifier_response" name="identifier_response" lowerBound="1" defaultValueLiteral="CallableFlowAsyncInvoke-1jk867b2-7bea-1945-99c7-o0169ed9862s">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.identifier_request" name="identifier_request" lowerBound="1" defaultValueLiteral="CallableFlowAsyncInvoke-1jk867b2-7bea-1945-99c7-o0169ed9862s">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.asyncResponseCorrelator" name="asyncResponseCorrelator" lowerBound="1" defaultValueLiteral="HTTPAsyncRequest-8521f414-2449-4687-h908-81ka37c90cgg">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="route" bundleName="route" pluginId="finance_accounting_integration_invoices_v2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_v2/icons/full/obj16/route.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_v2/icons/full/obj30/route.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="233,331" computeExpression="esql://routine/#invoice_routage.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="routage"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="routage.terminal.in" eventIdentity="INFO: Receive invoice">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/Info" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="INFO: Receive invoice"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="407,228" computeExpression="esql://routine/#invoice_error.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="error"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="error.terminal.in" eventIdentity="FAIL: Catch exception">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$ExceptionList" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: Catch exception"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out1 terminal" eventSourceName="error.terminal.out1" eventIdentity="SUP: RECEIVE fail response">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: RECEIVE fail response"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.in" location="19,329">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="route" pluginId="finance_accounting_integration_invoices_v2"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="688,429">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="route" pluginId="finance_accounting_integration_invoices_v2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="87,330" computeExpression="esql://routine/#setBusinessIdentifiers.Main">
+        <translation xmi:type="utility:ConstantString" string="setBusinessIdentifiers"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="setBusinessIdentifiers.terminal.out" eventIdentity="SUP: LOG request">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: LOG request"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_callable_async_call.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="376,333" identifier_request="CallableFlowAsyncInvoke-1jk867b2-7bea-1945-99c7-o0169ed9862s" identifier_response="CallableFlowAsyncInvoke-1jk867b2-7bea-1945-99c7-o0169ed9862s">
+        <translation xmi:type="utility:ConstantString" string="cc_callable_async_call1"/>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_encapsulate_calls_cc_http_async_call.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="389,429" monitoring-api-name="finance-accounting-integration-technical-invoices-financial-documents" monitoring-api-operation="invoice" asyncResponseCorrelator="HTTPAsyncRequest-8521f414-2449-4687-h908-81ka37c90cgg" cmdb-id-target="CMP22944">
+        <translation xmi:type="utility:ConstantString" string="cc_http_async_call"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="685,228">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Error" bundleName="route" pluginId="finance_accounting_integration_invoices_v2"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_25" targetNode="FCMComposite_1_2" sourceNode="InTerminal.in" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_36" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_40" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_41" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Response_Out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_49" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_50" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.redquest_ouit1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_51" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_52" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_53" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_54" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_55" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.callable.AsyncInvokeNodeCorrelationIdPropertyEditor" configurable="true" describedAttribute="Property.identifier_response">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.identifier_response" bundleName="common_integration_shlib_encapsulate_calls/cc_callable_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+        <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.AsyncCorrelationIdPropertyEditor" configurable="true" describedAttribute="Property.identifier_request">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.identifier_request" bundleName="common_integration_shlib_encapsulate_calls/cc_callable_async_call" pluginId="common-integration-shlib-encapsulate-calls"/>
+          <propertyDescriptor groupName="Group.Basic" propertyEditor="com.ibm.etools.mft.ibmnodes.editors.AsyncCorrelationIdPropertyEditor" configurable="true" describedAttribute="Property.asyncResponseCorrelator">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.asyncResponseCorrelator" bundleName="ComIbmHTTPAsyncRequest" pluginId="com.ibm.etools.mft.ibmnodes.definitions"/>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.identifier_response" overriddenNodes="FCMComposite_1_4">
+      <overriddenAttribute href="common_integration_shlib_encapsulate_calls/cc_callable_async_call.subflow#Property.identifier_response"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.identifier_request" overriddenNodes="FCMComposite_1_4">
+      <overriddenAttribute href="common_integration_shlib_encapsulate_calls/cc_callable_async_call.subflow#Property.identifier_request"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.asyncResponseCorrelator" overriddenNodes="FCMComposite_1_7">
+      <overriddenAttribute href="common_integration_shlib_encapsulate_calls/cc_http_async_call.subflow#Property.asyncResponseCorrelator"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

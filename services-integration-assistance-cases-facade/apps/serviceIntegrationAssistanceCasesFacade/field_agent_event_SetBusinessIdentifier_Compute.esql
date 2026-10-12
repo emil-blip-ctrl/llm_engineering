@@ -1,0 +1,38 @@
+
+
+CREATE COMPUTE MODULE field_agent_event_SetBusinessIdentifier_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		-- Set business identifier
+		SET OutputLocalEnvironment.Variables.businessIdentifier.Info.caseId = InputLocalEnvironment.REST.Input.Parameters."case-id";
+		SET OutputLocalEnvironment.Variables.businessIdentifier.Info.serviceId = InputLocalEnvironment.REST.Input.Parameters."service-delivery-id";
+		SET OutputLocalEnvironment.Variables.businessIdentifier.Info.fieldAgentId = InputLocalEnvironment.REST.Input.Parameters."field-agent-id";
+
+		-- Store parameter
+		SET Environment.Variables.REST = InputLocalEnvironment.REST;
+
+		-- copy all in the LocalEnv as it is passed to the callable flow
+		SET OutputLocalEnvironment."X-Correlation-Id" = Environment.Variables."X-Correlation-Id";
+		SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		SET OutputLocalEnvironment.Environment = Environment;
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

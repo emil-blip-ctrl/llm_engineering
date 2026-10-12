@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCallableFlowAsyncInvoke.msgnode="ComIbmCallableFlowAsyncInvoke.msgnode" xmlns:ComIbmCallableFlowAsyncResponse.msgnode="ComIbmCallableFlowAsyncResponse.msgnode" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmGroupComplete.msgnode="ComIbmGroupComplete.msgnode" xmlns:ComIbmGroupGather.msgnode="ComIbmGroupGather.msgnode" xmlns:ComIbmGroupScatter.msgnode="ComIbmGroupScatter.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="health.subflow" nsPrefix="health.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" nodeLayoutStyle="SQUARE">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="health" bundleName="health" pluginId="finance_accounting_integration_invoices_v2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_v2/icons/full/obj16/health.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/finance_accounting_integration_invoices_v2/icons/full/obj30/health.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="59,71">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="health" pluginId="finance_accounting_integration_invoices_v2"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="877,259">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="health" pluginId="finance_accounting_integration_invoices_v2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowAsyncInvoke.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="462,73" asyncResponseCorrelator="CampingCare-health-mx371ed5-1358-4fb2-ad27-8ddb95w0g258" targetApplication="finance-accounting-integration-technical-invoices-cc" targetEndpointName="health" requestTimeout="10" AddRequestToGroup="true" GroupRequestFolderName="CAMPINGCARE">
+        <translation xmi:type="utility:ConstantString" string="CampingCare-health"/>
+      </nodes>
+      <nodes xmi:type="ComIbmGroupComplete.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="498,258" GroupName="HEALTH_INVOICE">
+        <translation xmi:type="utility:ConstantString" string="Group Complete"/>
+      </nodes>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="255,299" messageDomain="BLOB" resetMessageDomain="true" resetMessageSet="true" resetMessageType="true" resetMessageFormat="true">
+        <translation xmi:type="utility:ConstantString" string="BLOB"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowAsyncResponse.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="86,299" asyncResponseCorrelator="CampingCare-health-mx371ed5-1358-4fb2-ad27-8ddb95w0g258">
+        <translation xmi:type="utility:ConstantString" string="responseCampingCare"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowAsyncInvoke.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="485,146" asyncResponseCorrelator="IDIT-health-9234hd203crm238rd23rskd2307h8s233h743r" targetApplication="finance-accounting-integration-technical-invoices-idit" targetEndpointName="health" requestTimeout="10" AddRequestToGroup="true" GroupRequestFolderName="IDIT">
+        <translation xmi:type="utility:ConstantString" string="IDIT-health"/>
+      </nodes>
+      <nodes xmi:type="ComIbmGroupScatter.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="178,72" GroupName="HEALTH_INVOICE" GroupTimeout="3.0">
+        <translation xmi:type="utility:ConstantString" string="Group Scatter"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowAsyncResponse.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="108,209" asyncResponseCorrelator="SAPFI-health-2g7md91f-5d47-4afe-8217-ab0ab41ep483">
+        <translation xmi:type="utility:ConstantString" string="responseSAPFI"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowAsyncResponse.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="111,386" asyncResponseCorrelator="IDIT-health-9234hd203crm238rd23rskd2307h8s233h743r">
+        <translation xmi:type="utility:ConstantString" string="responseIDIT"/>
+      </nodes>
+      <nodes xmi:type="ComIbmGroupGather.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="357,303" GroupName="HEALTH_INVOICE" UnknownMessageTimeout="30.0">
+        <translation xmi:type="utility:ConstantString" string="Group Gather"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="739,258" computeExpression="esql://routine/#health_health_response.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="health_response"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCallableFlowAsyncInvoke.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="482,7" asyncResponseCorrelator="SAPFI-health-2g7md91f-5d47-4afe-8217-ab0ab41ep483" targetApplication="finance-accounting-integration-technical-invoices-sapfi" targetEndpointName="health" requestTimeout="10" AddRequestToGroup="true" GroupRequestFolderName="SAPFI">
+        <translation xmi:type="utility:ConstantString" string="SAPFI-health"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="317,71" computeExpression="esql://routine/#health_contexte_health.Main">
+        <translation xmi:type="utility:ConstantString" string="contexte_health"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.timeout" targetTerminalName="InTerminal.in">
+        <bendPoints>129,46,-130,50</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+        <bendPoints>125,-55,-134,-51</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.unknown" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in">
+        <bendPoints>127,13,-132,17</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in">
+        <bendPoints>125,-34,-134,-30</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_6" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:sapasi="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata" xmlns:sapcardinformation="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcardinformation932265214" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcardinformation932265214">
+  
+  <xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability">
+<info:resourceAdapter xmlns:info="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability" version="7.5.0.5_IF10"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="commonj.connector.asi">
+<asi:annotationSet xmlns:asi="commonj.connector.asi" asiNSURI="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+</xsd:appinfo>
+</xsd:annotation>
+  
+  <xsd:complexType name="SapCardInformation">
+    
+    <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIBusinessObjectTypeMetadata>
+</sapasi:sapBAPIBusinessObjectTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+    
+    <xsd:sequence maxOccurs="1" minOccurs="1">
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="CARD_HOLDER_NAME" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>CARD_HOLDER_NAME</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>40</sapasi:MaxLength>
+<sapasi:Description>Payment cards: Name of cardholder</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="40"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+      <xsd:element maxOccurs="1" minOccurs="0" name="CARD_HOLDER_PRIMARY_ACC" nillable="true">
+        
+        <xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>CARD_HOLDER_PRIMARY_ACC</sapasi:FieldName>
+<sapasi:FieldType>CHAR</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>25</sapasi:MaxLength>
+<sapasi:Description>Payment cards: Card number</sapasi:Description>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+        
+        <xsd:simpleType>
+          
+          <xsd:restriction base="xsd:string">
+            
+            <xsd:maxLength value="25"/>
+            
+          </xsd:restriction>
+          
+        </xsd:simpleType>
+        
+      </xsd:element>
+      
+    </xsd:sequence>
+    
+  </xsd:complexType>
+  
+</xsd:schema>

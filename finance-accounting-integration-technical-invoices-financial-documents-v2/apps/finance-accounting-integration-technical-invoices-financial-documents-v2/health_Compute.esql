@@ -1,0 +1,13 @@
+
+
+CREATE COMPUTE MODULE health_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.JSON.Data.status = 'pass';-- override after if error
+		SET OutputRoot.JSON.Data.api = ApplicationLabel;
+		SET OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP as CHAR FORMAT 'I');
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,41 @@
+BROKER SCHEMA esql.createClaimsAlis
+PATH Shlib_PoliciesReader;
+
+
+CREATE COMPUTE MODULE CreateClaim_PostClaim_PrepareCallAlis
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+		BEGIN
+
+			SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/json';
+			SET OutputRoot.HTTPRequestHeader.Accept = 'application/json, application/xml, text/html';
+			SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+			
+			DECLARE URLAPI CHARACTER Environment.Variables.policy.apicHost;
+			DECLARE PATHAPI CHARACTER Environment.Variables.policy.claimPost;
+			
+			-- Read Policy in order to retrieve dynamicaly the credentials related to the sender code  
+		    SET OutputRoot.HTTPRequestHeader."X-IBM-Client-Id" = Environment.Variables.policy.ACE_ClientID;
+
+			SET OutputRoot.HTTPRequestHeader."X-Global-Transaction-Id" = Environment.Variables.logging.envelope.GTID;
+			SET OutputRoot.HTTPRequestHeader."X-Request-ID" = UUIDASCHAR;
+			SET OutputRoot.HTTPRequestHeader."X-Correlation-ID" =  Environment.Variables.logging.envelope.TID;
+			SET OutputRoot.HTTPRequestHeader."X-IBM-Client-Id" = getPolicyProperty('{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy','client_id');
+			SET OutputRoot.HTTPRequestHeader."X-IBM-Client-Secret" = getPolicyProperty('{AceAppEsbCredentialsPolicies}:AceAppEsbCredentialsPolicy','client_secret');
+			
+			DECLARE Auth CHARACTER BASE64ENCODE(getPolicyProperty('{insurance-integration-policies-credentials}:AlisCredentialsPolicy','ClientId') || ':' || getPolicyProperty('{insurance-integration-policies-credentials}:AlisCredentialsPolicy','ClientSecret'));
+			SET OutputRoot.HTTPRequestHeader.Authorization = 'Basic '|| Auth ;
+			
+       
+	        SET OutputLocalEnvironment.Destination.HTTP.RequestURL = URLAPI || PATHAPI ;
+	       	SET OutputLocalEnvironment.Destination.HTTP.RequestLine.Method = 'POST';
+	       	
+	       	--Logs
+			SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541';
+			SET Environment.Variables.TCSLog.context."target-system" = 'CMP05538';
+			SET Environment.Variables.TCSLog.context."caller-code" = ApplicationLabel;
+			SET Environment.Variables.TCSLog.context."target-url" = URLAPI || PATHAPI;
+		
+			RETURN TRUE;
+		END;
+
+END MODULE;

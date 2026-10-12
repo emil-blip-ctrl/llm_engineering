@@ -1,0 +1,17 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+CREATE COMPUTE MODULE CreateClaim_MappingResponseClaimToTCS
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET Environment.Variables."technical-id"			= InputRoot.JSON.Data.id;
+		SET Environment.Variables."functional-id"			= InputRoot.JSON.Data.identifier;
+		SET Environment.Variables."claim-number"			= InputRoot.JSON.Data.externalID;
+		SET Environment.Variables.status					= InputRoot.JSON.Data.statusIVO.status;
+		SET Environment.Variables."meta-data-validation" 	= TRUE;
+		
+		SET Environment.Variables.ALISerror = FALSE;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

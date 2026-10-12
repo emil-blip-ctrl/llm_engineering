@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:CommonError_traceErrorAndReturnStatus.subflow="CommonError/traceErrorAndReturnStatus.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:flowCreateServiceDelivery.subflow="flowCreateServiceDelivery.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="resourceNewServiceDeliveryToAssistance.subflow" nsPrefix="resourceNewServiceDeliveryToAssistance.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="resourceNewServiceDeliveryToAssistance" bundleName="resourceNewServiceDeliveryToAssistance" pluginId="servicesIntegrationAssistanceCases"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj16/resourceNewServiceDeliveryToAssistance.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj30/resourceNewServiceDeliveryToAssistance.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="34,199">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="resourceNewServiceDeliveryToAssistance" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="690,193">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="resourceNewServiceDeliveryToAssistance" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="CommonError_traceErrorAndReturnStatus.subflow:FCMComposite_1" xmi:id="FCMComposite_1_12" location="464,300" errorcode="504">
+        <translation xmi:type="utility:ConstantString" string="traceErrorAndReturn504"/>
+      </nodes>
+      <nodes xmi:type="CommonError_traceErrorAndReturnStatus.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="451,67">
+        <translation xmi:type="utility:ConstantString" string="traceErrorAndReturn500"/>
+      </nodes>
+      <nodes xmi:type="flowCreateServiceDelivery.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="143,202">
+        <translation xmi:type="utility:ConstantString" string="flowCreateServiceDelivery"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.OutputError" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.OutputConnect" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard>
+      <stickyNote location="598,385">
+        <body xmi:type="utility:ConstantString" string="Call from mLogistics to create a new service in Assys"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

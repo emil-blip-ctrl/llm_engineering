@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:restapiDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.restapi" definitionType="openapi_3" definitionFile="schema.yaml" implementation="gen/finance_accounting_integration_invoices_v2.msgflow" https="true" definitionWithExtRef="false" faultFormat="JSON">
+    <references>
+        <sharedLibraryReference>
+            <libraryName>common-integration-shlib-encapsulate-calls</libraryName>
+        </sharedLibraryReference>
+        <sharedLibraryReference>
+            <libraryName>SHLIB_PoliciesReader</libraryName>
+        </sharedLibraryReference>
+    </references>
+    <ns2:operations>
+        <ns2:operation name="health" implementation="health.subflow"/>
+        <ns2:operation name="postPayable-documents" implementation="postPayable_documents.subflow"/>
+        <ns2:operation name="postReceivable-documents" implementation="postReceivable_documents.subflow"/>
+    </ns2:operations>
+    <ns2:errorHandlers/>
+</ns2:restapiDescriptor>

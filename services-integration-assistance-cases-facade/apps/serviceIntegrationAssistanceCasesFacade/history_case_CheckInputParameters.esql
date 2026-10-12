@@ -1,0 +1,22 @@
+
+
+CREATE COMPUTE MODULE history_case_CheckInputParameters
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		if LENGTH(COALESCE(InputLocalEnvironment.REST.Input.Parameters.personalreference,'')) = 0 or 
+		   LENGTH(COALESCE(InputLocalEnvironment.REST.Input.Parameters.personalreference,'')) > 9 or
+		   cast(InputLocalEnvironment.REST.Input.Parameters.personalreference as INT DEFAULT 1000000000) >= 1000000000
+		then
+		
+			SET OutputLocalEnvironment.Variables.TCSError."error-code" = 400;
+			SET OutputLocalEnvironment.Variables.TCSError."error-message" = 'Bad Request';
+			SET OutputLocalEnvironment.Variables.TCSError."error-stack" = 'The parameter personalreference does not respect the expected format.';
+			propagate to terminal 1;
+			return false;
+		end if;
+		RETURN TRUE;
+	END;
+END MODULE;

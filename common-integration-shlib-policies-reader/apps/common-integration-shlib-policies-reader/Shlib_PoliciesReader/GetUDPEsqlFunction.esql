@@ -1,0 +1,38 @@
+BROKER SCHEMA Shlib_PoliciesReader
+
+CREATE FUNCTION gestionPolicy( IN policyName CHARACTER, IN propertyName CHARACTER ) RETURNS CHARACTER
+BEGIN
+	DECLARE prop CHAR getPolicyPropertyWithOutError(policyName, propertyName);
+	if prop = 'POLICY_NOT_FOUND' OR prop = 'PROPERTY_NOT_FOUND' THEN 
+		THROW USER EXCEPTION CATALOG 'MyCatalog' MESSAGE 4004 VALUES(policyName || '/' || propertyName || ' not found');
+	end if;
+	return prop;
+
+END;
+CREATE PROCEDURE getAllPolicyProperties (IN PolicyProjectName CHAR,IN PolicyName CHAR, IN rowRef REFERENCE )  
+BEGIN
+	/* 
+		exemple d'appel  
+		call getAllPolicyProperties('DigitalIntakePolicies','BALOISEDIG',OutputRoot.JSON.Data.test);
+	*/
+	DECLARE properties CHAR getAllPolicyPropertiesJava('{' || PolicyProjectName || '}:' ||  PolicyName);
+	DECLARE RowTempo ROW;
+	DECLARE dataAsBit BIT  CAST(properties AS BIT CCSID 1208);
+	CREATE LASTCHILD OF RowTempo DOMAIN 'JSON' PARSE(dataAsBit CCSID 1208);
+	set rowRef = RowTempo.JSON.Data;
+	
+END;
+CREATE FUNCTION getPolicyProperty( IN policyName CHARACTER, IN propertyName CHARACTER )
+RETURNS CHARACTER
+LANGUAGE JAVA
+EXTERNAL NAME "GETUDP_JavaCompute.getPolicyProperty";
+
+CREATE FUNCTION getPolicyPropertyWithOutError( IN policyName CHARACTER, IN propertyName CHARACTER )
+RETURNS CHARACTER
+LANGUAGE JAVA
+EXTERNAL NAME "GETUDP_JavaCompute.getPolicyPropertyWithOutError";
+
+CREATE FUNCTION getAllPolicyPropertiesJava( IN policyName CHARACTER )
+RETURNS CHARACTER
+LANGUAGE JAVA
+EXTERNAL NAME "GETUDP_JavaCompute.getAllPolicyProperties";

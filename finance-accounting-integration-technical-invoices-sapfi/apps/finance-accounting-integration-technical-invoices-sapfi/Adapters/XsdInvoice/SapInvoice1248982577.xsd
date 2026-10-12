@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapinvoice1248982577" xmlns:sapasi="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata" xmlns:sapcustomer370229080="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcustomer370229080" xmlns:sapdetail355745837="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdetail355745837" xmlns:sapheader368244230="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheader368244230" xmlns:sapinvoice="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapinvoice1248982577">
+<xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheader368244230" schemaLocation="SapHeader368244230.xsd"/>
+<xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcustomer370229080" schemaLocation="SapCustomer370229080.xsd"/>
+<xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdetail355745837" schemaLocation="SapDetail355745837.xsd"/>
+<xsd:import namespace="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+
+<xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability">
+<info:resourceAdapter xmlns:info="http://www.ibm.com/xmlns/prod/j2ca/versionCompatability" version="7.5.0.5_IF09"/>
+</xsd:appinfo>
+</xsd:annotation>
+
+<xsd:annotation xml:space="preserve">
+<xsd:appinfo source="commonj.connector.asi">
+<asi:annotationSet xmlns:asi="commonj.connector.asi" asiNSURI="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata"/>
+</xsd:appinfo>
+</xsd:annotation>
+<xsd:complexType name="SapInvoice">
+<xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIBusinessObjectTypeMetadata>
+</sapasi:sapBAPIBusinessObjectTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+<xsd:sequence maxOccurs="1" minOccurs="1">
+<xsd:element maxOccurs="1" minOccurs="0" name="SapHeader" nillable="true" type="sapheader368244230:SapHeader">
+<xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>HEADER</sapasi:FieldName>
+<sapasi:FieldType>ZNCMP_S_INV_HEADER</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:element>
+<xsd:element maxOccurs="1" minOccurs="0" name="SapCustomer" nillable="true" type="sapcustomer370229080:SapCustomer">
+<xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>CUSTOMER</sapasi:FieldName>
+<sapasi:FieldType>ZNCMP_S_INV_CUSTOMER</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:element>
+<xsd:element maxOccurs="unbounded" minOccurs="0" name="SapDetail" nillable="true" type="sapdetail355745837:SapDetail">
+<xsd:annotation xml:space="preserve">
+<xsd:appinfo source="http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/metadata">
+<sapasi:sapBAPIPropertyTypeMetadata>
+<sapasi:FieldName>DETAIL</sapasi:FieldName>
+<sapasi:FieldType>ZNCMP_T_INV_DETAIL</sapasi:FieldType>
+<sapasi:PrimaryKey>false</sapasi:PrimaryKey>
+<sapasi:MaxLength>0</sapasi:MaxLength>
+<sapasi:Description/>
+<sapasi:ParameterType>IN</sapasi:ParameterType>
+</sapasi:sapBAPIPropertyTypeMetadata>
+</xsd:appinfo>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:complexType>
+
+</xsd:schema>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:common_integration_shlib_wrap_message_messageBuild.subflow="common_integration_shlib_wrap_message/messageBuild.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
+    nsURI="SendDocumentsMetadataToArchivingProcessAlis.subflow" nsPrefix="SendDocumentsMetadataToArchivingProcessAlis.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="SendDocumentsMetadataToArchivingProcessAlis" bundleName="SendDocumentsMetadataToArchivingProcessAlis" pluginId="insurance-claims-integration-technical-alis"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/insurance-claims-integration-technical-alis/icons/full/obj16/SendDocumentsMetadataToArchivingProcessAlis.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/insurance-claims-integration-technical-alis/icons/full/obj30/SendDocumentsMetadataToArchivingProcessAlis.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="10,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="SendDocumentsMetadataToArchivingProcessAlis" pluginId="insurance-claims-integration-technical-alis"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="376,20" queueName="A.CLAIMSEDM.PROCESS" policyUrl="{GlobalMQPolicies}:RemoteMQPolicies">
+        <translation xmi:type="utility:ConstantString" string="MQ Output"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="MQ Output.terminal.in" eventIdentity="Send message to MQ to send metadata">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="Send message to MQ to send metadata"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="93,20" computeExpression="esql://routine/esql.createClaimsAlis#BuildMessageForArchive.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="BuildMessageForArchive"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="BuildMessageForArchive.terminal.out" eventIdentity="SUP: SEND documents metadata">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/TCSLog/context/*" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="SUP: SEND documents metadata"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="common_integration_shlib_wrap_message_messageBuild.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="263,20">
+        <translation xmi:type="utility:ConstantString" string="messageBuild"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_6" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

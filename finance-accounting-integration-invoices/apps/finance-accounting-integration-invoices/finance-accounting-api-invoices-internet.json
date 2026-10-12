@@ -1,0 +1,1297 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "version" : "1.0.0",
+    "title" : "finance-accounting-api-invoices-internet",
+    "description" : "## Purpose\nThe purpose of this API is to route all the invoice use cases to the right back-office (both TCS internal non TCS). The standard EN 16931-1:2017 is used, feel free to read the documentation before using it.   The first use case are the ones about the Camping invoices. \n",
+    "contact" : {
+      "name" : "05_IT_Applications_Solutions",
+      "email" : "05_IT_Applications_Solutions@tcs.ch"
+    }
+  },
+  "externalDocs" : {
+    "description" : "Camping Care - SAP FI financial dataflows",
+    "url" : "https://confluence.tcsgroup.ch/display/ARCHI/SP+TCS+Campings+financial+data+flows"
+  },
+  "schemes" : [ "https" ],
+  "basePath" : "/finance-accounting/v1/invoices",
+  "paths" : {
+    "/invoice" : {
+      "post" : {
+        "summary" : "Send invoice objects\n",
+        "description" : "An invoice model should be given in the body as parameter, this invoice model will be routed to the correct receiver in the backend.\n",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "invoice",
+          "description" : "The invoice object",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/invoice"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Invoice sent succesfully\n"
+          },
+          "202" : {
+            "description" : "Invoice will be processed\n"
+          },
+          "400" : {
+            "description" : "Bad request\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "404" : {
+            "description" : "Not found\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "429" : {
+            "description" : "Too many requests\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "501" : {
+            "description" : "Not implemented\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "502" : {
+            "description" : "Bad gateway\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "503" : {
+            "description" : "Service unavailable\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "default" : {
+            "description" : "Unexpected error\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          }
+        },
+        "operationId" : "invoice"
+      }
+    },
+    "/health" : {
+      "get" : {
+        "summary" : "Pings the target receiver to check the connection\n",
+        "operationId" : "health",
+        "responses" : {
+          "200" : {
+            "description" : "Succesfull\n",
+            "schema" : {
+              "$ref" : "#/definitions/healthType"
+            }
+          },
+          "400" : {
+            "description" : "Bad request\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "404" : {
+            "description" : "Not found\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "429" : {
+            "description" : "Too many requests\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "501" : {
+            "description" : "Not implemented\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "502" : {
+            "description" : "Bad gateway\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "503" : {
+            "description" : "Service unavailable\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          },
+          "default" : {
+            "description" : "Unexpected error\n",
+            "schema" : {
+              "$ref" : "#/definitions/error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "invoice" : {
+      "description" : "The invoice model object.\nTODO: change required fields etc based upon mapping requirements to be given\n",
+      "type" : "array",
+      "maxItems" : 100,
+      "items" : {
+        "required" : [ "invoice-number", "invoice-issue-date", "invoice-type-code", "invoice-currency-code", "process-control", "seller", "buyer", "document-totals", "vat-breakdown", "invoice-line" ],
+        "properties" : {
+          "invoice-number" : {
+            "description" : "A unique identification number of the invoice.\n\nUsage note: The sequential number required in Article 226(2) of the directive 2006/112/EC, to uniquely identify the Invoice within the business context, time-frame, operating systems and records of the Seller.  It may be based on one or more series of numbers, which may include alphanumeric characters. No identification scheme is to be used. No identification scheme is to be used.\n",
+            "$ref" : "#/definitions/identifier"
+          },
+          "invoice-issue-date" : {
+            "description" : "The date when the invoice was issued.\n",
+            "$ref" : "#/definitions/date"
+          },
+          "invoice-type-code" : {
+            "description" : "A code specifying the functional type of the invoice\nUsage note: Commercial invoices and credit nots are defined according the entries in UNTDID 1001. Other entries of UNTDID 1001 with specific invoices or credit notes may be used if applicable.\n",
+            "$ref" : "#/definitions/code"
+          },
+          "invoice-currency-code" : {
+            "description" : "The currency in which all invoice amounts are given, except for the total VAT amount in accounting currency.\nUsage note: Only one currency shall be used in the invoice, except for the invoice total VAT amount in accounting currency in accordance with article 230 of directive 2006/112/EC on VAT. The lists of valid currencies are registered with the ISO 4217 maintenance agency \"Codes for the representation of currencies and funds\".\n",
+            "$ref" : "#/definitions/code"
+          },
+          "vat-accounting-currency-code" : {
+            "description" : "The currency used for VAT accounting and reporting purposes as accepted or required in the country of the seller\nUsage notes: Shall be used in combination with the invoice total VAT amount in accounting currency when the VAT accounting currency code differs from the invoice currency code. The lists of valid currencies are registered with the ISO 4217 Maintenance Agency \"Codes for the representation of currencies and funds\". Please refer to article 230 of the council directive 2006/112/EC for more information.\n",
+            "$ref" : "#/definitions/code"
+          },
+          "value-added-tax-point-date" : {
+            "description" : "The date when the VAT becomes accountable for the seller and for the buyer in so far as that date can be determined and differs from the date of issue of the invoice, according to the VAT directive.\nUsage note: The tax point is usually the date goods were supplied or services completed (the 'basic tax point'). There are some variations. Please refer to article 226 of the council directive 2006/112/EC for more information. This element is required if the value added tax point date is different from the invoice issue date. Bot buyer and seller should use the tax point date when provided by the seller. The use of this field is mutually exclusive with the value-added-tax-point-date-code field below.\n",
+            "$ref" : "#/definitions/date"
+          },
+          "value-added-tax-point-date-code" : {
+            "description" : "The code of the date when the VAT becomes accountable for the seller and for the buyer.\nUsage note: The code shall distinguish between the following entries of UNTDID 2005:\n - Invoice document issue date\n - Delivery date, actual\n - Paid to date\n \n The value added tax point date code is used if the value added tax point date is not known hwen the invoice is issues. The use of this field is mutually exclusive with the use of the field value-added-tax-point-date above.\n",
+            "$ref" : "#/definitions/code"
+          },
+          "payment-due-date" : {
+            "description" : "The date when the payment is due\nUsage note: The payment due date reflects the due date of the net payment. For partial payments it states the first net due date. The corresponding description of more complex payment terms can be stated in the field payment-terms.\n",
+            "$ref" : "#/definitions/date"
+          },
+          "buyer-reference" : {
+            "description" : "An identifier assigned by the buyer used for internal routing purposes.\nUsage note: The identifier is defined by the buyer, but provided by the seller in the invoice.\n",
+            "$ref" : "#/definitions/text"
+          },
+          "project-reference" : {
+            "description" : "The identification of the project the invoice refers to.\n",
+            "$ref" : "#/definitions/document-reference"
+          },
+          "contract-reference" : {
+            "description" : "The identification of a contract\nUsage note: The contract identifier should be unique in the context of the specific trading relationship and for a defined time period.\n",
+            "$ref" : "#/definitions/document-reference"
+          },
+          "purchase-order-reference" : {
+            "description" : "An identifier of a referenced purchase order, issued by the buyer.\n",
+            "$ref" : "#/definitions/document-reference"
+          },
+          "sales-order-reference" : {
+            "description" : "An identifier of a referenced sales order, issued by the seller\n",
+            "$ref" : "#/definitions/document-reference"
+          },
+          "receiving-advice-reference" : {
+            "description" : "An identifier of a referenced receiving advice.\n",
+            "$ref" : "#/definitions/document-reference"
+          },
+          "despatch-advice-reference" : {
+            "description" : "An identifier of a referenced despatch advice.\n",
+            "$ref" : "#/definitions/document-reference"
+          },
+          "tender-or-lot-reference" : {
+            "description" : "The identification of the call for tender or lot the invoice relates to.\nUsage note: In some countries a reference to the call for the tender that has led to the contract shall be provided\n",
+            "$ref" : "#/definitions/document-reference"
+          },
+          "invoiced-object-identifier" : {
+            "description" : "An identifier for an object on which the invoice is based, given by the seller\nUsage note: It may be a subscription number, telephone number, meter point, vehicle, person etc., as applicable. If it may be not clear for the receiver what scheme is used for the identifier, a conditional scheme identifier should be used that shall be chosen from the UNTDID 1153 code list entries.\n",
+            "$ref" : "#/definitions/identifier"
+          },
+          "buyer-accounting-reference" : {
+            "description" : "A textual value that specifies where to book the relevant data into the buyer's financial accounts\n",
+            "$ref" : "#/definitions/text"
+          },
+          "payment-terms" : {
+            "description" : "A textual description of the payment terms that apply to the amount due for payment (including description of possible penalties) . This element may contain multiple lines and multiple terms.\n",
+            "$ref" : "#/definitions/text"
+          },
+          "invoice-note" : {
+            "description" : "A group of business terms providing textual notes that are relevant for the invoice, together with an indication of the note subject.\n",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/invoice-note-object"
+            }
+          },
+          "process-control" : {
+            "description" : "A group of business terms providing information on the business process and rules applicable to the invoice document.\n",
+            "$ref" : "#/definitions/process-control-object"
+          },
+          "preceding-invoice-reference" : {
+            "description" : "A group of business terms providing information on one or more preceding invoices\nUsage note: To be used in case: - a preceding invoice is corrected - preceding partial invoices are referred to from a final invoice - preceding pre-payment invoices are referred to from a final invoice\n",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/preceding-invoice-reference-object"
+            }
+          },
+          "seller" : {
+            "description" : "A group of business terms providing information about the seller\n",
+            "$ref" : "#/definitions/seller-object"
+          },
+          "buyer" : {
+            "description" : "A group of business terms providing information about the buyer\n",
+            "$ref" : "#/definitions/buyer-object"
+          },
+          "payee" : {
+            "description" : "A group of business terms providing information about the payee.\n",
+            "$ref" : "#/definitions/payee-object"
+          },
+          "seller-tax-representative-party" : {
+            "description" : "A group of business terms providing information about the seller's tax representative.\n",
+            "$ref" : "#/definitions/seller-tax-representative-party-object"
+          },
+          "delivery-information" : {
+            "description" : "A group of business terms providing information about where and when the goods and services invoiced are delivered.\n",
+            "$ref" : "#/definitions/delivery-information-object"
+          },
+          "payment-instructions" : {
+            "description" : "A group of business terms providing information about the payment.\n",
+            "$ref" : "#/definitions/payment-instructions-object"
+          },
+          "document-level-allowances" : {
+            "description" : "A group of business terms providing information about allowances applicable to the invoice as a whole. Deductions, such as withheld tax may also be specified in this group.\n",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/document-level-allowances-object"
+            }
+          },
+          "document-level-charges" : {
+            "description" : "A group of business terms providing information about charges and taxes other than VAT, applicable to the invoice as a whole.\n",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/document-level-charges-object"
+            }
+          },
+          "document-totals" : {
+            "description" : "A group of business terms providing the monetary totals for the invoice.\n",
+            "$ref" : "#/definitions/document-totals-object"
+          },
+          "vat-breakdown" : {
+            "description" : "A group of business terms providing information about VAT breakdown by different categories, rates and exemption reasons.\n",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/vat-breakdown-object"
+            }
+          },
+          "additional-supporting-documents" : {
+            "description" : "A group of business terms providing information about additional supporting documents substantiating the claims made in the invoice.\nUsage note: The additional supporting documents can be used for both referencing a document number which is expected to be known by the receiver, an external document or as an embedded document. The option to link to an external document will be needed, for example in the case of large attachments and/or when sensitive information has to be separated from the invoice itself.\n",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/additional-supporting-documents-object"
+            }
+          },
+          "invoice-line" : {
+            "description" : "A group of business terms providing information on individual invoice lines.\n",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/invoice-line-object"
+            }
+          }
+        }
+      }
+    },
+    "concept-invoice" : {
+      "description" : "An incomplete version of the invoice object, used to send booking data as invoice before the final invoice can be created\nTODO: create as a copy of invoice but using less required fields etc (temporarily reference invoice object)\n",
+      "$ref" : "#/definitions/invoice"
+    },
+    "invoice-note-object" : {
+      "description" : "An object consisting of the invoice note and optionally the invoice note subject code\n",
+      "type" : "object",
+      "required" : [ "invoice-note-text" ],
+      "properties" : {
+        "invoice-note-subject-code" : {
+          "description" : "The subject of the textual note of the invoice. To be chosen from entries in UNTDID 4451.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "invoice-note-text" : {
+          "description" : "A textual note that gives unstructured information that is relevant to the invoice as a whole. Such as the reason for any correction or assignment note in case the invoice has been factored.\n",
+          "$ref" : "#/definitions/text"
+        }
+      }
+    },
+    "process-control-object" : {
+      "description" : "An object consisting of a specification identifier and optionally the business process type\n",
+      "type" : "object",
+      "required" : [ "specification-identifier" ],
+      "properties" : {
+        "business-process-type" : {
+          "description" : "Identifies the business process context in which the transaction appears, to enable the buyer to process the invoice in an appropriate way. To be specified by the buyer.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "specification-identifier" : {
+          "description" : "An identification of the specification containing the total set of rules regarding semantic content, cardinalities and business rules to which the data contained in the instance of document conforms.\nUsage note: This identifies compliance or conformance to this document. Compliant invoices, compliant to a user specification may identify that user specification here. No identification scheme is to be used.\n",
+          "$ref" : "#/definitions/identifier"
+        }
+      }
+    },
+    "preceding-invoice-reference-object" : {
+      "description" : "An object consisting of the preceding invoice reference and a preceding invoice issue date if the identifier is not unique.\n",
+      "type" : "object",
+      "required" : [ "preceding-invoice-reference" ],
+      "properties" : {
+        "preceding-invoice-reference" : {
+          "description" : "The identification of an invoice that was previously sent by the seller.\n",
+          "$ref" : "#/definitions/document-reference"
+        },
+        "preceding-invoice-issue-date" : {
+          "description" : "The date when the preceding invoice was issues\nusage note: This shall be provided in case the preceding invoice identifier is not unique.\n",
+          "$ref" : "#/definitions/date"
+        }
+      }
+    },
+    "seller-object" : {
+      "description" : "Object that contains the seller name and may contain a bunch more informational fields about the seller.\n",
+      "type" : "object",
+      "required" : [ "seller-name", "seller-postal-address" ],
+      "properties" : {
+        "seller-name" : {
+          "description" : "The full formal name by which the seller is registered in the national registry of legal entities or as a taxable person or otherwise trades as a person or persons.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "seller-trading-name" : {
+          "description" : "A name by which the seller is known, other than the seller name\nThis may be used if it is different from the seller name\n",
+          "$ref" : "#/definitions/text"
+        },
+        "seller-identifier" : {
+          "description" : "List of identifiers to identify the seller with\nUsage note: Multiple seller identifiers may be assigned or specified.  They may be differentiated by using various idenfication schemes.  If no scheme is specified, it should be known by buyer and seller, e.g. a previously exchanged buyer assigned identifier of the seller\n",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/identifier"
+          }
+        },
+        "seller-legal-registration-identifier" : {
+          "description" : "An identifier issued by an official registrar that identifies the seller as a legal entity or person.\nIf no scheme is specified it should be known by buyer and seller, e.g a previously exchanged seller assigned identifier of the buyer. If used, the identification scheme shall be chosen from the entries of the list published by the ISO/IEC 6523 maintenance agency.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "seller-vat-identifier" : {
+          "description" : "The seller's VAT identifier.\nUsage note: VAT number prefixed by a country code. A VAT registered supplier shall include his VAT ID, except when he uses a tax representative.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "seller-tax-registration-identifier" : {
+          "description" : "The local identification (defined by seller's address) of the seller for tax puposes or a reference that enables the seller to state his registered tax status.\nUsage note: This information may affect how the buyer settles the payment (such as for social security fees). E.g. in some countries, if the seller is not registered as a tax paying entity then the buyer is required to withhold the amount of the tax and pay it on behalf of the seller\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "seller-additional-legal-information" : {
+          "description" : "Additional legal information relevant for the seller.\nSuch as share capital for example.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "seller-electronic-address" : {
+          "description" : "Identifies the seller's electronic address to which the application level response to the invoice may be delivered.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "seller-postal-address" : {
+          "description" : "A group of business terms providing information about the address of the seller. Sufficient somponents of the address are to be filled to comply with legal requirements.\n",
+          "$ref" : "#/definitions/postal-address-object"
+        },
+        "seller-contact" : {
+          "description" : "A group of business terms providing contact information about the seller\n",
+          "$ref" : "#/definitions/contact-object"
+        }
+      }
+    },
+    "postal-address-object" : {
+      "description" : "Object that defines a model for a postal address.\n",
+      "type" : "object",
+      "required" : [ "country-code" ],
+      "properties" : {
+        "address-line-1" : {
+          "description" : "The main address line in an address. Usually the street name and number or post office box.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "address-line-2" : {
+          "description" : "An additional address line in an address that can be used to give further details supplementing the main line.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "address-line-3" : {
+          "description" : "An additional address line in an address that can be used to give further details supplementing the main line.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "city" : {
+          "description" : "The common name of the city, town or village, where the address is located.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "post-code" : {
+          "description" : "The identifier for an addressable group of properties according to the relevant postal service.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "seller-country-subdivision" : {
+          "description" : "The subdivision of a country, such as a region, county, state, province, etc.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "country-code" : {
+          "description" : "A code that identifies the country.\nThe list of valid countries are registered with the EN ISO 3166-1 maintenance agency, \"Codes for the representation of names of countries and their subdivisions\".\n",
+          "$ref" : "#/definitions/code"
+        }
+      }
+    },
+    "contact-object" : {
+      "description" : "Object to contain contact information\n",
+      "type" : "object",
+      "properties" : {
+        "contact-point" : {
+          "description" : "A contact point for a legal entity or person, such as a name, contact identification, department or office identification.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "contact-telephone-number" : {
+          "description" : "A phone number for the contact point\n",
+          "$ref" : "#/definitions/text"
+        },
+        "contact-email-address" : {
+          "description" : "An e-mail address for the contact point\n",
+          "$ref" : "#/definitions/text"
+        }
+      }
+    },
+    "buyer-object" : {
+      "description" : "Object that contains the buyer name and may contain a bunch more informational fields about the buyer.\n",
+      "type" : "object",
+      "required" : [ "buyer-name", "buyer-postal-address" ],
+      "properties" : {
+        "buyer-name" : {
+          "description" : "The full name of the buyer.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "buyer-trading-name" : {
+          "description" : "A name by which the buyer is known, other than buyer name. This may be used if different from the buyer name.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "buyer-identifier" : {
+          "description" : "An identifier of the buyer.\nIf no scheme is specified it should be known by buyer and seller, e.g a previously exchanged seller assigned identifier of the buyer. If used, the identification scheme shall be chosen from the entries of the list published by the ISO/IEC 6523 maintenance agency.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "buyer-legal-registration-identifier" : {
+          "description" : "An identifier issued by an official registrar that identifies the buyer as a legal entity or person.\nIf no scheme is specified it should be known by buyer and seller, e.g a previously exchanged seller assigned identifier of the buyer. If used, the identification scheme shall be chosen from the entries of the list published by the ISO/IEC 6523 maintenance agency.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "buyer-vat-identifier" : {
+          "description" : "The buyer's VAT identifier.\nVAT number prefixed by a country code based on EN ISO 3166-1 \"Codes for the representation of names of countries and their subdivisions.\"\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "buyer-electronic-address" : {
+          "description" : "Identifies the buyer's electronic address to which the invoice is delivered.\nThe scheme identifier shall be chosen from a list to be maintained by the Connecting Europe Facility\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "buyer-postal-address" : {
+          "description" : "A group of business terms providing information about the address of the buyer. Sufficient somponents of the address are to be filled to comply with legal requirements.\n",
+          "$ref" : "#/definitions/postal-address-object"
+        },
+        "buyer-contact" : {
+          "description" : "A group of business terms providing contact information about the buyer\n",
+          "$ref" : "#/definitions/contact-object"
+        }
+      }
+    },
+    "payee-object" : {
+      "description" : "Object that contains information about the payee\n",
+      "type" : "object",
+      "required" : [ "payee-name" ],
+      "properties" : {
+        "payee-name" : {
+          "description" : "The name of the payee.\nShall be used when the payee is different from the seller. The payee name may however be the same as the seller name.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "payee-identifier" : {
+          "description" : "An identifier for the payee.\nIf no scheme is specified it should be known by buyer and seller, e.g a previously exchanged seller assigned identifier. If used, the identification scheme shall be chosen from the entries of the list published by the ISO/IEC 6523 maintenance agency.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "payee-legal-registration-identifier" : {
+          "description" : "An identifier issued by an official registrar that identifies the payee as a legal entity or person.\nIf no scheme is specified it should be known by buyer and seller, e.g a previously exchanged seller assigned identifier. If used, the identification scheme shall be chosen from the entries of the list published by the ISO/IEC 6523 maintenance agency.\n",
+          "$ref" : "#/definitions/identifier"
+        }
+      }
+    },
+    "seller-tax-representative-party-object" : {
+      "description" : "Object for a group of business terms providing information about the seller's tax representative.\n",
+      "type" : "object",
+      "required" : [ "seller-tax-representative-name", "seller-tax-representative-vat-identifier", "seller-tax-representative-postal-address" ],
+      "properties" : {
+        "seller-tax-representative-name" : {
+          "description" : "The full name of the seller's tax representative party.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "seller-tax-representative-vat-identifier" : {
+          "description" : "The VAT identifier of the seller's tax representative party. VAT number prefixed by a country code based on EN ISO 3166-1 \"Codes for the representation of names of countries and their subdivisions\".\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "seller-tax-representative-postal-address" : {
+          "description" : "A group of business terms providing information about the postal address for the tax representative party.\n",
+          "$ref" : "#/definitions/postal-address-object"
+        }
+      }
+    },
+    "delivery-information-object" : {
+      "description" : "Object for a group of business terms providing information about where and when the goods and services invoiced are delivered.\n",
+      "type" : "object",
+      "properties" : {
+        "deliver-to-party-name" : {
+          "description" : "The name of the party to which the goods and services are delivered. Shall be used if the deliver to party is different from the buyer.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "deliver-to-location-identifier" : {
+          "description" : "An identifier for the location at which the goods and services are delivered.\nIf no scheme is specified it should be known by buyer and seller, e.g a previously exchanged seller assigned identifier of the buyer. If used, the identification scheme shall be chosen from the entries of the list published by the ISO/IEC 6523 maintenance agency.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "actual-delivery-date" : {
+          "description" : "The date on which the supply of goods or services was made or completed\n",
+          "$ref" : "#/definitions/date"
+        },
+        "invoicing-period" : {
+          "description" : "A group of business terms providing information on the invoice period.\nUsage note: Used to indicate when the period covered by the invoice starts and when it ends. Also called delivery period.\n",
+          "$ref" : "#/definitions/invoicing-period-object"
+        },
+        "deliver-to-address" : {
+          "description" : "A group of business terms providing information about the address to which goods and services invoiced were or are delivered.\nUsage note: In the case of pick-up, the deliver to address is the pick-up address.  Sufficient components of the address are to be filed to comply with legal requirements.\n",
+          "$ref" : "#/definitions/postal-address-object"
+        }
+      }
+    },
+    "invoicing-period-object" : {
+      "description" : "Object that contains a group of business terms providing infromation on the invoice period.\nUsage note: Used to indicate when the period covered by the invoice starts and when it ends. Also called delivery period.\n",
+      "type" : "object",
+      "properties" : {
+        "invoicing-period-start-date" : {
+          "description" : "The date when the invoice period starts. The initial date of delivery of goods or services.\n",
+          "$ref" : "#/definitions/date"
+        },
+        "invoicing-period-end-date" : {
+          "description" : "The date when the invoice period ends. The date on which the delivery of goods or services was completed.\n"
+        }
+      }
+    },
+    "payment-instructions-object" : {
+      "description" : "Object of a group of business terms providing information about the payment.\n",
+      "type" : "object",
+      "required" : [ "payment-means-type-code" ],
+      "properties" : {
+        "payment-means-type-code" : {
+          "description" : "The means, expressed as code, for how a payment is expected to be or has been settled.\nUsage note: Entries from the UNTDID 4461 code shall be used. Distinction should be made between SEPA and non-SEPA payments, and between credit payments, direct debtis, card payments and other instruments.\n",
+          "$ref" : "#/definitions/code"
+        },
+        "payment-means-text" : {
+          "description" : "The means, expressed as text, for how a payment is expected to be or has been settled. Such as cash, credit transfer, direct debit, credit card, etc.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "remittance-information" : {
+          "description" : "A textual value used to establish a link between the payment and the invoice, issued by the seller.\nUsage note:\nUsed for creditor's critical reconciliation information. This information element helps the seller to assign an incoming payment to the relevant payment process. When specifying the textual value, which is commonly the invoice number of the invoice being paid, but may be another seller reference, the buyer should indicate this reference in his payment order when executing the payment.  In a payment transaction this reference is transferred back to the seller as remittance information.\nIn order to allow for automatic processing of cross-border SEPA payments, only Latin characters should be used in this field, with a maximum of 140 characters. Reference section 1.4 of the SEPA credit transfer and SEPA direct debit scheme implementation guides and for details of the allowed characters. Other rules may apply for SEPA payments within national borders.\n"
+        },
+        "credit-transfer" : {
+          "description" : "A group of business terms to specify credit transfer payments\n",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/credit-transfer-object"
+          }
+        },
+        "payment-card-information" : {
+          "description" : "A group of business terms providing information about card used for payment contemporaneous with invoice issuance. Only used if the buyer had opted to pay by using a payment card such as a credit or debit card.\n",
+          "type" : "object",
+          "required" : [ "payment-card-primary-account-number" ],
+          "properties" : {
+            "payment-card-primary-account-number" : {
+              "description" : "The primary account number (PAN) of the card used for payment\nUsage note: In accordance with card payments security standards an invoice should never include a full card primary account number. At the moment PCI security standards council has defined that the first 6 digits and last 4 digits are the maximum number of digits to be shown.\n",
+              "$ref" : "#/definitions/text"
+            },
+            "payment-card-holder-name" : {
+              "description" : "The name of the payment card holder.\n",
+              "$ref" : "#/definitions/text"
+            }
+          }
+        },
+        "direct-debit" : {
+          "description" : "A group of business terms to sepcify a direct debit. This group may be used to give prior notice in the invoice that payment will be made through a SEPA or other direct debit initiated by the seller, in accordance with the rules of the SEPA or other direct debit scheme.\n",
+          "type" : "object",
+          "properties" : {
+            "mandate-reference-identifier" : {
+              "description" : "Unique identifier assigned by the payee for referencing the direct debit mandate. Used in order to pre-notify the buyer of a SEPA direct debit.\n",
+              "$ref" : "#/definitions/identifier"
+            },
+            "bank-assigned-creditor-identifier" : {
+              "description" : "Unique banking reference identifier of the payee or seller assigned by the payee or seller bank. Used in order to pre-notify the buyer of a SEPA direct debit.\n",
+              "$ref" : "#/definitions/identifier"
+            },
+            "debited-account-identifier" : {
+              "description" : "The account to be debited by the direct debit.\n",
+              "$ref" : "#/definitions/identifier"
+            }
+          }
+        }
+      }
+    },
+    "credit-transfer-object" : {
+      "description" : "Object for a group of business terms to specify credit transfer payments\n",
+      "type" : "object",
+      "required" : [ "payment-account-identifier" ],
+      "properties" : {
+        "payment-account-identifier" : {
+          "description" : "A unique identifier of the financial payment account, at a payment service provider, to which payment should be made. Such as IBAN (in case of a SEPA payment) or a national account number.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "payment-account-name" : {
+          "description" : "The name of the payment account, at a payment service provider, to which payment should be made.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "payment-service-provider-identifier" : {
+          "description" : "An identifier for the payment service provider where a payment account is located. Such as a BIC or a national clearing code where required. No identification scheme to be used.\n",
+          "$ref" : "#/definitions/identifier"
+        }
+      }
+    },
+    "document-level-allowances-object" : {
+      "description" : "Object of a group of business terms providing information about allowances applicable to the invoice as a whole. Deductions, such as withheld tax may also be specified in this group.\n",
+      "type" : "object",
+      "required" : [ "document-level-allowance-amount", "document-level-allowance-vat-category-code" ],
+      "properties" : {
+        "document-level-allowance-amount" : {
+          "description" : "The amount of an allowance, without VAT.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "document-level-allowance-base-amount" : {
+          "description" : "The base amount that may be used, in conjuction with the document level allowance percentage, to calculate the document level allowance amount.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "document-level-allowance-percentage" : {
+          "description" : "The percentage that may be used, in conjuction with the document level allowance base amount, to calculate the document level allowance amount.\n",
+          "$ref" : "#/definitions/percentage"
+        },
+        "document-level-allowance-vat-category-code" : {
+          "description" : "A coded identification of what VAT category applies to the document level allowance.\nUsage note: The following entries of UNTDID 5305 are used: - Standard rate - Zero rated goods - Exempt from tax - VAT reverse charge - VAT exempt for intra community supply of goods - Free export item, tax not charged - Services outside scope of tax - Canary islands general indirect tax - Liable for IPSI\n",
+          "$ref" : "#/definitions/code"
+        },
+        "document-level-allowance-vat-rate" : {
+          "description" : "The VAT rate, represented as percentage that applies to the document level allowance.\n",
+          "$ref" : "#/definitions/percentage"
+        },
+        "document-level-allowance-reason" : {
+          "description" : "The reason for the document level allowance, expressed as text.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "document-level-allowance-reason-code" : {
+          "description" : "The reason for the document level allowance, expressed as a code\nUsage note: Use entries of the UNTDID 5189 code list. The document level allowance reason code and the document level allowance reason shall indicate the same allowance reason.\n",
+          "$ref" : "#/definitions/code"
+        }
+      }
+    },
+    "document-level-charges-object" : {
+      "description" : "Object of a group of business terms providing information about charges and taxes other than VAT, applicable to the invoice as a whole.\n",
+      "type" : "object",
+      "required" : [ "document-level-charge-amount", "document-level-charge-vat-category-code" ],
+      "properties" : {
+        "document-level-charge-amount" : {
+          "description" : "The amount of a charge, without VAT.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "document-level-charge-base-amount" : {
+          "description" : "The base amount that may be used, in conjunction with the document level charge percentage, to calculate the document level charge amount.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "document-level-charge-percentage" : {
+          "description" : "The percentage that may be used, in conjunction with the document level charge base amount, to calculate the document level charge amount.\n",
+          "$ref" : "#/definitions/percentage"
+        },
+        "document-level-charge-vat-category-code" : {
+          "description" : "A coded identification of what VAT category applies to the document level charge.\nUsage note: The following entries of UNTDID 5305 are used: - Standard rate - Zero rated goods - Exempt from tax - VAT reverse charge - VAT exempt for intra community supply of goods - Free export item, tax not charged - Services outside scope of tax - Canary islands general indirect tax - Liable for IPSI\n",
+          "$ref" : "#/definitions/code"
+        },
+        "document-level-charge-vat-rate" : {
+          "description" : "The VAT rate, represented as percentage that applies to the document level charge.\n",
+          "$ref" : "#/definitions/percentage"
+        },
+        "document-level-charge-reason" : {
+          "description" : "The reason for the document level charge, expressed as text.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "document-level-charge-reason-code" : {
+          "description" : "The reason for the document level charge, expressed as a code.\nUse entries of the UNTDID 7161 code list.  The document level charge reason code and the document level charge reason shall indicate the same charge reason.\n",
+          "$ref" : "#/definitions/code"
+        }
+      }
+    },
+    "document-totals-object" : {
+      "description" : "Object of a group of business terms providing the monetary totals for the invoice.\n",
+      "type" : "object",
+      "required" : [ "sum-of-invoice-line-net-amount", "invoice-total-amount-without-vat", "invoice-total-amount-with-vat", "amount-due-for-payment" ],
+      "properties" : {
+        "sum-of-invoice-line-net-amount" : {
+          "description" : "Sum of all invoice line net amounts in the invoice\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "sum-of-allowances-on-document-level" : {
+          "description" : "Sum of all allowances on document level in the invoice.\nAllowances on line level are included in the invoice line net amount which is summed up into the sum of invoice line net amount.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "sum-of-charges-on-document-level" : {
+          "description" : "Sum of all charges on document level in the invoice.\nCharges on line level are included in the invoice line net amount which is summed up into the sum of invoice line net amount.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-total-amount-without-vat" : {
+          "description" : "The total amount of the invoice without VAT.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-total-vat-amount" : {
+          "description" : "The total VAT amount for the invoice. The invoice total VAT amount is the sum of all VAT category tax amounts.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-total-vat-amount-in-accounting-currency" : {
+          "description" : "The VAT total amount expressed in the accounting currency accepted or required in the country of the seller.\nTo be used when the VAT accounting currency differs from the invoice currency code in accordance with article 230 of directive 2006/112 / EC on VAT. The VAT amount in accounting currency is not used in the calculation of the invoice totals.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-total-amount-with-vat" : {
+          "description" : "The total amount of the invoice with VAT.\nThe invoice total amount with VAT is the invoice total amount without VAT plus the invoice total VAT amount.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "paid-amount" : {
+          "description" : "The sum of amounts which have been paid in advance. This amount is subtracted from the invoice total amount with VAT to calculate the amount due for payment.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "rounding-amount" : {
+          "description" : "The amount to be added to the invoice total to round the amount to be paid.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "amount-due-for-payment" : {
+          "description" : "The outstanding amount that is requested to be paid.\nThis amount is the invoice total amount with VAT minus the paid amount that has been paid in advance. The amount is zero in case of a fully paid invoice. The amount may be negative; in that case the seller owes the amount to the buyer.\n",
+          "$ref" : "#/definitions/amount"
+        }
+      }
+    },
+    "vat-breakdown-object" : {
+      "description" : "Object for a group of business terms providing information about VAT breakdown by different categories, rates and exemption reasons.\n",
+      "type" : "object",
+      "required" : [ "vat-category-taxable-amount", "vat-category-tax-amount", "vat-category-code" ],
+      "properties" : {
+        "vat-category-taxable-amount" : {
+          "description" : "Sum of all taxable amounts subject to a specific VAT category code and VAT category rate.\nThe sum of invoice line net amounts minus allowances plus charges on document level which are subject to a specific VAT category code and VAT category rate.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "vat-category-tax-amount" : {
+          "description" : "The total VAT amount for a given VAT category.\nCalculated by multiplying the VAT category taxable amount with the VAT category rate for the relevant VAT category.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "vat-category-code" : {
+          "description" : "Coded identification of a VAT category.\nUsage note: The following entries of UNTDID 5305 are used: - Standard rate - Zero rated goods - Exempt from tax - VAT reverse charge - VAT exempt for intra community supply of goods - Free export item, tax not charged - Services outside scope of tax - Canary islands general indirect tax - Liable for IPSI\n",
+          "$ref" : "#/definitions/code"
+        },
+        "vat-category-rate" : {
+          "description" : "The VAT rate, represented as percentage that applies for the relevant VAT category. The VAT category code and the VAT category rate shall be consistent.\n",
+          "$ref" : "#/definitions/percentage"
+        },
+        "vat-exemption-reason-text" : {
+          "description" : "A textual statement of the reason why the amount is exempted from VAT or why no VAT is being charged.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "vat-exemption-reason-code" : {
+          "description" : "A coded statement for the reason for why the amount is exempted from VAT.\n",
+          "$ref" : "#/definitions/code"
+        }
+      }
+    },
+    "additional-supporting-documents-object" : {
+      "description" : "Object of a group of business terms providing information about additional supporting documents substantiating the claims made in the invoice.\n    \nUsage note: The additional supporting documents can be used for both referencing a document number which is expected to be known by the receiver, an external document or as an embedded document. The option to link to an external document will be needed, for example in the case of large attachments and/or when sensitive information has to be separated from the invoice itself.\n",
+      "type" : "object",
+      "required" : [ "supporting-document-reference" ],
+      "properties" : {
+        "supporting-document-reference" : {
+          "description" : "An identifier of the supporting document.\n",
+          "$ref" : "#/definitions/document-reference"
+        },
+        "supporting-document-description" : {
+          "description" : "A description of the supporting document.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "external-document-location" : {
+          "description" : "The URL that identifies where the external document is located.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "attached-document" : {
+          "description" : "An attached document embedded as binary object or sent together with the invoice.\nAllowed mime codes: - application/pdf - image/png - image/jpeg - text/csv - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet - application/vnd.oasis.opendocument.spreadsheet\n",
+          "$ref" : "#/definitions/binary-object"
+        }
+      }
+    },
+    "invoice-line-object" : {
+      "description" : "Object for a group of business terms providing information on individual invoice lines.\n",
+      "type" : "object",
+      "required" : [ "invoice-line-identifier", "invoiced-quantity", "invoiced-quantity-unit-of-measure-code", "invoiced-line-net-amount", "price-details", "line-vat-information", "item-information" ],
+      "properties" : {
+        "invoice-line-identifier" : {
+          "description" : "A unique identifier for the individual line within the invoice.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "invoice-line-note" : {
+          "description" : "A textual note that gives unstructured information that is relevant to the invoice line.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "invoice-line-object-identifier" : {
+          "description" : "An identifier for an object on which the invoice line is based, given by the seller.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "invoiced-quantity" : {
+          "description" : "The quantity of items that is charged in the invoice line.\n",
+          "$ref" : "#/definitions/quantity"
+        },
+        "invoiced-quantity-unit-of-measure-code" : {
+          "description" : "The unit of measure that applies to the invoiced quantity.\n",
+          "$ref" : "#/definitions/code"
+        },
+        "invoiced-line-net-amount" : {
+          "description" : "The total amount of the invoice line. The amount is 'net' without VAT.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "referenced-purchase-order-line-reference" : {
+          "description" : "An identifier for a referenced line within a purchase order, issued by the buyer. The purchase order identifier is referenced on document level.\n",
+          "$ref" : "#/definitions/document-reference"
+        },
+        "invoice-line-buyer-accounting-reference" : {
+          "description" : "A textual value that specifies where to book the relevant data into the buyer's financial accounts. If required, this reference shall be provided by the buyer to the seller prior to the issuing of the invoice.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "invoice-line-period" : {
+          "description" : "A group of business terms providing information about the period relevant for the invoice line. Is also called invoice line delivery period.\n",
+          "type" : "object",
+          "properties" : {
+            "invoice-line-period-start-date" : {
+              "description" : "The date when the invoice period for this invoice line starts.\n",
+              "$ref" : "#/definitions/date"
+            },
+            "invoice-line-period-end-date" : {
+              "description" : "The date when the invoice period for this invoice line ends.\n",
+              "$ref" : "#/definitions/date"
+            }
+          }
+        },
+        "invoice-line-allowances" : {
+          "description" : "A group of business terms providing information about allowances applicable to the individual invoice line.\n",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/invoice-line-allowances-object"
+          }
+        },
+        "invoice-line-charges" : {
+          "description" : "A group of business terms providing information about charges and taxes other than VAT applicable to the individual invoice line.\nAll charges and taxes are assumed to be liable to the same VAT rate as the invoice line.\n",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/invoice-line-charges-object"
+          }
+        },
+        "price-details" : {
+          "description" : "A group of business terms providing information about the price applied for the goods and services invoiced on the invoice line.\n",
+          "type" : "object",
+          "required" : [ "item-net-price" ],
+          "properties" : {
+            "item-net-price" : {
+              "description" : "The price of an item, exclusive of VAT, after subtracting item price discount.\n",
+              "$ref" : "#/definitions/unit-price-amount"
+            },
+            "item-price-discount" : {
+              "description" : "The total discount subtracted from the item gross price to calculate the item net price.\n",
+              "$ref" : "#/definitions/unit-price-amount"
+            },
+            "item-gross-price" : {
+              "description" : "The unit price, exclusive of VAT, before subtracting item price discount.\n",
+              "$ref" : "#/definitions/unit-price-amount"
+            },
+            "item-price-base-quantity" : {
+              "description" : "The number of item units to which the price applies.\n",
+              "$ref" : "#/definitions/quantity"
+            },
+            "item-price-base-quantity-unit-of-measure-code" : {
+              "description" : "The unit of measure that applies to the item price base quantity.\n",
+              "$ref" : "#/definitions/code"
+            }
+          }
+        },
+        "line-vat-information" : {
+          "description" : "A group of business terms providing information about the VAT applicable for the goods and services invoiced on the invoice line.\n",
+          "type" : "object",
+          "required" : [ "invoiced-item-vat-category-code" ],
+          "properties" : {
+            "invoiced-item-vat-category-code" : {
+              "description" : "The VAT category code for the invoiced item.\n\n Usage note:\nThe following entries of UNTDID 5305 are used: - Standard rate - Zero rated goods - Exempt from tax - VAT reverse charge - VAT exempt for intra community supply of goods - Free export item, tax not charged - Services outside scope of tax - Canary islands general indirect tax - Liable for IPSI\n",
+              "$ref" : "#/definitions/code"
+            },
+            "invoiced-item-vat-rate" : {
+              "description" : "The VAT rate, represented as percentage that applies to the invoiced item.\n",
+              "$ref" : "#/definitions/percentage"
+            }
+          }
+        },
+        "item-information" : {
+          "description" : "A group of business terms providing information about the goods and services invoiced.\n",
+          "$ref" : "#/definitions/item-information-object"
+        }
+      }
+    },
+    "invoice-line-allowances-object" : {
+      "description" : "Object of a group of business terms providing information about allowances applicable to the individual invoice line.\n",
+      "type" : "object",
+      "required" : [ "invoice-line-allowance-amount" ],
+      "properties" : {
+        "invoice-line-allowance-amount" : {
+          "description" : "The amount of an allowance, without VAT.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-line-allowance-base-amount" : {
+          "description" : "The base amount that may be used, in conjunction with the invoice line allowance percentage, to calculate the invoice line allowance amount.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-line-allowance-percentage" : {
+          "description" : "The percentage that may be used, in conjunction with the invoice line allowance base amount, to calculate the invoice line allowance amount.\n",
+          "$ref" : "#/definitions/percentage"
+        },
+        "invoice-line-allowance-reason" : {
+          "description" : "The reason for the invoice line allowance, expressed as text.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "invoice-line-allowance-reason-code" : {
+          "description" : "The reason for the invoice line allowance, expressed as a code.\n",
+          "$ref" : "#/definitions/code"
+        }
+      }
+    },
+    "invoice-line-charges-object" : {
+      "description" : "Object for a group of business terms providing information about charges and taxes other than VAT applicable to the individual invoice line.\n    \nAll charges and taxes are assumed to be liable to the same VAT rate as the invoice line.\n",
+      "type" : "object",
+      "required" : [ "invoice-line-charge-amount" ],
+      "properties" : {
+        "invoice-line-charge-amount" : {
+          "description" : "The amount of a charge, without VAT.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-line-charge-base-amount" : {
+          "description" : "The base amount that may be used, in conjunction with the invoice line charge percentage, to calculate the invoice line charge amount.\n",
+          "$ref" : "#/definitions/amount"
+        },
+        "invoice-line-charge-percentage" : {
+          "description" : "The percentage that may be used, in conjunction with the invoice line charge base amount, to calculate the invoice line charge amount.\n",
+          "$ref" : "#/definitions/percentage"
+        },
+        "invoice-line-charge-reason" : {
+          "description" : "The reason for the invoice line charge, expressed as text.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "invoice-line-charge-reason-code" : {
+          "description" : "The reason for the invoice line charge, expressed as a code.\n",
+          "$ref" : "#/definitions/code"
+        }
+      }
+    },
+    "item-information-object" : {
+      "description" : "Object for a group of business terms providing information about the goods and services invoiced.\n",
+      "type" : "object",
+      "required" : [ "item-name" ],
+      "properties" : {
+        "item-name" : {
+          "description" : "A name for an item.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "item-description" : {
+          "description" : "Description of an item.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "item-sellers-identifier" : {
+          "description" : "An identifier assigned by the seller, for the item\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "item-buyers-identifier" : {
+          "description" : "An identifier assigned by the buyer, for the item\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "item-standard-identifier" : {
+          "description" : "An item identifier based on a registered scheme.\n",
+          "$ref" : "#/definitions/identifier"
+        },
+        "item-classification-identifier" : {
+          "description" : "A code for classifying the item by its type or nature.\n",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/identifier"
+          }
+        },
+        "item-country-of-origin" : {
+          "description" : "The code identifying the country from which the item originates.\n",
+          "$ref" : "#/definitions/code"
+        },
+        "item-attributes" : {
+          "description" : "A group of business terms providing information about properties of the goods and services invoiced.\n",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/item-attributes-object"
+          }
+        }
+      }
+    },
+    "item-attributes-object" : {
+      "description" : "Object for a group of business terms providing information about properties of the goods and services invoiced.\n",
+      "type" : "object",
+      "required" : [ "item-attribute-name", "item-attribute-value" ],
+      "properties" : {
+        "item-attribute-name" : {
+          "description" : "The name of the atrribute or property of the item.\n",
+          "$ref" : "#/definitions/text"
+        },
+        "item-attribute-value" : {
+          "description" : "The value of the attribute or property of the item.\n",
+          "$ref" : "#/definitions/text"
+        }
+      }
+    },
+    "amount" : {
+      "description" : "A numerical monetary value.\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "number",
+          "example" : 10000.25
+        }
+      }
+    },
+    "unit-price-amount" : {
+      "description" : "A unit price amount that may be multiplied by item quantities.\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "number",
+          "example" : 10000.2489
+        }
+      }
+    },
+    "quantity" : {
+      "description" : "To state a number of units such as for items.\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "number",
+          "example" : 10000.2489
+        }
+      }
+    },
+    "percentage" : {
+      "description" : "Percentages, given as fractions of 100%.  For example 34.78% is given as 34.78\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "number",
+          "example" : 34.78
+        }
+      }
+    },
+    "identifier" : {
+      "description" : "Identifiers are keys issues by the sender or recipient of a document or a third party. \n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "description" : "Value of invoice number\n",
+          "type" : "string",
+          "example" : "abc:123-DEF"
+        },
+        "scheme-identifier" : {
+          "description" : "Id for the scheme on which the identifier (invoice number) is based\n",
+          "type" : "string",
+          "example" : "GLN"
+        },
+        "scheme-version-identifier" : {
+          "description" : "Version number of the scheme on which the identifier is based\n",
+          "type" : "string",
+          "example" : "1.0"
+        }
+      }
+    },
+    "document-reference" : {
+      "description" : "Identifiers that were assigned to a document or document line by the buyer, the seller, or by a third party.\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "string",
+          "example" : "abc:123-DEF"
+        }
+      }
+    },
+    "code" : {
+      "description" : "Codes are used to specify allowed values in elements as well as for lists of options. The difference with identifier is that allowed values have standardized meanings that can be known by the recipient.\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "string",
+          "example" : "Abc123"
+        }
+      }
+    },
+    "date" : {
+      "description" : "Dates in accordance to \"calendar date complete representation\". Does not include a time of day.\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "string",
+          "format" : "date",
+          "example" : "2015-06-10"
+        }
+      }
+    },
+    "text" : {
+      "description" : "Text is the actual wording of anything written or printed.\n",
+      "required" : [ "content" ],
+      "properties" : {
+        "content" : {
+          "type" : "string",
+          "example" : "5% allowance when paid within 30 days"
+        }
+      }
+    },
+    "binary-object" : {
+      "description" : "Binary objects can be used to describe files which are transmitted together with the invoice.\n",
+      "required" : [ "content", "mime-code", "filename" ],
+      "properties" : {
+        "content" : {
+          "type" : "boolean"
+        },
+        "mime-code" : {
+          "description" : "Specifies the type of attachment\n",
+          "type" : "string",
+          "example" : "image/jpeg"
+        },
+        "filename" : {
+          "description" : "Specifies the name of the file that is attached\n",
+          "type" : "string",
+          "example" : "drawing5.jpg"
+        }
+      }
+    },
+    "error" : {
+      "description" : "Error structure definition\n",
+      "required" : [ "timestamp", "httpCode", "httpMessage" ],
+      "type" : "object",
+      "properties" : {
+        "id" : {
+          "description" : "The id of the error code\n",
+          "type" : "string",
+          "example" : "C87424CE-9AC9-4F9C-80A9-6C3C7CE5AA24"
+        },
+        "timestamp" : {
+          "description" : "Time at which the error occurred.\n",
+          "type" : "string",
+          "example" : "16:53:23.548"
+        },
+        "httpCode" : {
+          "description" : "The http response code given as a response to the request.\n",
+          "type" : "string",
+          "example" : "500"
+        },
+        "refAppError" : {
+          "description" : "Reference to the error code defined within the application it occured in\n",
+          "type" : "string",
+          "example" : "3001"
+        },
+        "httpMessage" : {
+          "description" : "The message given with the http response code.\n",
+          "type" : "string",
+          "example" : "3001: User exception thrown by throw node"
+        },
+        "moreInformation" : {
+          "description" : "Additional information given about this error.\n",
+          "type" : "string",
+          "example" : "\"name\": \"GetPolicyServiceMsgFlow#FCMComposite_1_10. HandleRequest#FCMComposite."
+        },
+        "CMDBOriginCode" : {
+          "description" : "CMDB defined code for the origin of the error.\n",
+          "type" : "string",
+          "example" : "ACE"
+        }
+      }
+    },
+    "healthType" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "string",
+          "description" : "status of the healthcheck",
+          "enum" : [ "pass", "error" ]
+        },
+        "api" : {
+          "type" : "string",
+          "description" : "api/app name of the component"
+        },
+        "timestamp" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "checks" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/check"
+          }
+        }
+      }
+    },
+    "check" : {
+      "type" : "object",
+      "description" : "describe a component check (MQ, DataBase, BackEnd etc..)",
+      "properties" : {
+        "component" : {
+          "type" : "string",
+          "description" : "name of the tested component (MQ, Baloise, Toni, etc..)"
+        },
+        "status" : {
+          "type" : "string",
+          "description" : "status of the tested component",
+          "enum" : [ "pass", "error", "warn" ]
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "details",
+          "enum" : [ "pass", "error", "warn" ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,99 @@
+BROKER SCHEMA common_integration_shlib_encapsulate_calls
+
+CREATE COMPUTE MODULE cc_rest_api_start_SetMonitoringEnvContextRestApi
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET Environment.Variables."cmdb-id-source" = "cmdb-id-source" ;
+		-- generate contextual id for tracking
+		SET Environment.Variables.trackID = UUIDASCHAR;				
+		SET Environment.Variables."X-Global-Transaction-Id" = COALESCE(InputRoot.HTTPInputHeader."X-Global-Transaction-Id",'');
+		SET Environment.Variables."X-Correlation-Id" = COALESCE(InputRoot.HTTPInputHeader."X-Correlation-Id",Environment.Variables."X-Global-Transaction-Id");	
+		SET Environment.Variables.In."target-url" = COALESCE(InputLocalEnvironment.REST.Input.URI,'');
+		SET Environment.Variables.In."X-Caller-Code" = COALESCE(InputRoot.HTTPInputHeader."X-Caller-Code",'');SET Environment.Variables."X-Caller-Code" = COALESCE(InputRoot.HTTPInputHeader."X-Caller-Code",'');
+		SET Environment.Variables."X-Origin-Caller-Code" = COALESCE(InputRoot.HTTPInputHeader."X-Origin-Caller-Code",COALESCE(InputRoot.HTTPInputHeader."X-Caller-Code",''));
+		SET Environment.Variables.In."X-Source-System" = COALESCE(InputRoot.HTTPInputHeader."X-Source-System", 'CMP05737');
+		SET Environment.Variables."REST-URI" = InputLocalEnvironment.REST.Input.URI;
+		SET Environment.Variables."REST-QueryParamsString" = InputRoot.HTTPInputHeader."X-Query-String";
+		SET Environment.Variables."REST-Operation" = InputLocalEnvironment.REST.Input.Operation;
+			
+		-- set contextual variables to track them in SUP logs		
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		SET Environment.Variables.TCSLog.context."rest-operation" = Environment.Variables."REST-Operation";
+		SET Environment.Variables.TCSLog.context."origin-caller" = Environment.Variables."X-Origin-Caller-Code";
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.Variables.In."X-Caller-Code";
+		SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.In."target-url";
+		SET Environment.Variables.TCSLog.context."correlation-id" = Environment.Variables."X-Correlation-Id";
+		SET Environment.Variables.TCSLog.context."global-transaction-id" = Environment.Variables."X-Global-Transaction-Id";	
+		SET Environment.Variables.TCSLog.context."source-system" = COALESCE(InputRoot.HTTPInputHeader."X-Source-System", 'CMP05737');--APIC
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.SetContext = true;	
+		SET Environment.Variables.MonitoringMessage = 'SUP: RECEIVE ' || InputLocalEnvironment.REST.Input.Operation || ' operation from ' || Environment.Variables.In."X-Caller-Code";			
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE cc_rest_api_end_ExitPoint
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.Properties = InputRoot.Properties;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		IF NOT(COALESCE(Environment.Variables.SetContext,FALSE)) THEN
+			THROW USER EXCEPTION VALUES('please add subflow cc_*.*_start.subflow at the beginning of your flow');
+		END IF;		
+		--check if records needed
+		IF Environment.Variables.ContextCode IS NOT NULL AND Environment.Variables.ContextCode <> '' THEN
+			SET Environment.Variables.OVERRIDE = THE(SELECT ITEM t.CONTEXT_OVERRIDE FROM Database.ACE_CONTEXTREFERENCE_DB.dbo.CONTEXTREFERENCE AS t WHERE t.CONTEXT_CODE = Environment.Variables.ContextCode AND t.CONTEXT_LANGUAGE = COALESCE(InputLocalEnvironment.Context.Language,'EN'));
+			IF Environment.Variables.OVERRIDE THEN
+				SET Environment.Variables.CONTEXT[] = SELECT t.CONTEXT_STATUS_CODE, t.CONTEXT_STATUS_MESSAGE   
+													  FROM Database.ACE_CONTEXTREFERENCE_DB.dbo.CONTEXTREFERENCE AS t 
+													  WHERE t.CONTEXT_CODE = Environment.Variables.ContextCode AND t.CONTEXT_LANGUAGE = COALESCE(InputLocalEnvironment.Context.Language,'EN');
+			
+				SET OutputRoot.HTTPReplyHeader."Content-Type" = 'application/json; charset=utf-8';
+				SET OutputRoot.JSON.Data.refAppError = Environment.Variables.ContextCode;
+				SET OutputRoot.JSON.Data.httpCode = Environment.Variables.CONTEXT.CONTEXT_STATUS_CODE;
+				SET OutputRoot.JSON.Data.httpMessage = Environment.Variables.CONTEXT.CONTEXT_STATUS_MESSAGE;
+				SET OutputRoot.JSON.Data.moreInformation = Environment.Variables.Info.moreInformation;
+				SET OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP as CHAR FORMAT 'I');
+				SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = Environment.Variables.CONTEXT.CONTEXT_STATUS_CODE;
+				
+				SET Environment.Variables.TCSLog.context."error-code" = Environment.Variables.CONTEXT.CONTEXT_STATUS_CODE;
+				SET Environment.Variables.TCSLog.context."error-message" = OutputRoot.JSON.Data.httpMessage;
+				SET Environment.Variables.TCSLog.context."context-code" = Environment.Variables.ContextCode ; 
+			ELSEIF Environment.Variables.OVERRIDE IS NULL THEN
+				SET OutputRoot.HTTPReplyHeader."Content-Type" = 'application/json; charset=utf-8';
+				SET OutputRoot.JSON.Data.refAppError = Environment.Variables.ContextCode;
+				SET OutputRoot.JSON.Data.httpCode = 500;
+				SET OutputRoot.JSON.Data.httpMessage = 'No value provided in database for this ContextCode: ' || Environment.Variables.ContextCode || ' and Language: ' || COALESCE(InputLocalEnvironment.Context.Language,'EN');
+				SET OutputRoot.JSON.Data.moreInformation = Environment.Variables.Info.moreInformation;
+				SET OutputRoot.JSON.Data.timestamp = CAST(CURRENT_TIMESTAMP as CHAR FORMAT 'I');
+				SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 500;
+			ELSE
+				
+				SET OutputRoot = InputRoot ;
+			END IF;
+		ELSE
+			SET OutputRoot = InputRoot ;
+		END IF;
+		
+		DECLARE RefHTTPReplyHeader REFERENCE to OutputRoot;
+		IF EXISTS(OutputRoot.HTTPReplyHeader[]) THEN
+			MOVE RefHTTPReplyHeader to OutputRoot.HTTPReplyHeader;
+		ELSE
+			CREATE NEXTSIBLING OF OutputRoot.Properties as RefHTTPReplyHeader NAME 'HTTPReplyHeader';
+		END IF;
+		
+		SET Environment.Variables.TCSLog.context."caller-code" = Environment.Variables.In."X-Caller-Code" ;
+		SET Environment.Variables.TCSLog.context."target-url" = Environment.Variables.In."target-url";
+	    SET RefHTTPReplyHeader."X-Correlation-ID" =  Environment.Variables."X-Correlation-Id";
+		SET RefHTTPReplyHeader."X-Origin-Caller-Code" = Environment.Variables."X-Origin-Caller-Code";
+		SET RefHTTPReplyHeader."X-Caller-Code" = ApplicationLabel;
+		SET RefHTTPReplyHeader."X-Global-Transaction-Id" = Environment.Variables."X-Global-Transaction-Id";
+		SET Environment.Variables.TCSLog.context."source-system" = COALESCE(InputRoot.HTTPInputHeader."X-Source-System", 'CMP05737');--APIC
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541'; --ACE
+		SET Environment.Variables.MonitoringMessage = 'SUP: SEND response to ' || Environment.Variables.In."X-Caller-Code";
+
+		RETURN TRUE;
+	END;
+END MODULE;

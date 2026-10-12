@@ -1,0 +1,15 @@
+
+
+CREATE COMPUTE MODULE CreateClaimAlisFromOnbase_SetContextCode
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		if EXISTS(InputExceptionList.*[]) then
+			set Environment.Variables.ContextCode = 'CMP22482_CMP22286_GENERIC';
+		else
+			set Environment.Variables.ContextCode = 'CMP22482_CMP22286_' || COALESCE(cast(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" as char),'500');
+		end if;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

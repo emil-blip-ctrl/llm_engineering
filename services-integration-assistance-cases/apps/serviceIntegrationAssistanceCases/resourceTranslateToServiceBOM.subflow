@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:CommonError_traceErrorAndReturnStatus.subflow="CommonError/traceErrorAndReturnStatus.subflow" xmlns:SHLIB_TranslatorBomAssys_TranslateAssysToBomService.subflow="SHLIB_TranslatorBomAssys/TranslateAssysToBomService.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="resourceTranslateToServiceBOM.subflow" nsPrefix="resourceTranslateToServiceBOM.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="resourceTranslateToServiceBOM" bundleName="resourceTranslateToServiceBOM" pluginId="servicesIntegrationAssistanceCases"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj16/resourceTranslateToServiceBOM.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj30/resourceTranslateToServiceBOM.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="55,84">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="resourceTranslateToServiceBOM" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="562,100">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="resourceTranslateToServiceBOM" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="CommonError_traceErrorAndReturnStatus.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="344,29">
+        <translation xmi:type="utility:ConstantString" string="traceErrorAndReturn500"/>
+      </nodes>
+      <nodes xmi:type="SHLIB_TranslatorBomAssys_TranslateAssysToBomService.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="157,82">
+        <translation xmi:type="utility:ConstantString" string="TranslateAssysToBomService"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.OutputError" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,11 @@
+
+
+CREATE COMPUTE MODULE invoice_log_elk
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		set Environment.Variables.TCSLog.context."target-system" = 'CMP05686';
+		RETURN TRUE;
+	END;
+
+END MODULE;

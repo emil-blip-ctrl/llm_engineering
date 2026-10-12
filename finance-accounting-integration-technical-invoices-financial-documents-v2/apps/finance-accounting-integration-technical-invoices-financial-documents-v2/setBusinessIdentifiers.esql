@@ -1,0 +1,66 @@
+CREATE COMPUTE MODULE setBusinessIdentifiers
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+    	
+        SET OutputRoot = InputRoot;
+        
+        CREATE FIELD Environment.Variables.TCSLog.context."business-identifiers".INVOICE_NUMBER VALUE '';
+        CREATE FIELD Environment.Variables.TCSLog.context."business-identifiers".SUPPLIER_REF_NUMBER VALUE '';
+        CREATE FIELD Environment.Variables.TCSLog.context."business-identifiers".CAS_REF_NUMBER VALUE '';
+        CREATE FIELD Environment.Variables.TCSLog.context."business-identifiers".INVOICE_ID VALUE '';
+        CREATE FIELD Environment.Variables.TCSLog.context."business-identifiers".TRANSPORT_NUMBER VALUE '';
+
+        DECLARE SUPPLIER_REF_NUMBER REFERENCE TO Environment.Variables.TCSLog.context."business-identifiers".SUPPLIER_REF_NUMBER;
+        DECLARE CAS_REF_NUMBER REFERENCE TO Environment.Variables.TCSLog.context."business-identifiers".CAS_REF_NUMBER;
+        DECLARE INVOICE_NUMBER REFERENCE TO Environment.Variables.TCSLog.context."business-identifiers".INVOICE_NUMBER;
+        DECLARE INVOICE_ID REFERENCE TO Environment.Variables.TCSLog.context."business-identifiers".INVOICE_ID;
+        DECLARE TRANSPORT_NUMBER REFERENCE TO Environment.Variables.TCSLog.context."business-identifiers".TRANSPORT_NUMBER;
+
+        DECLARE invoice REFERENCE TO InputRoot.JSON.Data.[1];
+        WHILE LASTMOVE(invoice) DO
+	       FOR invoiceNumber AS invoice.invoiceNumber.Item[] DO
+				IF UPPER(invoiceNumber.schemeIdentifier) = 'SUPPLIER_REF_NUMBER' THEN
+	       			SET SUPPLIER_REF_NUMBER = SUPPLIER_REF_NUMBER || '|' || invoiceNumber.content;
+				ELSEIF UPPER(invoiceNumber.schemeIdentifier) = 'CAS_REF_NUMBER' THEN
+					SET CAS_REF_NUMBER = CAS_REF_NUMBER || '|' || invoiceNumber.content;
+				ELSEIF UPPER(invoiceNumber.schemeIdentifier) = 'INVOICE_NUMBER' THEN	
+					SET INVOICE_NUMBER = INVOICE_NUMBER || '|' || invoiceNumber.content;
+				ELSEIF UPPER(invoiceNumber.schemeIdentifier) = 'INVOICE_ID' THEN
+					SET INVOICE_ID = INVOICE_ID || '|' || invoiceNumber.content;
+				ELSEIF UPPER(invoiceNumber.schemeIdentifier) = 'TRANSPORT_NUMBER' THEN
+					SET TRANSPORT_NUMBER = TRANSPORT_NUMBER || '|' || invoiceNumber.content;
+				END IF;	
+	       	END FOR;
+	    	MOVE invoice NEXTSIBLING;
+        END WHILE;
+
+        SET SUPPLIER_REF_NUMBER = SUPPLIER_REF_NUMBER || '|';
+        SET CAS_REF_NUMBER = CAS_REF_NUMBER || '|';
+        SET INVOICE_NUMBER = INVOICE_NUMBER || '|';
+        SET INVOICE_ID = INVOICE_ID || '|';
+        SET TRANSPORT_NUMBER = TRANSPORT_NUMBER || '|';
+        
+        IF SUPPLIER_REF_NUMBER = '|' THEN
+        	SET SUPPLIER_REF_NUMBER = NULL;
+        END IF;
+        IF CAS_REF_NUMBER = '|' THEN
+        	SET CAS_REF_NUMBER = NULL;
+        END IF;
+        IF INVOICE_NUMBER = '|' THEN
+        	SET INVOICE_NUMBER = NULL;
+        END IF;
+        IF INVOICE_ID = '|' THEN
+        	SET INVOICE_ID = NULL;
+        END IF;
+        IF TRANSPORT_NUMBER = '|' THEN
+        	SET TRANSPORT_NUMBER = NULL;
+        END IF;
+        
+        IF UPPER(InputRoot.JSON.Data.Item[1].processControl.specificationIdentifier.Item[1].content) = 'AMBULANCE_TRANSPORT_BILLING' THEN
+        	PROPAGATE TO TERMINAL 'out1';
+        	RETURN FALSE;
+        END IF;
+
+        RETURN TRUE;
+    END;
+END MODULE;

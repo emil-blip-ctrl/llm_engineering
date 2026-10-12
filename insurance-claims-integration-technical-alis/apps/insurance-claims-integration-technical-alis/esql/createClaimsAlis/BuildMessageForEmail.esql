@@ -1,0 +1,44 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+CREATE COMPUTE MODULE BuildMessageForEmail
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET Environment.ESB.ESBEnvelope 				= UNKNOWN;
+		SET Environment.Variables.logging.envelope.GTID = Environment.Variables.XCorrelationID;
+		
+		SET OutputRoot.JSON.Data.email 			= Environment.Variables.email;
+		SET OutputRoot.JSON.Data.claimNumber 	= Environment.Variables."claim-number";
+		SET OutputRoot.JSON.Data.language 		= Environment.Variables.language;
+		
+		IF Environment.Variables.ALISerror = TRUE THEN
+		    SET OutputRoot.JSON.Data.error = TRUE;
+		ELSE
+			SET OutputRoot.JSON.Data.error = FALSE;    	
+		END IF;
+		
+		SET OutputRoot.JSON.Data.policyNumber 		= Environment.Variables.policyNumber;
+		SET OutputRoot.JSON.Data.personalReference 	= Environment.Variables.personalReference;	
+		SET OutputRoot.JSON.Data.emailContent 		= Environment.Variables.emailContent;
+		SET OutputRoot.JSON.Data.sendMailBusiness 	= Environment.Variables.sendMailBuisness;
+		SET OutputRoot.JSON.Data.sendMailClient 	= Environment.Variables.sendMailClient;
+		SET OutputRoot.JSON.Data.initConsumerName	= UPPER(Environment.Variables.initConsumerName);
+		SET OutputRoot.JSON.Data.countClaimContact 	= Environment.Variables.countClaimContact;
+		SET OutputRoot.JSON.Data.numberOfDocuments 	= Environment.Variables.numberOfDocuments;
+		
+		--Logs
+		SET Environment.Variables.TCSLog.context.severity 			= 'INFO';
+	    SET Environment.Variables.TCSLog.context."source-system" 	= 'CMP05541';
+	    SET Environment.Variables.TCSLog.context."target-system" 	= 'CMP05625';
+	    SET Environment.Variables.TCSLog.context."caller-code" 		= ApplicationLabel;
+	    SET Environment.Variables.TCSLog.context."target-url" 		= UNKNOWN;
+	    SET Environment.Variables.TCSLog.context."error-message" 	= UNKNOWN;
+		SET Environment.Variables.TCSLog.context."error-code" 		= UNKNOWN;                    
+	    
+	    SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+	    SET Environment.Variables.TCSLog.context.transaction.CLAIM_NUMBER = Environment.Variables."claim-number";
+	    SET OutputLocalEnvironment.Variables.TCSLog."business-identifiers" = Environment.Variables.TCSLog.context.transaction;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

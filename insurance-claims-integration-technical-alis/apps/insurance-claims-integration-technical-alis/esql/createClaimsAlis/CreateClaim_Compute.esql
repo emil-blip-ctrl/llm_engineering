@@ -1,0 +1,33 @@
+BROKER SCHEMA esql.createClaimsAlis
+
+
+CREATE COMPUTE MODULE CreateClaim_Compute
+CREATE FUNCTION Main() RETURNS BOOLEAN
+		BEGIN
+			SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/json';
+			SET OutputRoot.HTTPRequestHeader.Accept = 'application/json, application/xml, text/html';
+			
+			DECLARE URLAPI CHARACTER '';
+			DECLARE PATHAPI CHARACTER '';
+			DECLARE CLAIMID CHARACTER '';
+			
+			SET URLAPI = Environment.Variables.policy.apicHost;
+			SET PATHAPI = Environment.Variables.policy.claimGet;
+			SET CLAIMID = Environment.Variables."claim-id";
+			
+			-- Read Policy in order to retrieve dynamicaly the credentials related to the sender code  
+		    SET OutputRoot.HTTPRequestHeader."X-IBM-Client-Id" = Environment.Variables.policy.ACE_ClientID;
+
+			SET OutputRoot.HTTPRequestHeader."X-Global-Transaction-Id" = Environment.Variables.logging.envelope.GTID;
+			SET OutputRoot.HTTPRequestHeader."X-Request-ID" = UUIDASCHAR;
+			SET OutputRoot.HTTPRequestHeader."X-Correlation-ID" =  Environment.Variables.logging.envelope.TID;
+			
+			SET CLAIMID = Environment.Variables."claim-id";
+	        
+	        SET OutputLocalEnvironment.Destination.HTTP.RequestURL = URLAPI || PATHAPI || '/' ||CLAIMID;
+	       	SET OutputLocalEnvironment.Destination.HTTP.RequestLine.Method = 'GET';
+			RETURN TRUE;
+		END;
+
+	
+END MODULE;

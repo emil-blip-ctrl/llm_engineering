@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:CommonError_traceErrorAndReturnStatus.subflow="CommonError/traceErrorAndReturnStatus.subflow" xmlns:SHLIB_TranslatorBomAssys_TranslateAssysHistoryToBomCase.subflow="SHLIB_TranslatorBomAssys/TranslateAssysHistoryToBomCase.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
+    nsURI="resourceTranslateToHistoryBOM.subflow" nsPrefix="resourceTranslateToHistoryBOM.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="resourceTranslateToHistoryBOM" bundleName="resourceTranslateToHistoryBOM" pluginId="servicesIntegrationAssistanceCases"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj16/resourceTranslateToHistoryBOM.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj30/resourceTranslateToHistoryBOM.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input_1" location="25,25">
+        <translation xmi:type="utility:TranslatableString" key="Input" bundleName="resourceTranslateToHistoryBOM" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output_1" location="435,37">
+        <translation xmi:type="utility:TranslatableString" key="Output" bundleName="resourceTranslateToHistoryBOM" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="SHLIB_TranslatorBomAssys_TranslateAssysHistoryToBomCase.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="141,23">
+        <translation xmi:type="utility:ConstantString" string="TranslateAssysHistoryToBomCase"/>
+      </nodes>
+      <nodes xmi:type="CommonError_traceErrorAndReturnStatus.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="332,157">
+        <translation xmi:type="utility:ConstantString" string="traceErrorAndReturn500"/>
+      </nodes>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="95,80" messageDomain="BLOB" resetMessageDomain="true" resetMessageSet="true" resetMessageType="true" resetMessageFormat="true">
+        <translation xmi:type="utility:ConstantString" string="toBlob"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="OutTerminal.Output_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_3" sourceNode="InTerminal.Input_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard>
+      <stickyNote location="83,219" association="FCMComposite_1_1">
+        <body xmi:type="utility:ConstantString" string="the subflow expected BLOB.&#xA;"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

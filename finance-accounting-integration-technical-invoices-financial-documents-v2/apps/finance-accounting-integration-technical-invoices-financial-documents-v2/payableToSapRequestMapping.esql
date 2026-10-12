@@ -1,0 +1,364 @@
+DECLARE ns NAMESPACE 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsfindoc';
+DECLARE xsi NAMESPACE 'http://www.w3.org/2001/XMLSchema-instance';
+
+CREATE COMPUTE MODULE payableToSapRequestMapping
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		CREATE FIELD OutputRoot.XMLNSC.ns:SapZwsFinDoc.SapFinDoc;
+		DECLARE RefOut REFERENCE TO OutputRoot.XMLNSC.ns:SapZwsFinDoc;
+
+		-- Add required namespaces
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapaddresses = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapaddresses2073361285';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapcardinformation = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcardinformation932265214';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapcredittransfer = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapcredittransfer2124727546';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdata = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdata1333925805';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdoccustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdoccustomelements755363819';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdocs = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocs438412961';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapdocumentlines = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapdocumentlines901811010';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapfindoc = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapfindoc1249096900';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapheader = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheader6103334';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapheadercustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapheadercustomelements2061585280';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapmeta = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapmeta528807181';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sappartner = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappartner639908812';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sappartnercustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappartnercustomelements383215995';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sappaymentinstructions = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sappaymentinstructions316354212';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapreferences = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapreferences725672799.xsd';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapreturn = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapreturn1478768624';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapserviceproviderid = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapserviceproviderid1102181588';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:saptechnicalreponse = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/saptechnicalreponse568329194';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapthirdaddresses = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdaddresses1000666237';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapthirdparties = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdparties366063943';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapthirdpartycustomelements = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapthirdpartycustomelements1538637409';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:sapzwsfindoc = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsfindoc';
+		SET RefOut.(XMLNSC.NamespaceDecl)xmlns:xsi = 'http://www.w3.org/2001/XMLSchema-instance';
+		SET RefOut.(XMLNSC.Attribute)xsi:schemaLocation = 'http://www.ibm.com/xmlns/prod/websphere/j2ca/sap/sapzwsfindoc SapZwsFinDoc.xsd';
+
+		DECLARE invoiceIndex INTEGER 1;
+		DECLARE invoice REFERENCE TO InputRoot.JSON.Data.[1];
+
+		SET RefOut.OBJECT_SYSTEM = 'CAS';
+		SET RefOut.PRODUCER_APP = 'SFCAS';
+		SET RefOut.PROCESS_CONTROL = invoice.processControl.specificationIdentifier.Item[1].content;
+		SET RefOut.X_GLOBAL_TRANSACTION_ID = Environment.Variables.XCorrelationID;
+		
+		DECLARE invoiceLineValues ROW;
+		CREATE LASTCHILD OF invoiceLineValues NAME 'INSURANCE_CLAIM_NUMBER';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'DAMAGE_CODE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'PAYMENT_BREAKDOWN';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'INCIDENT_CAUSE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'COUNTRY';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'INCIDENT_DATE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'IDIT_COVER_CODE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'SAP_COVER_CODE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'MEMBER';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'YOUNGSTER';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'COVER_TYPE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'COVER_AREA';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'FIRST_YEAR_FREE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'SECTION';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'PRODUCT_CODE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'PRODUCT_VERSION';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'FAMILY_VARIANT';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'MOTOR_VARIANT';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'CAS_SERVICE_CODE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'PRODUCT_FAMILY';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'INSURANCE_LIMIT';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'B2B_PRODUCT_DESC';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'COVERAGE_DURATION';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'B2B_COVER_DESC';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'B2B_COVER_CODE';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'PA_DEDUCT';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'CNL_DEDUCT';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'PRODUCT_BRAND';
+		CREATE LASTCHILD OF invoiceLineValues NAME 'CONTRACT_PARTNER';
+		
+		-- SapDocs
+		WHILE LASTMOVE(invoice) DO
+
+			CREATE LASTCHILD OF RefOut.SapFinDoc NAME 'SapDocs';
+			DECLARE sapDoc REFERENCE TO RefOut.SapFinDoc.SapDocs[invoiceIndex];
+
+			CREATE FIELD sapDoc.SapHeader;
+			CREATE FIELD sapDoc.SapPartner;
+			CREATE FIELD sapDoc.SapPaymentInstructions;
+			DECLARE sapHeader REFERENCE TO sapDoc.SapHeader;
+			DECLARE sapPartner REFERENCE TO sapDoc.SapPartner;
+			DECLARE sapPaymentInstructions REFERENCE TO sapDoc.SapPaymentInstructions;
+
+			SET sapHeader.DOCUMENT_DATE = CAST(invoice.invoiceIssueDate AS CHARACTER);
+			SET sapHeader.DOCUMENT_TYPE = invoice.invoiceTypeCode;
+
+			DECLARE headerCustomIndex INTEGER 1;
+			FOR invoiceNumber AS invoice.invoiceNumber.Item[] DO
+				IF UPPER(invoiceNumber.schemeIdentifier) = 'SUPPLIER_REF_NUMBER' THEN
+					SET sapHeader.REFERENCE = invoiceNumber.content;
+				ELSEIF UPPER(invoiceNumber.schemeIdentifier) = 'CAS_REF_NUMBER' THEN
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = invoiceNumber.schemeIdentifier;
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoiceNumber.content;
+					SET headerCustomIndex = headerCustomIndex + 1;
+				END IF;
+			END FOR;
+
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'CURRENCY';
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoice.invoiceCurrencyCode;
+			SET headerCustomIndex = headerCustomIndex + 1;
+
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'WRBTR';
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoice.documentTotals.amountDueForPayment;
+			SET headerCustomIndex = headerCustomIndex + 1;
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'TOTAMTVATINCLUDED';
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoice.documentTotals.invoiceTotalAmountWithVat;
+			SET headerCustomIndex = headerCustomIndex + 1;
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'TOTAMTVATEXCLUDED';
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoice.documentTotals.invoiceTotalAmountWithoutVat;
+			SET headerCustomIndex = headerCustomIndex + 1;
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'SUMAMTVATEXCLUDED';
+			SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoice.documentTotals.sumOfInvoiceLineNetAmount;
+			SET headerCustomIndex = headerCustomIndex + 1;
+
+			DECLARE addressIndex INTEGER 1;
+			FOR invoiceNote AS invoice.invoiceNote.Item[] DO
+				IF UPPER(invoiceNote.invoiceNoteSubjectCode) = 'POSTING_DATE' THEN
+					SET sapHeader.POSTING_DATE = CAST(invoiceNote.invoiceNoteText AS CHARACTER);
+				ELSEIF UPPER(invoiceNote.invoiceNoteSubjectCode) = 'ADDITIONAL_INFOS' THEN
+					SET sapDoc.SapPaymentInstructions.ADDITIONAL_INFOS = invoiceNote.invoiceNoteText;
+				ELSEIF UPPER(invoiceNote.invoiceNoteSubjectCode) = 'CASE_HANDLER' THEN
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'CASE_HANDLER';
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoiceNote.invoiceNoteText;
+					SET headerCustomIndex = headerCustomIndex + 1;
+				ELSEIF UPPER(invoiceNote.invoiceNoteSubjectCode) = 'SUPPLIER_ADDRESS_TYPE' THEN
+					SET sapPartner.SapAddresses[addressIndex].ADDRESS_TYPE = invoiceNote.invoiceNoteText;
+				ELSEIF UPPER(invoiceNote.invoiceNoteSubjectCode) = 'SAP_ORIGINAL_DOC' THEN
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'SAP_ORIGINAL';
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoiceNote.invoiceNoteText;
+					SET headerCustomIndex = headerCustomIndex + 1;
+				ELSEIF UPPER(invoiceNote.invoiceNoteSubjectCode) = 'CAS_ORIGINAL_DOC' THEN
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = 'SFDC_ORIGINAL';
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = invoiceNote.invoiceNoteText;
+					SET headerCustomIndex = headerCustomIndex + 1;
+				END IF;
+			END FOR;
+
+			FOR buyerIdentifier AS invoice.buyer.buyerIdentifier.Item[] DO
+				IF UPPER(buyerIdentifier.schemeIdentifier) = 'COMPANY_CODE' THEN
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_KEY = buyerIdentifier.schemeIdentifier;
+					SET sapHeader.SapHeaderCustomElements[headerCustomIndex].CUSTOM_VALUE = buyerIdentifier.content;
+					SET headerCustomIndex = headerCustomIndex + 1;
+				END IF;
+			END FOR;
+			DECLARE name1 CHAR '';
+			DECLARE name2 CHAR '';
+			CALL SplitName(invoice.seller.sellerTradingName,name1,name2); 
+			SET sapPartner.LEGAL_ENTITY_NAME1 = name1;
+			SET sapPartner.LEGAL_ENTITY_NAME2 = COALESCE(name2,'');
+
+			SET sapPartner.SapAddresses[addressIndex].STREET = invoice.seller.sellerPostalAddress.addressLine1;
+			SET sapPartner.SapAddresses[addressIndex].STREET2 = invoice.seller.sellerPostalAddress.addressLine2;
+			SET sapPartner.SapAddresses[addressIndex].STREET3 = invoice.seller.sellerPostalAddress.addressLine3;
+			SET sapPartner.SapAddresses[addressIndex].CITY = invoice.seller.sellerPostalAddress.city;
+			SET sapPartner.SapAddresses[addressIndex].POSTCODE = invoice.seller.sellerPostalAddress.postCode;
+			SET sapPartner.SapAddresses[addressIndex].COUNTRY = invoice.seller.sellerPostalAddress.countryCode;
+			DECLARE sapPartnerReferencesIndex INTEGER 1;
+			FOR sellerIdentifier AS invoice.seller.sellerIdentifier.Item[] DO
+				IF UPPER(sellerIdentifier.schemeIdentifier) = 'SAP_REFERENCE' THEN
+					SET sapPartner.SapReferences[sapPartnerReferencesIndex].REFERENCE_TYPE = 'SAPREF';
+					SET sapPartner.SapReferences[sapPartnerReferencesIndex].REFERENCE = sellerIdentifier.content;
+					SET sapPartnerReferencesIndex = sapPartnerReferencesIndex + 1;
+				END IF;
+			END FOR;
+
+			DECLARE serviceProviderIdIndex INTEGER 1;
+			SET sapPaymentInstructions.PAYMENT_TERMS = invoice.paymentTerms;
+			SET sapPaymentInstructions.PAYMENT_MEANS_TYPE = invoice.paymentInstructions.paymentMeansTypeCode;
+			SET sapPaymentInstructions.REFERENCE = invoice.paymentInstructions.remittanceInformation;
+			FOR creditTransfer AS invoice.paymentInstructions.creditTransfer.Item[] DO
+				FOR paymentIdentifier AS creditTransfer.paymentAccountIdentifier.Item[] DO
+					IF UPPER(paymentIdentifier.schemeIdentifier) = 'IBAN' THEN
+						SET sapPaymentInstructions.SapCreditTransfer.IBAN = paymentIdentifier.content;
+					ELSEIF UPPER(paymentIdentifier.schemeIdentifier) = 'BANK_ACCOUNT' THEN
+						SET sapPaymentInstructions.SapCreditTransfer.SapServiceProviderId[serviceProviderIdIndex].CUSTOM_KEY = paymentIdentifier.schemeIdentifier;
+						SET sapPaymentInstructions.SapCreditTransfer.SapServiceProviderId[serviceProviderIdIndex].CUSTOM_VALUE = paymentIdentifier.content;
+						SET serviceProviderIdIndex = serviceProviderIdIndex + 1;
+					END IF;
+				END FOR;
+				FOR pspi as creditTransfer.paymentServiceProviderIdentifier.Item[] DO
+					IF UPPER(pspi.schemeIdentifier) IN ('BANK_COUNTRY', 'BANK_KEY') THEN
+						SET sapPaymentInstructions.SapCreditTransfer.SapServiceProviderId[serviceProviderIdIndex].CUSTOM_KEY = pspi.schemeIdentifier;
+						SET sapPaymentInstructions.SapCreditTransfer.SapServiceProviderId[serviceProviderIdIndex].CUSTOM_VALUE = pspi.content;
+						SET serviceProviderIdIndex = serviceProviderIdIndex + 1;
+					END IF;
+				END FOR;
+			END FOR;
+
+			DECLARE documentLinesIndex INTEGER 1;
+			FOR invoiceLine AS invoice.invoiceLine.Item[] DO
+				FOR invoiceLineIdentifier AS invoiceLine.invoiceLineIdentifier.Item[] DO
+					IF UPPER(invoiceLineIdentifier.schemeIdentifier) = 'INVOICE_LINE_ID' THEN
+						SET sapDoc.SapDocumentLines[documentLinesIndex].ITEM_IDENTIFIER = invoiceLineIdentifier.content;
+					END IF;
+				END FOR;
+				SET sapDoc.SapDocumentLines[documentLinesIndex].UNIT = CAST(invoiceLine.invoicedQuantityUnitOfMeasureCode AS CHARACTER);
+				SET sapDoc.SapDocumentLines[documentLinesIndex].QUANTITY = CAST(invoiceLine.invoicedQuantity AS DECIMAL);
+				SET sapDoc.SapDocumentLines[documentLinesIndex].NET_AMOUNT = CAST(invoiceLine.invoicedLineNetAmount AS DECIMAL);
+				SET sapDoc.SapDocumentLines[documentLinesIndex].VAT_RATE = TRIM(CAST(invoiceLine.lineVatInformation.invoicedItemVatRate AS CHARACTER FORMAT '#################.#################'));
+				SET sapDoc.SapDocumentLines[documentLinesIndex].VAT_CODE = invoiceLine.lineVatInformation.invoicedItemVatCategoryCode;
+				DECLARE customElementsIndex INTEGER 1;
+				IF LENGTH(invoiceLine.itemInformation.itemName) > 0 THEN
+					SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_KEY = 'ITEM_TEXT';
+					SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_VALUE = invoiceLine.itemInformation.itemName;
+					SET customElementsIndex = customElementsIndex + 1;
+				END IF;
+				FOR itemAttribute AS invoiceLine.itemInformation.itemAttributes.Item[] DO
+					IF EXISTS(invoiceLineValues.{UPPER(itemAttribute.itemAttributeName)}[]) THEN
+						SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_KEY = itemAttribute.itemAttributeName;
+						SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_VALUE = CAST(itemAttribute.itemAttributeValue AS CHARACTER);
+						SET customElementsIndex = customElementsIndex + 1;
+					ELSEIF UPPER(itemAttribute.itemAttributeName) = 'PRIMARY_CAUSE_OF_LOSS_ID' THEN
+						SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_KEY = 'PRIMARY_CAUSE_OF_LOSS';
+						SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_VALUE = itemAttribute.itemAttributeValue;
+						SET customElementsIndex = customElementsIndex + 1;
+					ELSEIF UPPER(itemAttribute.itemAttributeName) = 'CAS_CASE_NUMBER' THEN
+						SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_KEY = 'ASSISTANCE_CASE_NUMBER';
+						SET sapDoc.SapDocumentLines[documentLinesIndex].SapDocCustomElements[customElementsIndex].CUSTOM_VALUE = itemAttribute.itemAttributeValue;
+						SET customElementsIndex = customElementsIndex + 1;
+					ELSEIF UPPER(itemAttribute.itemAttributeName) = 'GROSS_AMOUNT' THEN
+						SET sapDoc.SapDocumentLines[documentLinesIndex].GROSS_AMOUNT = CAST(itemAttribute.itemAttributeValue AS DECIMAL);
+					END IF;
+				END FOR;
+				SET documentLinesIndex = documentLinesIndex + 1;
+			END FOR;
+			-- Handle missing invoiceNote structure
+			-- THROW USER EXCEPTION CATALOG 'Custom' MESSAGE 1234 VALUES('Missing invoiceNote structure in input JSON');
+
+			SET invoiceIndex = invoiceIndex + 1;
+			MOVE invoice NEXTSIBLING;
+		END WHILE;
+		RETURN TRUE;
+	END;
+	CREATE PROCEDURE SplitName (IN fullName CHARACTER, OUT name1 CHARACTER, OUT name2 CHARACTER)
+	BEGIN
+	
+	    -----------------------------------------------------------------
+	    -- Taille max des champs NAME1 / NAME2
+	    -----------------------------------------------------------------
+	    DECLARE maxLen INTEGER 35;
+	
+	    -----------------------------------------------------------------
+	    -- Nettoyage des espaces début/fin
+	    -----------------------------------------------------------------
+	    DECLARE work CHARACTER TRIM(fullName);
+	
+	    -----------------------------------------------------------------
+	    -- Variables de travail
+	    --
+	    -- i         : index de parcours
+	    -- splitPos  : position de l'espace choisi pour le split
+	    -- leftPart  : partie gauche avant split
+	    -- rightPart : partie droite après split
+	    -----------------------------------------------------------------
+	    DECLARE i INTEGER;
+	    DECLARE splitPos INTEGER 0;
+	    DECLARE leftPart CHARACTER;
+	    DECLARE rightPart CHARACTER;
+	
+	    -----------------------------------------------------------------
+	    -- Initialisation des outputs
+	    -----------------------------------------------------------------
+	    SET name1 = '';
+	    SET name2 = '';
+	
+	    -----------------------------------------------------------------
+	    -- Si le texte tient dans 35 caractères
+	    -- => tout dans NAME1
+	    -----------------------------------------------------------------
+	    IF LENGTH(work) <= maxLen THEN
+	        SET name1 = work;
+	        RETURN;
+	    END IF;
+	
+	    -----------------------------------------------------------------
+	    -- Recherche d'un espace de séparation
+	    --
+	    -- On commence à 36 :
+	    -- si l'espace est en position 36,
+	    -- alors NAME1 fera exactement 35 caractères
+	    --
+	    -- On parcourt ensuite vers la gauche
+	    -----------------------------------------------------------------
+	    SET i = maxLen + 1;
+	
+	    WHILE i > 0 AND splitPos = 0 DO
+	
+	        -----------------------------------------------------------------
+	        -- Si caractère courant = espace
+	        -----------------------------------------------------------------
+	        IF SUBSTRING(work FROM i FOR 1) = ' ' THEN
+	
+	            -----------------------------------------------------------------
+	            -- Partie gauche = avant l'espace
+	            -----------------------------------------------------------------
+	            SET leftPart =
+	                TRIM(SUBSTRING(work FROM 1 FOR i - 1));
+	
+	            -----------------------------------------------------------------
+	            -- Partie droite = après l'espace
+	            -----------------------------------------------------------------
+	            SET rightPart =
+	                TRIM(SUBSTRING(work FROM i + 1));
+	
+	            -----------------------------------------------------------------
+	            -- On valide ce split uniquement si :
+	            --   NAME1 <= 35
+	            --   NAME2 <= 35
+	            -----------------------------------------------------------------
+	            IF LENGTH(leftPart) <= maxLen
+	               AND LENGTH(rightPart) <= maxLen THEN
+	
+	                SET splitPos = i;
+	
+	            END IF;
+	
+	        END IF;
+	
+	        -----------------------------------------------------------------
+	        -- Déplacement vers la gauche
+	        -----------------------------------------------------------------
+	        SET i = i - 1;
+	
+	    END WHILE;
+	
+	    -----------------------------------------------------------------
+	    -- Si on a trouvé un bon espace de split
+	    -----------------------------------------------------------------
+	    IF splitPos > 0 THEN
+	
+	        -----------------------------------------------------------------
+	        -- NAME1 = partie avant espace
+	        -----------------------------------------------------------------
+	        SET name1 =
+	            TRIM(SUBSTRING(work FROM 1 FOR splitPos - 1));
+	
+	        -----------------------------------------------------------------
+	        -- NAME2 = partie après espace
+	        -----------------------------------------------------------------
+	        SET name2 =
+	            TRIM(SUBSTRING(work FROM splitPos + 1 FOR maxLen));
+	
+	    ELSE
+	
+	        -----------------------------------------------------------------
+	        -- Aucun split valide trouvé
+	        --
+	        -- Fallback :
+	        -- coupe brute à 35 caractères
+	        -----------------------------------------------------------------
+	        SET name1 =
+	            SUBSTRING(work FROM 1 FOR maxLen);
+	
+	        SET name2 =
+	            SUBSTRING(work FROM maxLen + 1 FOR maxLen);
+	
+	    END IF;
+	END;	
+END MODULE;

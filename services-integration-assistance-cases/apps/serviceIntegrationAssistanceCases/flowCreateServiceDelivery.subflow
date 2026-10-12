@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:SHLIB_TranslatorBomAssys_TranslateAssysToBomService.subflow="SHLIB_TranslatorBomAssys/TranslateAssysToBomService.subflow" xmlns:SHLIB_TranslatorBomAssys_TranslateBomToAssysService.subflow="SHLIB_TranslatorBomAssys/TranslateBomToAssysService.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor"
+    xmlns:sendRequestToAssys.subflow="sendRequestToAssys.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="flowCreateServiceDelivery.subflow" nsPrefix="flowCreateServiceDelivery.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="flowCreateServiceDelivery" bundleName="flowCreateServiceDelivery" pluginId="servicesIntegrationAssistanceCases"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj16/flowCreateServiceDelivery.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/servicesIntegrationAssistanceCases/icons/full/obj30/flowCreateServiceDelivery.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="90,194">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="flowCreateServiceDelivery" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="962,185">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="flowCreateServiceDelivery" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="sendRequestToAssys.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="553,204">
+        <translation xmi:type="utility:ConstantString" string="sendRequestToAssys"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="389,208" computeExpression="esql://routine/#Set_params_service_creation_compute.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="prepare request"/>
+        <monitorEvents eventSourceDescription="In terminal" eventSourceName="prepare request.terminal.in" eventIdentity="START prepare request.InTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="START prepare request.InTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Failure terminal" eventSourceName="prepare request.terminal.failure" eventIdentity="FAIL: prepare request.terminal.failure">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="FAIL: prepare request.terminal.failure"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="prepare request.terminal.out" eventIdentity="END: prepare request.OutTerminal">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="END: prepare request.OutTerminal"/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.OutputError" location="905,17">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.OutputError" bundleName="flowCreateServiceDelivery" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.OutputConnect" location="953,321">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.OutputConnect" bundleName="flowCreateServiceDelivery" pluginId="servicesIntegrationAssistanceCases"/>
+      </nodes>
+      <nodes xmi:type="SHLIB_TranslatorBomAssys_TranslateBomToAssysService.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="168,209">
+        <translation xmi:type="utility:ConstantString" string="TranslateBomToAssysService"/>
+      </nodes>
+      <nodes xmi:type="SHLIB_TranslatorBomAssys_TranslateAssysToBomService.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="735,186">
+        <translation xmi:type="utility:ConstantString" string="TranslateAssysToBomService"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="OutTerminal.OutputConnect" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.ConnectionError" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="OutTerminal.OutputError" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.Output%20Error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="OutTerminal.OutputError" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="OutTerminal.OutputError" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.OutputError" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.OutputError" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>
