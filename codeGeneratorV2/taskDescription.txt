@@ -1,102 +1,648 @@
-I am giving you a description of a task. It should already has lots of details and technical explanaitions. It mainly needs to be changed on service. This service has multiple operations
-which are absolutely the same but with some slight differences. For this operation of the service there might be bigger changes from the others. You should review the task and 
-decide what should be done, if something is unclear, you should check the other operations to find similarities. This operation for SANSYS I have created it previously to be very similar to the
-others but I didn't have this task description before. So you should review the operation and the description and do any chenges described here.
+ADDITIONAL DETAILS FROM THE DEVELOPER -> THOSE ARE "MUST". HIGHEST PRIORITY THEY INTRODUCE CHANGES TO THE TASK PROVIDED BELOW AND HAVE EXPLICIT DESCRIPTION OF THE IMPLEMENTATION:
+- the mapping for longitude and latitude will be provided later so for now just write a comment about it in the esql so I don't foget it. In the place where they need to be mapped, leave a comment. 
+- About the routing if it is for loss-event or manage-claims:
+    1. check  request.attributes[@type=claim-use-case].value-code == PA || RSA  if PA then loss-event if RSA then manage-claims
+    - if it is missing then
+    --> November configuration: tcs.ch × 101 / 102 / 103 / 106  → manageClaims. Everything else, including tcs.ch × 103 → loss-event.
+    You need to make it in a way that in the future the check for November configuration will be deleted and it will work only with the first condition 
+        if claim-use-case PA || RSA -> loss-event or manage-claims , if missing -> PA
+ 
+If the claim-use-case is missing I will check the second condition (November condition)
+- Don't do anything for damagedObjectStatus as you can see it is in the category NOT transmitted 
+- For the logging and error handling you must stick to the way it is already implemented. You must stick to the syntax and they way the logging and the error handling already works
+in the services. They might not be perfect but the new changes must be aligned to the way the services are already working.
+- You don't touch the PrepareCreateClaimAsync.subflow! You need to create new subflow similar to this one but for the manage-claims operation and adjust it accoding to the 
+description and the details given in the task.
+- In the processClaimAsync.subflow you need to use technice to route the flow execution either to the existing PrepareCreateClaimAsync or the new one you will create.
+- Don't implement this point ->  "riven by an ACE property, so it can be changed without redeployment"
+We will stick only to -> "November configuration: tcs.ch × 101 / 102 / 103 / 106 × RSA → manageClaims. Everything else, including tcs.ch × 103 × PA → loss-event"
+- Caller code is TCSCH
+- Keep existing `202 + {"isAccepted": true}`
+- You have no responsibility for the APIC yaml and its fields. You are responsible only for the ACE implementation.
+- You dont need - Missing referenced attachments
+    - `insurance-claims-api-claims-2.0.6.yaml`
+    - `NIPO-9902_insurance-claims_RSA.postman_collection.json`
+    - `Cahier_tests_IDITS-29325_manageClaims.xlsx`
+- We already have flow which starts with MQ input which calls IDIT and uses subflow to set up the call, you need to do something simillar but slightly different, you will figureout this yourself by all the details given.
+- You need to read the EXCEL file carefully and to do apply the logic from there and do the following mapping and what is described there.
+- You have the logic to determine which routing is for "loss-event" and which one is for "manage-claims" 
+	November configuration: tcs.ch × 101 / 102 / 103 / 106 × RSA → manageClaims. Everything else, including tcs.ch × 103 × PA → loss-event.
+- IBAN is not transmitted so it should not be needed in the new subflow, check the subflow we already have, I think the IBAN subflow there won't be needed in the new flow.
+- So basically what we have is: The call begins by consumer calling IBM APIC (you don't have details about that and you don't need). APIC calls ACE services -> insurance-claims-integration-claims does some validation,
+business validation and routing then it goes to asynchronously to -> insurance-claims-integration-technical-idit which does some checks and mappings and sets up the call to IDIT, after IDIT replies we have some 
+logging or something and erro, failure routing. I want the new subflow to follow what the previous is doing as IDIT error handlong, logging and etc.
+- Here is the endpoint to the new IDIT operation /api/v2/loss-event/manage-claims 
 
 
-# US NIPO\-9422 Sansys \- File to Invoice Ingestion
+# Description
 
-**Ticket:** [NIPO-9422](https://tcsgroup.atlassian.net/browse/NIPO-9422) · **Owner:** Integration engineer · **Status:** design complete — one residual verification (task 15)
+**As** tcs.ch, **I want** to create a Roadside Assistance (RSA) claim through the `insurance-claims` API, including the vehicle, the driver and the declared amount, **so that** the claim is created in IDIT through the new manageClaims endpoint, while Personal Assistance (PA) claims keep using loss-event unchanged.
 
-**Design references:** [ADR-0006](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267086883) (bukrs from base\_id), [ADR-0007](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267447304) (SFTP topology), [ADR-0008](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2267185173) (identifier model), [ADR-0009](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2266333273) (neutral process\_control) ·
+## Context
 
- **Field map:** `Mapping_Sansys_to_EOM_to_SFinDoc_v1.0.0.xlsx`, sheet `SANSYS => EOM` · 
+- **RSA** claims from tcs.ch must be sent to `POST /api/v2/loss-event/manage-claims`.
+- **PA** claims from tcs.ch keep using `loss-event`, unchanged.
+- A claim is RSA when it carries a vehicle, PA otherwise. Product 103 can be either.
+- MOEx chooses the route through configuration. The consumer sees no difference: same endpoint, same contract, same responses.
+- Go-live: November 2026.
 
-**Identiy map**  [https://touringclubsuisse-my.sharepoint.com/personal/victor\_hueni\_tcs\_ch/Documents/01 - Projet/BCI Sansys/INSA - Base name.xlsx?web=1](https://touringclubsuisse-my.sharepoint.com/personal/victor_hueni_tcs_ch/Documents/01%20-%20Projet/BCI%20Sansys/INSA%20-%20Base%20name.xlsx?web=1)
+## Solution design
 
-**dentity:** [Cross Cuttings](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265907431)
+### References
 
-## Why
+These references are aligned with each other. **Any gap between them is a defect: report it to the BA rather than deciding alone.**
 
-`finance-accounting-integration-invoices-ingestion` today has three near-identical per-company injection subflows (`postAsv_`/`postSarge_`/`postSarvd_files_injection_trigger.subflow`). Sansys needs **one generic subflow** serving all 6 companies (company travels in the payload, not in the flow name), and its mapper must emit **EOM v2 camelCase** rather than the v1 kebab-case shape the Attrib mappers produce.
+| DoR deliverable | Reference |
+|---|---|
+| System Process | SP Insurance Claim handling (update to the manageClaims route in progress — Architecture) |
+| APIC swagger | `insurance-claims-api-claims-2.0.6.yaml` (attached) |
+| BOM | [Lucidchart](https://lucid.app/lucidchart/66b406ce-8c7d-4084-8bbc-7220430c9f03/edit?viewport_loc=-341%2C-20%2C4272%2C2137%2Cmacro-new&invitationId=inv_6dd9379d-2c2d-4583-9560-1cc1b5584ff6) |
+| Mapping table | `translator_manageClaims_RSA_V1.1.xlsx` (attached) — tabs *Translator RSA* and *Non transmis* |
+| JSON | Tab *Référence TC-101-01*: input BOM and expected manageClaims payload (validated against IDIT, claim `26101-0002698`) |
+| Unit tests | `NIPO-9902_insurance-claims_RSA.postman_collection.json` (attached, 11 cases) |
 
-Three structural changes distinguish this from a copy-paste of the ASV subflow:
+**Actual input format.** Paths follow what tcs.ch actually sends today (PA payload *ACP - ETI Reference*): `claimed-damages` and `reimbursement` **are arrays**, the cause of loss is written `primary-cause-of-loss-extcode` (lowercase c), and attributes may only carry `type` + `value-code`. The yaml differs on these points (payload validation disabled since 2.0.4). **Do not change the existing ACE parsing.**
 
-1. **Batch, not one-file-per-trigger.** The current `ComIbmFileRead` consumes one file per trigger invocation. This story replaces that with a whole-folder batch — and a queue is explicitly forbidden.
-2. **Validation must stop requiring** `fip_number`. Sansys never sends it. The relaxation must be keyed on **source/trigger**, not company — `TAG`/`TAV`/`ASV` dual-run both front-ends and Attrib must keep enforcing it.
-3. **Identity is derived, not received.** Sansys sends no `object_system`; `bukrs` is transcoded from `intervention.base_id` via the base-identity lookup (see [Cross Cuttings](https://tcsgroup.atlassian.net/wiki/spaces/CS/pages/2265907431)). `producer_app` is **not** handled here — it is a hardcoded constant in [NIPO-9499](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233008237/US+NIPO-9499+Sansys+-+Financial+Document+V2+to+S_FIN_DOC).
+### Business rules
 
-## What
+| # | Rule | Hosted in |
+|---|---|---|
+| B1 | A claim is **RSA when it carries a vehicle, PA otherwise**, for every product (103 can be either). The consumer flags it with `attributes[type=claim-use-case].value-code = RSA`. Missing or `PA` means PA. Any other value is rejected. | ACE — validation |
+| B2 | An RSA claim carries exactly one vehicle (`damaged-objects-details.vehicle[]`, one item). | ACE — validation |
+| B2b | A claim carrying a `vehicle[]` item without `claim-use-case = RSA` is rejected (inconsistent request). | ACE — validation |
+| B3 | Products 101 and 106 are added to the routing table, including without a damage code. Product 103 keeps its current routing to IDIT. | ACE — `Routing_ValidatePayloadAndDetermineDestination` |
+| B4 | The route (loss-event / manageClaims) depends on consumer × product × `claim-use-case`, read from an ACE property. Default route: loss-event. | ACE — route switch |
+| B5 | An RSA claim is translated to manageClaims according to the mapping table. The legacy translator (loss-event route) is unchanged. | ACE — translator |
+| B6 | Rules that depend on the vehicle category (plate, model, weight...) are enforced by IDIT (422), not by MOEx. | IDIT |
 
-- **One** generic `postSansys_files_injection_trigger.subflow` — not six.
-- A **whole-folder batch** read: one trigger drains every `*.json` in the Sansys `/input`, no message queue anywhere in the loop.
-- A generic Sansys mapper (`sansys/PrepareReceivableDocumentRequest.esql`) emitting EOM v2 camelCase per the `SANSYS => EOM` sheet — including both `invoiceNumber` entries (`INVOICE_ID` ← `id`, `TRANSPORT_NUMBER` ← `intervention.references[]`) and `processControl.specificationIdentifier = 'AMBULANCE_TRANSPORT_BILLING'`.
-- `bukrs` derived from `intervention.base_id`, carried as `seller.sellerIdentifier[].schemeIdentifier = 'COMPANY_CODE'`.
-- A Sansys-shaped validation variant: `fip_number` no longer required; `category_id`/`category_name` still required; `intervention.references[TRANSPORT_NUMBER]` newly required. Attrib's validation byte-identical to today.
-- `save/` on consumption, `done/`/`errors/` on outcome — same policy properties, per file.
-- The 3 Attrib subflows, their 3 mappers, and `/health` unchanged.
+### Scope of work
 
-**Definition of done:** one trigger against a Sansys `/input` holding *n* files leaves `/input` empty, *n* copies in `save/`, each file's valid invoices in a `done/` payload accepted by the downstream v2 posting path, invalid invoices in `errors/` — with the 3 Attrib flows provably untouched.
+#### 1. Contract
 
-## How — dev tasks
+- ⚠️ **Start from tag `v2.0.4`**, not from `develop`. `develop` contains NIPO-8910, which is on hold and must not be delivered.
+- Publish the attached yaml 2.0.6. It only adds elements on top of `v2.0.4`: the `Vehicle` schema and `DamagedObjectsDetails.vehicle[]`, `Claim.number-of-beneficiaries`, and new `Attribute` types.
 
-| **#** | **Task** | **Object / file** | **Note** |
-| --- | --- | --- | --- |
-| 1 | Create `postSansys_files_injection_trigger.subflow` by cloning `postAsv_…`, then apply the tasks below | new subflow | Clone for node wiring + monitoring-event names only — it is not a per-company flow. |
-| 2 | Point the SFTP nodes at the Sansys credential identity | subflow FileRead/FileOutput, `fileFtpUser` | ⚠️ Sansys is a **separate credential on a shared folder** — do not reuse `ASVAttribSftpIdentity`. |
-| 3 | Replace the single `ComIbmFileRead` with an in-flow whole-folder batch loop (mechanism: dev's choice, see options below) | subflow node `ProcessFile` | ⚠️ No queue. The read is already destructive (delete-on-transfer + archive), so a loop drains the folder naturally. |
-| 4 | Keep `noMatch` → `emptyOrMissingFileError` as the loop exit and the empty-folder response | subflow `FCMConnection_9` | Produces the APIC `200 NO_FILE` (NIPO-9421). With a loop, `noMatch` means *end of batch*, not *error*, once ≥1 file was processed. |
-| 5 | Add a Sansys branch to the validation module: drop `fip_number`, keep `category_id`/`category_name`, add `intervention.references[TRANSPORT_NUMBER]` | `PrepareAndProcessFile.esql:116-123` | ⚠️ Guard on **source/trigger, not company** — a company-keyed guard would silently weaken live Attrib validation on the dual-run companies. |
-| 6 | Replace the `fip_number` TCSLog business-identifier with `TRANSPORT_NUMBER` in the Sansys branch | `PrepareAndProcessFile.esql:158-159` | `INVOICE_ID`/`INVOICE_REFERENCE`/`DOCUMENT_TYPE` stay as-is. |
-| 7 | Write the generic Sansys mapper: EOM v2 camelCase, all rows marked `Y` in the `SANSYS => EOM` sheet | new `sansys/PrepareReceivableDocumentRequest.esql` | Not a rename of `asv/PrepareHTTPRequest.esql` — every key changes case. See the v1→v2 delta below. |
-| 8 | `processControl.specificationIdentifier.Item[1].content = 'AMBULANCE_TRANSPORT_BILLING'` — one value, all 6 companies | same | Not derived from `intervention.type`, not per-company. No downstream enum enforces it. |
-| 9 | Transcode `intervention.base_id` → `bukrs` (base-identity lookup); emit as `seller.sellerIdentifier[].schemeIdentifier='COMPANY_CODE'`, `.content = bukrs`. Emit `buyer.buyerIdentifier[schemeIdentifier='SANSYS'].content = debtor.code`, hyphen-stripped**Implementation — policy-driven, not hardcoded:**  - add a new named policy (e.g. `BaseIdentityPolicy`) inside the already-referenced `finance-integration-policies-endpoints` policy project, keyed on `producer_app` + `base_id` — `{producer_app}_{base_id}_bukrs` (e.g. `sansysmit_c7b01f98-70b1-457c-bd1a-95bf1ffeb548_bukrs` = `1070`) -  read via `Shlib_PoliciesReader`. This is the same composite-key mechanism `common.policyxml` already runs for `{sender_id}_{process_control}_{attr}` routing (`invoice_routage.esql:55-59`).  - Keying on `producer_app` (not `base_id` alone) means Attrib can reuse the same policy post-v2-migration without a redesign. **On no match:** follow `invoice_routage.esql:45-53`'s pattern — set `Environment.Variables.ErrorRefApp` to a newly reserved, distinct code (e.g. `ACEFONC0023`, "unknown base\_id — no bukrs mapping") and `PROPAGATE TO TERMINAL 2`; do **not** use this app's existing bare `THROW USER EXCEPTION VALUES(...)` (`PrepareAndProcessFile.esql:16`), which carries no distinct code. | same | ⚠️ Unknown `base_id` must fail loudly with a distinct error code, never default to a company. 12 of 19 known bases resolve today — see *Blocked by*. producer\_app here is a hardcoded literal ('SANSYSMIT'), never the trigger's sender\_id/X-Origin-Caller-Code (<https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233204876)>  confirms that header resolves to VTOM for this trigger (VTOM is the caller/orchestrator, same as the live Attrib rows) |
-| 10 | Emit both `invoiceNumber` entries: `INVOICE_ID` ← `id`; `TRANSPORT_NUMBER` ← `intervention.references[@scheme-identifier="TRANSPORT_NUMBER"].identifier` | same | ⚠️ `TRANSPORT_NUMBER` gets its **own** scheme-identifier — do not reuse `PATIENT_FIP_NUMBER` as the v1 mapper does. |
-| 11 | Emit `invoiceNote[INVOICE_REFERENCE]` ← `reference`, `invoiceNote[INTERVENTION_CASE_NUMBER]` ← `references[CASE_NUMBER]`, `invoiceNote[PATIENT_ID]` ← `patient.id` | same | `reference` may be `null` — tolerate it (reconciliation display only, not a posting blocker). |
-| 12 | Tolerate every field the workbook marks absent/dropped: `fip_number`, `gender_*`, `naca_*`, `alarmed_by_*`, `alarm_time`, `without_transportation`, `civility*` | same | `COALESCE(…, '')` as the existing mappers do; never `THROW` on an absent Tier-C field. |
-| 13 | Pass `intervention.start_time`/`end_time` through as **local ISO-8601 with offset**, unconverted | same | Samples carry `+02:00`; do not normalise to UTC. |
-| 14 | Repoint the outbound call to `finance-accounting-integration-invoices-v2`'s `POST /receivable-documents` | `PrepareAndProcessFile.esql:10` (Sansys equivalent) | Target the **v2** routing app — it reads `process_control` camelCase natively. The policy tuple it resolves is [NIPO-9498](https://tcsgroup.atlassian.net/wiki/spaces/ARCHI/pages/2233204876/US+NIPO-9498+Sansys+-+Routing+-+Invoice+Ingestion+to+Financial+Document+V2)'s. |
-| 15 | ⛔ Verify/create the policy property this app reads to build the task-14 URL — key `path-finance-accounting-integration-invoices-v2-receivable-documents`, value `/finance-accounting/v2/invoices/receivable-documents` | `finance-integration-policies-endpoints : AceEndPointsPolicy` | Not the same property as NIPO-9498's (that one is read one hop later). Unverified — if absent, task 14 cannot work at all. |
-| 16 | Add a `Sansys` monitoring-event set mirroring the `SUP:`/`FAIL:` event identities | subflow `monitorEvents` | Feeds error management; keep the prefix convention. |
-| 17 | Leave `postAsv_`/`postSarge_`/`postSarvd_*`, the 3 mappers, `purgeFile.esql` and `get_health.subflow` untouched | existing objects | Regression guard. |
-| 18 | Delete or update the stale embedded response schema `finance-accounting-api-invoice 2.1.0.yml` (still documents the old `IngestionResponse` shape) | this repo | The live ESQL already builds the newer `meta`/`data` shape; only the doc file lags. Pairs with the NIPO-9421 enum fix. |
+#### 2. Validation and routing (`Routing_ValidatePayloadAndDetermineDestination`)
 
-**Batch-loop options (task 3 — dev's choice, all queue-free):**
+- Add products 101 and 106 to the routing table. They are rejected with a 400 today.
+- Extend to these products the branch "no damage code + cause of loss → IDIT", which currently exists for product 103 only.
+- Implement B1, B2 and B2b. `claim-use-case` values are compared exactly (case-sensitive, no trimming).
 
-| **Option** | **How** | **Trade-off** |
-| --- | --- | --- |
-| **A — loop the destructive** `FileRead` (recommended) | Re-enter `FileRead` (`*.json`) until `noMatch`; each read archives + deletes its file | Smallest delta from today. Needs an iteration cap so a folder being written into cannot spin the flow. |
-| B — list, then loop | List the directory once, iterate names, `FileRead` each by exact name | Batch size known up front (truthful `receivedCount`); more moving parts. |
-| C — `FileInput` node | ACE polls the directory | **Rejected**: the trigger stops controlling when ingestion runs, breaking the VTOM cadence. |
+#### 3. Route switch
 
-**v1 → v2 mapper delta (task 7)** — same semantics, different casing and identity source:
+- A separate component, placed after routing when the destination is IDIT.
+- Driven by an ACE property, so it can be changed without redeployment.
+- November configuration: tcs.ch × 101 / 102 / 103 / 106 × RSA → manageClaims. Everything else, including tcs.ch × 103 × PA → loss-event.
+- Fallback switch: forces the configured PA combinations back to loss-event (preparation for the 2027 PA switch). It does not apply to RSA, which the legacy translator cannot handle.
 
-| Concern | v1 (`asv/PrepareHTTPRequest.esql`) | v2 (Sansys, this story) |
-| --- | --- | --- |
-| Key casing | kebab-case (`"invoice-number"`) | camelCase (`invoiceNumber`) |
-| `process_control` | `'ASV_INTERVENTION_CUSTOMER_BILLING'`, hardcoded per company | `'AMBULANCE_TRANSPORT_BILLING'`, one value for all 6 |
-| Invoice identity #1 | `id` → `'INVOICE_ID'` | unchanged in meaning |
-| Invoice identity #2 | `patient.fip_number` → `'PATIENT_FIP_NUMBER'` | `intervention.references[TRANSPORT_NUMBER]` → `'TRANSPORT_NUMBER'` (own key) |
-| Company identity | `seller."seller-name" = 'ASV'`, literal | `seller.sellerIdentifier[COMPANY_CODE]` = `bukrs` looked up from `base_id` |
-| Business reference | `invoice-note` code `'REFERENCE'` | `invoiceNote[].invoiceNoteSubjectCode = 'INVOICE_REFERENCE'` |
-| New codes | — | `INTERVENTION_CASE_NUMBER`, `PATIENT_ID` |
-| Dropped codes | `PATIENT_NACA_ID`, `INTERVENTION_ALARMED_BY_*`, `PATIENT_GENDER_*`, `PARTNER_GENDER*` | omitted — Sansys never populates them |
+#### 4. Translator BOM → manageClaims
 
-The \~50-entry `invoiceNote` array, the `invoiceLine` article loop, the `documentTotals` fill, the pipe-concatenated `buyerName`/`addressLine1`, and the `document_type` 1→380 / 2→381 mapping all carry over unchanged in logic — only the key casing changes.
+- Apply the *Translator RSA* tab (52 rules). Anything not listed there is not sent.
+- Watch out for:
+  - `ClaimContactRefIBO` is written with an **uppercase C**;
+  - `CHF` is sent **if and only if** `totalEstimatedDamage` is sent;
+  - the `claimStatus` / `claimantStatus = "open"` constants must be grouped together, so they can be removed after IRND-16006.
+- Never use the legacy translator values (`polHold`, `1`, `INTERFACE` ...) on the manageClaims route.
 
-## Blocked by
+### Response specification
 
-1. **Task 15** — the `AceEndPointsPolicy` path property is unverified; if absent it must be created before the outbound call can work.
-2. **Base coverage** — 7 of the 19 known Sansys bases match no in-scope company; build against the 12 resolved bases, ship behind the completed lookup table (rollout gate, not a build blocker).
-3. **TAA↔1076 base mapping unconfirmed** — SAP `T001` shows `bukrs` 1076's registered city as Genève, not Aargau. This mapping was inferred from canton-name matching and had never been checked against SAP master data until now (see [identity model §2](https://tcsgroup.atlassian.net/wiki/x/5wAPhw)). Confirm with SAP/Finance before building task 9 against this row — if wrong, Sansys invoices for TAA would post under the wrong company code.
+Responses are identical for both routes and follow the contract.
 
-## How to test
+| Type | Case | Response to consumer |
+|---|---|---|
+| Success | IDIT 200 + `ExtendedIDWrapperIVO` | **202**, empty body |
+| Consumer error (MOEx) | Rules B1, B2, B2b | **400** + `ResponseClaimError`, `httpCode` prefixed `ACE :` |
 
-| **Check** | **How** | **Env** |
-| --- | --- | --- |
-| One trigger ingests all files | Drop 3 files, fire the trigger once: `/input` empty, 3 copies in `save/`, 3 outcomes | QA |
-| No queue in the loop | Code/flow review: no MQ node, no queue subflow, no `FileInput` polling node | QA (review) |
-| `save/`/`done/`/`errors/` split | Mixed batch (1 all-valid, 1 all-invalid, 1 partial): `save/` = 3, `done/` and `errors/` payloads match the split | QA |
-| Company derivation | Feed the `TAM` sample → output carries `schemeIdentifier COMPANY_CODE = 1075`; verifiable for the 12 resolved bases | QA |
-| Tolerated fields + timestamps | Feed both real samples: no validation failure from any dropped field; output `start_time` still ends `+02:00` | QA |
-| Attrib regression | Re-run one known-good Attrib file per dual-run company: the `fip_number` requirement still fires for Attrib, and the EOM payload is byte-identical to a pre-change capture | QA |
+MOEx rejection messages:
+
+| Rule | `moreInformation` |
+|---|---|
+| B1 | `ACE : claim-use-case value not allowed (expected RSA or PA)` |
+| B2 — no vehicle | `ACE : vehicle is mandatory for a RSA claim` |
+| B2 — more than one vehicle | `ACE : only one vehicle is allowed` |
+| B2b | `ACE : vehicle is only allowed for a RSA claim` |
+
+### Monitoring requirements
+
+Following the *SP Insurance Claim handling*, the new ACE monitoring framework is used:
+
+- Every RECEIVE and SEND step is traced **without payload**, with the following search keys:
+
+| Key | Source |
+|---|---|
+| `X-Global-Transaction-ID` | Request header |
+| `X-Origin-Caller-Code` | Request header |
+| Policy number | `policy-number` |
+| Client personal numbers | `claim-contacts[].personal-id` (policyholder, informant) |
+| Use case | `claim-use-case` (RSA / PA / missing) |
+| Route used | loss-event / manageClaims |
+| IDIT claim number | IDIT response (success) |
+
+- Every error is traced.
+- The new MOEx rejections (B1, B2, B2b) are added to the **error codes referential**, so that DevOps can handle or dispatch them.
+- Standard APIC monitoring and Monitoring 2.0 dashboards apply.
+
+## Acceptance criteria
+
+### AC1 — Nominal RSA creation
+
+**Given** a tcs.ch RSA BOM matching tab *Référence TC-101-01* (product 101, no damage code)  
+**When** tcs.ch calls `POST /claim`  
+**Then** MOEx calls manageClaims with a payload identical to TC-101-01 (technical identifiers aside), IDIT creates the claim, and tcs.ch receives a 202.
+
+### AC2 — Products 103 and 106 as RSA
+
+**Given** a tcs.ch RSA BOM (with a vehicle and `claim-use-case = RSA`) on a product 103 policy, and another one on a product 106 policy  
+**When** tcs.ch calls `POST /claim`  
+**Then** both requests go to manageClaims and the claims are created.
+
+### AC3 — PA unchanged (non-regression)
+
+**Given** a tcs.ch PA BOM compliant with v2.0.4, without `claim-use-case`, including an ETI 103 claim with `travel-infos` under `damaged-objects-details`  
+**When** tcs.ch calls `POST /claim`  
+**Then** the request goes to loss-event through the legacy...
+
+*[The end of this criterion is clipped in the image.]*
+
+### AC4 — Unknown `claim-use-case` value
+
+**Given** a BOM with `claim-use-case = "rsa"` (or any value other than `RSA` / `PA`)  
+**When** tcs.ch calls `POST /claim`  
+**Then** MOEx returns a 400 with the B1 message, without calling IDIT.
+
+### AC5 — RSA without vehicle
+
+**Given** a BOM with `claim-use-case = RSA` and no `vehicle[]` (or an empty array)  
+**When** tcs.ch calls `POST /claim`  
+**Then** MOEx returns a 400 with the B2 message, without calling IDIT.
+
+### AC6 — More than one vehicle
+
+**Given** an RSA BOM with two items in `vehicle[]`  
+**When** tcs.ch calls `POST /claim`  
+**Then** MOEx returns a 400 with the B2 message.
+
+### AC7 — Beneficiary other than the policyholder
+
+**Given** an RSA BOM with a contact whose role is `beneficiary` and `number-of-beneficiaries = 1`  
+**When** tcs.ch calls `POST /claim`  
+**Then** the manageClaims payload contains `ClaimContactRefIBO[0]` with this contact and the role `beneficiary`, and the claim is created.
+
+### AC8 — Route driven by configuration
+
+**Given** the ACE property updated to remove the tcs.ch × 101 × RSA combination  
+**When** tcs.ch sends an RSA claim on product 101  
+**Then** the request no longer goes to manageClaims (default route applies), without any redeployment.
+
+### AC9 — Monitoring
+
+**Given** one successful RSA call and one rejected call  
+**When** the logs are checked  
+**Then** both entries show the keys listed in *Monitoring requirements*, without payload, including the route used and, on success, the IDIT claim number.
+
+### AC10 — Contract
+
+**Given** yaml 2.0.6 published in APIC  
+**When** it is compared with tag `v2.0.4`  
+**Then** the diff only contains the listed additions: nothing removed or renamed, and `travel-infos` still under `DamagedObjectsDetails`.
+
+### AC11 — Vehicle without RSA flag
+
+**Given** a BOM with one `vehicle[]` item and no `claim-use-case` (or `claim-use-case = PA`)  
+**When** tcs.ch calls `POST /claim`  
+**Then** MOEx returns a 400 with the B2b message, without calling IDIT.
+
+## Test data
+
+- ⚠️ IDIT rejects duplicates (same policy + country + event date). **Change `event.date`** for every creation. The Postman collection generates a random past date for each call.
+
+| Product | Policy | IDIT proof (manageClaims, direct call) |
+|---|---|---|
+| 101 — RSA | `P0105697894-10100/00` | TC-101-01, claim `26101-0002698` |
+| 103 — RSA | `P0103750719-10300/00` | claim `26103-0002737` |
+| 106 — RSA | `<to be provided>` | — |
+| 103 — PA (non-regression) | `<to be provided>` | — |
+
+- Third-party beneficiary: contact `103376827` (TC-101-29).
+- IDIT reference collection: *IDITS-29325 – POST manageClaims – test cases* (workbook `Cahier_tests_IDITS-29325_manageClaims.xlsx`).
+
+## Dependencies
+
+| Item | Type |
+|---|---|
+| IDITS-33513 — optional damage code (Sapiens) | Blocks go-live, not development |
+| NIPO-8910 | On hold — must not be shipped (start from `v2.0.4`) |
+| SP *Insurance Claim handling* | Update for the manageClaims route — Architecture |
+| Digital (tcs.ch) | Must send `claim-use-case`, the vehicle with external codes, the driver, and the amount in `total-estimated-damaged-currency-amount` |
+
+## Regression risks
+
+- **tcs.ch PA flow:** validation and routing are modified, and the switch sits in front of the legacy translator. AC3 is mandatory.
+- **Starting branch:** starting from `develop` would ship NIPO-8910 and break PA in production.
+- **Input parsing:** the yaml does not match the actual payload format (arrays, `extcode`). "Aligning" the parsing on the yaml would break the current flow.
+- **Reporting:** no impact identified (same endpoint, same responses).
+
+## Out of scope
+
+Reserves and CAS (December, NIPO-9278) · PA switch to manageClaims (2027) · beneficiary IBAN and automatic payment · questionnaires 2.32/2.33 · consents · towing (more than one vehicle).
+
+
+# BOM 2.0.6 → manageClaims translation specification
+
+- **Scope:** RSA claims from tcs.ch.
+- **Version:** v1.1, dated 13.10.2026.
+- **Included sheets:** Read me, Translator RSA, Not transmitted.
+- **Excluded sheet:** Reference TC-101-01. References to test cases and examples contained in the other sheets are retained.
+- **Purpose:** Define how MOEx translates BOM 2.0.6 input into a manageClaims request.
+
+## 1. Reference artifacts
+
+These artifacts are intended to be consistent with one another:
+
+1. **Input contract:** `insurance-claims-api-claims-2.0.6.yaml`, based on tag `v2.0.4` plus additions from batch 1.
+2. **Model:** Lucidchart “BOM Claim - Macro-new (aligned with yaml 2.0.4 production + vehicle batch 1)”.
+3. **Translation rules:** This specification, applicable to the manageClaims route when `claim-use-case = RSA`.
+4. **Expected output reference:** Validated payload TC-101-01, claim `26101-0002698`. The corresponding reference sheet is excluded from this document.
+
+## 2. Conventions and global constraints
+
+### Path notation
+
+- Input and output paths use JSON dot notation.
+- `[0]` means the first array item.
+- `[]` means an array of items.
+- `claim-contacts[role=driver]` selects the contact whose role is `driver`.
+- `attributes[type=X].value-code` selects the `value-code` of the attribute whose type is `X`.
+- `—` in the input column means there is no BOM input field: the value is generated or injected.
+- All target paths below are fully expanded, including targets abbreviated with `…` in the workbook.
+
+### IDIT requirements
+
+| Code | Meaning |
+|---|---|
+| M | Mandatory on the manageClaims side |
+| C | Conditional on the manageClaims side |
+| O | Optional on the manageClaims side |
+
+`VO` is retained as the workbook's type label. The target path identifies the corresponding `extCode` field.
+
+### Translation constraints
+
+1. A **constant** is injected by MOEx and must never be read from the BOM.
+2. Any BOM data not listed in the translation rules is **not transmitted**.
+3. Input paths reflect the payload format actually sent by tcs.ch today:
+   - `claimed-damages` is an array.
+   - `reimbursement` is an array.
+   - The cause-of-loss field is `primary-cause-of-loss-extcode`, with lowercase `c`.
+   - Attributes may contain only `type` and `value-code`.
+4. The YAML differs from the actual input format on these points. Payload validation has been disabled since 2.0.4. **Do not “correct” the existing ACE reading to match the YAML.**
+5. The PA `loss-event` route retains its legacy translator unchanged, including its own values such as `polHold`, `1`, and `INTERFACE`. **Never mix the RSA and legacy translation tables.**
+6. Preserve the spelling and capitalization of field names, codes, and string identifiers, including leading zeros in examples.
+
+## 3. Translation rules
+
+### 3.1 Message
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 1 | — | Generate a unique request identifier in MOEx, e.g. using `X-Global-Transaction-ID`. | `messageId` | string | M | `TCSCH-QA-29325-101-01` | swagger |
+| 2 | — | Inject constant `3`. | `channelType.extCode` | VO | M | `3` | TC-101-01 |
+
+### 3.2 Claim
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 3 | `policy-number` | Pass through. Policy is determined by tcs.ch. | `claimIBO.externalPolicyNumber` | string | M | `PO105697894-10100/00` | AC-2 |
+| 4 | `event.date` | Format as `YYYY-MM-DD`. | `claimIBO.claimEventDate` | date | M | `2026-04-01` | AC-3 |
+| 5 | `event.description` | Pass through. | `claimIBO.claimEventDescription` | string | M | `Batterie a plat, …` | AC-1 |
+| 6 | `event.primary-cause-of-loss-extcode` | Pass through using the same table as the legacy route. | `claimIBO.claimCauseOfLossVO.extCode` | VO | M | `11900` | AC-1 |
+| 7 | — | Inject constant `"Web"`. | `claimIBO.claimReportingChannel.extCode` | VO | M | `Web` | Décision 18.09 |
+| 8 | — | Inject constant `"TCS"`. | `claimIBO.brandCompanyVO.extCode` | VO | M | `TCS` | TC-101-01 |
+| 9 | — | Inject constant `"no_update_made"`. | `claimIBO.latestChannelOfUpdate.extCode` | VO | O | `no_update_made` | IDITS-33900 |
+| 10 | — | Inject constant `"open"`. Remove after IRND-16006. | `claimIBO.claimStatus.extCode` | VO | M | `open` | TC-101-14 |
+| 11 | `total-estimated-damaged-currency-amount` | Pass through the reported amount. | `claimIBO.totalEstimatedDamage` | number | C | `450` | AC-9, TC-101-01 |
+| 12 | — | Inject constant `"CHF"` **if and only if** `totalEstimatedDamage` is sent. | `claimIBO.totalEstimatedDamageCurrency.extCode` | VO | C | `CHF` | TC-101-24/25 |
+| 13 | `number-of-beneficiaries` | Pass through; do not recalculate. | `claimIBO.numberOfBeneficiaries` | integer | O | `1` | AC-24 |
+| 14 | `event.attributes[type=police-intervention].value-code` | Convert string `"true"` → boolean `true`; string `"false"` → boolean `false`. | `claimIBO.isPoliceIntervention` | boolean | O | — | swagger |
+| 15 | `claim-service-providers[].personal-id` | Create one item per service provider. | `claimIBO.serviceProviders[].contactExtNumber` | string | O | — | swagger |
+
+### 3.3 Location
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 16 | `event.location.country-code` | Pass through. | `claimIBO.claimEventLocationIBO.countryVO.extCode` | VO | M | `CH` | AC-1 |
+| 17 | — | Inject constant `"country"`. | `claimIBO.claimEventLocationIBO.locationType.extCode` | VO | O | `country` | TC-101-01 |
+| 18 | `event.location.city` | Pass through. | `claimIBO.claimEventLocationIBO.addressIBO.cityName` | string | O | `Geneve` | TC-101-01 |
+| 19 | `event.location.zip-code` | Pass through. | `claimIBO.claimEventLocationIBO.addressIBO.zipCode` | string | O | `1203` | TC-101-01 |
+| 20 | `event.location.street-name` | Pass through. | `claimIBO.claimEventLocationIBO.addressIBO.streetName` | string | O | `Avenue Louis-Casai` | TC-101-01 |
+| 21 | `event.location.house-number` | Pass through. | `claimIBO.claimEventLocationIBO.addressIBO.houseNr` | string | O | `27` | TC-101-01 |
+
+### 3.4 Informant
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 22 | `claim-contacts[role=informant].personal-id` | Pass through. | `claimIBO.claimInformantIBO.contactExternalNumber` | string | M | `013225002` | AC-6 |
+| 23 | `claim-contacts[role=informant].informant-type` | Map `1` → `"policyholder"`. Mapping for other codes remains to be completed. `"third_person"` is validated by TC-106-01. | `claimIBO.claimInformantIBO.informantType.extCode` | VO | O | `policyholder` | TC-101-01 |
+
+### 3.5 Claimant
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 24 | `claim-contacts[role=polHold].personal-id` | Pass through; create a single claimant. | `claimIBO.claimantIBOs[0].contactExternalNumber` | string | M | `105697894` | AC-6 |
+| 25 | — | Inject constant `"policyholder"`. | `claimIBO.claimantIBOs[0].claimantSide.extCode` | VO | O | `policyholder` | TC-101-01 |
+| 26 | — | Inject constant `"unknown"`. | `claimIBO.claimantIBOs[0].claimantLiability.extCode` | VO | O | `unknown` | TC-101-01 |
+| 27 | — | Inject constant `"open"`. Remove after IRND-16006. | `claimIBO.claimantIBOs[0].claimantStatus.extCode` | VO | M | `open` | TC-101-15 |
+
+### 3.6 Damaged object
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 28 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].model` + `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].plate` | Build `"<model> - <plate>"`. Plate formatting with spaces remains to be confirmed. | `claimIBO.claimantIBOs[0].damagedObjects[0].description` | string | O | `SKODA KODIAQ - GE 777 034` | TC-101-01 |
+| 29 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.damage-items[].ext-code` | Pass through (`T_ASSET_ITEM_TYPE`). | `claimIBO.claimantIBOs[0].damagedObjects[0].damagedItems[].itemType.extCode` | VO | C | — | AC-23 |
+| 30 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.damage-items[].description` | Pass through. | `claimIBO.claimantIBOs[0].damagedObjects[0].damagedItems[].desc` | string | O | — | legacy |
+| 31 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.damage-items[].purchase-value` | Pass through. | `claimIBO.claimantIBOs[0].damagedObjects[0].damagedItems[].purchaseValue` | number | O | — | legacy |
+| 32 | — | Inject boolean constant `true` if damage items are present. | `claimIBO.claimantIBOs[0].damagedObjects[0].damagedItems[].isActive` | boolean | O | — | legacy |
+
+### 3.7 Vehicle
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 33 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].category-ext-code` | Pass through. | `claimIBO.damagedVehicleDetails[0].vehicleCategory.extCode` | VO | M | `VHCCH` | IDITS-33494 |
+| 34 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].plate` | Pass through without spaces. | `claimIBO.damagedVehicleDetails[0].licensePlateNumber` | string | C | `GE777034` | IDITS-33494 |
+| 35 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].type-ext-code` | Pass through. | `claimIBO.damagedVehicleDetails[0].vehicleType.extCode` | VO | M | `001` | IDITS-33494 |
+| 36 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].brand-ext-code` | Pass through. | `claimIBO.damagedVehicleDetails[0].vehicleBrand.extCode` | VO | M | `1000088` | IDITS-33494 |
+| 37 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].model` | Pass through. | `claimIBO.damagedVehicleDetails[0].vehicleModel` | string | C | `SKODA KODIAQ` | IDITS-33494 |
+| 38 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].matricule-number` | Pass through. | `claimIBO.damagedVehicleDetails[0].vehicleMatriculeNumber` | string | O | `228233407` | TC-101-01 |
+| 39 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].first-reg-date` | Format as `YYYY-MM-DD`. | `claimIBO.damagedVehicleDetails[0].firstRegistrationDate` | date | O | `2026-04-21` | TC-101-01 |
+| 40 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].maximum-weight` | Pass through. | `claimIBO.damagedVehicleDetails[0].maximumWeight` | integer | C | `2024` | IDITS-33494 |
+| 41 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].maximum-height` | Pass through. | `claimIBO.damagedVehicleDetails[0].maximumHeight` | integer | C | `147` | IDITS-33494 |
+| 42 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].purchase-date` | Format as `YYYY-MM-DD`. | `claimIBO.damagedVehicleDetails[0].purchaseDate` | date | C | — | IDITS-33494 |
+| 43 | `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].purchase-value` | Pass through. | `claimIBO.damagedVehicleDetails[0].purchaseValue` | number | C | — | IDITS-33494 |
+
+### 3.8 Driver
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 44 | `claim-contacts[role=driver].personal-id` | Pass through. | `claimIBO.driverDetails.DriverContactExtNumber` | string | C | `105697894` | IDITS-33494 |
+| 45 | `claim-contacts[role=driver].attributes[type=high-alcohol].value-code` | Map string `"true"` → `"Yes"`; string `"false"` → `"No"`. | `claimIBO.driverDetails.highAlcohol` | string | O | `No` | IDITS-33494 |
+| 46 | `claim-contacts[role=driver].attributes[type=alcohol-test-result].value-code` | Convert to number. | `claimIBO.driverDetails.alcoholTestResult` | number | O | — | swagger |
+| 47 | `claim-contacts[role=driver].attributes[type=influence-of-medicines].value-code` | Map string `"true"` → `"Yes"`; string `"false"` → `"No"`. | `claimIBO.driverDetails.influenceOfMedicines` | string | O | `No` | IDITS-33494 |
+| 48 | `claim-contacts[role=driver].attributes[type=influence-of-drugs].value-code` | Map string `"true"` → `"Yes"`; string `"false"` → `"No"`. | `claimIBO.driverDetails.influenceOfDrugs` | string | O | `No` | IDITS-33494 |
+| 49 | `claim-contacts[role=driver].attributes[type=influence-of-tiredness].value-code` | Map string `"true"` → `"Yes"`; string `"false"` → `"No"`. | `claimIBO.driverDetails.influenceOfTiredness` | string | O | `No` | IDITS-33494 |
+| 50 | `claim-contacts[role=driver].attributes[type=driver-notes].value-code` | Pass through. | `claimIBO.driverDetails.notes` | string | O | `Le preneur conduisait…` | TC-101-01 |
+
+### 3.9 Beneficiaries
+
+| ID | BOM input path | Transformation | manageClaims target | Type | IDIT req. | Example | Source |
+|---|---|---|---|---|---|---|---|
+| 51 | `claim-contacts[role=beneficiary].personal-id` | Create one item per beneficiary. Use **`ClaimContactRefIBO` with uppercase C**, never `claimContactRefIBO`. | `claimIBO.ClaimContactRefIBO[].contactExternalNumber` | string | C | `103376827` | AC-17, TC-101-29 |
+| 52 | — | Inject constant `"beneficiary"` for each item. | `claimIBO.ClaimContactRefIBO[].claimContactRoleVO.extCode` | VO | C | `beneficiary` | TC-101-29 |
+
+## 4. Not transmitted
+
+| Data or proposed mapping | Handling |
+|---|---|
+| `attributes[type=claim-use-case]` | Used only for routing (`RSA` / `PA`). Never transmitted to IDIT. |
+| Attributes with type `e-mail`, `language`, `personal-reference`, `number-of-documents`, or `document-list-guuid` | Unchanged: consumed by EOM / EDM as today. |
+| `claimed-cover[0].claimed-damages[0].damaged-objects-details.vehicle[0].category`, `.type`, `.brand` | Informational labels. Only the corresponding `*-ext-code` fields are transmitted. |
+| `claimState`, `claimantState`, `damagedObjectState`, `damageState` | Not transmitted. IDIT applies its default values. |
+| `damagedObjectStatus`, `damageStatus` | Not transmitted. Optional, TC-101-16; no RSA damage code. |
+| `claimed-cover[].claimed-damages[].functional-id` (damage code) | No damage code for RSA. Depends on IDITS-33513. |
+| `reimbursement.estimated-amount` → `estimatedDamageAmount` | **Prohibited** (AC-8). The amount is passed through `totalEstimatedDamage`. The workbook uses this path notation here, while its global input convention states that `reimbursement` is an array. |
+| `reserve.*` → `reserveIBOs` | Postponed; outside November scope. |
+| `attributes[type=iban]` / `iban-holder` | No usable target in November (PO7). `automaticPaymentTo` depends on a damage. |
+| Questionnaires 2.32 / 2.33; consentements 5.3 | Out of scope for November (PO8). |
+| `travel-infos`, `travelers`, `bike`, `CDW`, `external-claim` | Outside RSA. Used only on the `loss-event` route through the legacy translator. |
+
+
+
+MAPPING EXMAPLE: 
+
+Entrée BOM 2.0.6 (exemple)
+{
+  "policy-number": "PO105697894-10100/00",
+  "total-estimated-damaged-currency-amount": 450,
+  "total-estimated-damaged-currency-code": "CHF",
+  "number-of-beneficiaries": 1,
+  "event": {
+    "date": "2026-04-01",
+    "description": "Batterie a plat, vehicule immobilise au parking de Balexert. Intervention de la patrouille TCS, puis remorquage jusqu au garage.",
+    "primary-cause-of-loss-extcode": "11900",
+    "location": {
+      "type-desc": "country",
+      "country-code": "CH",
+      "city": "Geneve",
+      "zip-code": "1203",
+      "street-name": "Avenue Louis-Casai",
+      "house-number": "27"
+    }
+  },
+  "claim-contacts": [
+    {
+      "personal-id": "105697894",
+      "role": "polHold"
+    },
+    {
+      "personal-id": "013225002",
+      "role": "informant",
+      "informant-type": 1
+    },
+    {
+      "personal-id": "105697894",
+      "role": "driver",
+      "attributes": [
+        {
+          "type": "high-alcohol",
+          "value-type": "enum",
+          "value-id-format": "boolean",
+          "value-code": "false"
+        },
+        {
+          "type": "influence-of-medicines",
+          "value-type": "enum",
+          "value-id-format": "boolean",
+          "value-code": "false"
+        },
+        {
+          "type": "influence-of-drugs",
+          "value-type": "enum",
+          "value-id-format": "boolean",
+          "value-code": "false"
+        },
+        {
+          "type": "influence-of-tiredness",
+          "value-type": "enum",
+          "value-id-format": "boolean",
+          "value-code": "false"
+        },
+        {
+          "type": "driver-notes",
+          "value-type": "free",
+          "value-id-format": "string",
+          "value-code": "Le preneur conduisait le vehicule au moment de l incident."
+        }
+      ]
+    }
+  ],
+  "claimed-cover": [
+    {
+      "claimed-damages": [
+        {
+          "damaged-objects-details": {
+            "vehicle": [
+              {
+                "category-ext-code": "VHCCH",
+                "type-ext-code": "001",
+                "brand-ext-code": "1000088",
+                "model": "SKODA KODIAQ",
+                "plate": "GE777034",
+                "matricule-number": "228233407",
+                "first-reg-date": "2026-04-21",
+                "maximum-weight": 2024,
+                "maximum-height": 147
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "type": "claim-use-case",
+      "value-type": "enum",
+      "value-id-format": "string",
+      "value-code": "RSA"
+    },
+    {
+      "type": "e-mail",
+      "value-type": "free",
+      "value-id-format": "string",
+      "value-code": "jean.dupont@example.ch"
+    },
+    {
+      "type": "personal-reference",
+      "value-type": "free",
+      "value-id-format": "string",
+      "value-code": "105697894"
+    },
+    {
+      "type": "language",
+      "value-type": "enum",
+      "value-id-format": "string",
+      "value-code": "FR"
+    },
+    {
+      "type": "number-of-documents",
+      "value-type": "free",
+      "value-id-format": "integer",
+      "value-code": "0"
+    }
+  ]
+}
+
+
+
+Sortie manageClaims attendue (TC-101-01, validée)
+{
+  "messageId": "TCSCH-QA-29325-101-01",
+  "channelType": {
+    "extCode": 3
+  },
+  "claimIBO": {
+    "externalPolicyNumber": "PO105697894-10100/00",
+    "claimEventDate": "2026-04-01",
+    "claimEventDescription": "Batterie a plat, vehicule immobilise au parking de Balexert. Intervention de la patrouille TCS, puis remorquage jusqu au garage.",
+    "claimCauseOfLossVO": {
+      "extCode": "11900"
+    },
+    "claimReportingChannel": {
+      "extCode": "Web"
+    },
+    "brandCompanyVO": {
+      "extCode": "TCS"
+    },
+    "latestChannelOfUpdate": {
+      "extCode": "no_update_made"
+    },
+    "totalEstimatedDamage": 450,
+    "totalEstimatedDamageCurrency": {
+      "extCode": "CHF"
+    },
+    "claimStatus": {
+      "extCode": "open"
+    },
+    "numberOfBeneficiaries": 1,
+    "claimEventLocationIBO": {
+      "countryVO": {
+        "extCode": "CH"
+      },
+      "locationType": {
+        "extCode": "country"
+      },
+      "latitude": 46.2216,
+      "longitude": 6.1128,
+      "addressIBO": {
+        "cityName": "Geneve",
+        "zipCode": "1203",
+        "streetName": "Avenue Louis-Casai",
+        "houseNr": "27"
+      }
+    },
+    "claimInformantIBO": {
+      "contactExternalNumber": "013225002",
+      "informantType": {
+        "extCode": "policyholder"
+      }
+    },
+    "damagedVehicleDetails": [
+      {
+        "vehicleCategory": {
+          "extCode": "VHCCH"
+        },
+        "vehicleType": {
+          "extCode": "001"
+        },
+        "vehicleBrand": {
+          "extCode": "1000088"
+        },
+        "vehicleModel": "SKODA KODIAQ",
+        "licensePlateNumber": "GE777034",
+        "vehicleMatriculeNumber": "228233407",
+        "firstRegistrationDate": "2026-04-21",
+        "maximumWeight": 2024,
+        "maximumHeight": 147
+      }
+    ],
+    "driverDetails": {
+      "DriverContactExtNumber": "105697894",
+      "highAlcohol": "No",
+      "influenceOfMedicines": "No",
+      "influenceOfDrugs": "No",
+      "influenceOfTiredness": "No",
+      "notes": "Le preneur conduisait le vehicule au moment de l incident."
+    },
+    "claimantIBOs": [
+      {
+        "contactExternalNumber": "105697894",
+        "claimantSide": {
+          "extCode": "policyholder"
+        },
+        "claimantLiability": {
+          "extCode": "unknown"
+        },
+        "claimantStatus": {
+          "extCode": "open"
+        },
+        "damagedObjects": [
+          {
+            "damagedObjectStatus": {
+              "extCode": "open"
+            },
+            "description": "SKODA KODIAQ - GE 777 034"
+          }
+        ]
+      }
+    ]
+  }
+}

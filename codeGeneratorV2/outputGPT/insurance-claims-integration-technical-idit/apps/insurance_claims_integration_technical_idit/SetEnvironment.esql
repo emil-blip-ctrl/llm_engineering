@@ -1,0 +1,58 @@
+PATH Shlib_PoliciesReader;
+
+CREATE COMPUTE MODULE SetEnvironment
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+
+		IF EXISTS(InputLocalEnvironment.Variables.TCSLog.userDefined.*[]) THEN
+			SET Environment.Variables.userDefined = InputLocalEnvironment.Variables.TCSLog.userDefined;
+		END IF;
+
+		SET Environment.Variables.retryCount = InputLocalEnvironment.Variables.TCSLog.userDefined.retryCount;
+		SET Environment.Variables.timestamp = InputLocalEnvironment.Variables.TCSLog.userDefined.timestamp;
+		SET Environment.Variables.routeUsed = InputLocalEnvironment.Variables.TCSLog.userDefined.routeUsed;
+		SET Environment.Variables.claimUseCase = InputLocalEnvironment.Variables.TCSLog.userDefined.claimUseCase;
+
+		SET Environment.Variables.policyNumber = InputRoot.JSON.Data."policy-number";
+		DECLARE email ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'e-mail');
+		SET Environment.Variables.email = email."value-code";
+		DECLARE language ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'language');
+		SET Environment.Variables.language = language."value-code";
+		DECLARE informantPersonalReference ROW THE(SELECT A FROM InputRoot.JSON.Data."claim-contacts".Item[] AS A WHERE A.role = 'informant');
+		SET Environment.Variables.informantPersonalReference = informantPersonalReference."personal-id";
+		DECLARE policyHolderPersonalReference ROW THE(SELECT A FROM InputRoot.JSON.Data."claim-contacts".Item[] AS A WHERE A.role = 'polHold');
+		SET Environment.Variables.policyHolderPersonalReference = policyHolderPersonalReference."personal-id";
+		DECLARE ibanHolderPersonalReference ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'iban-holder');
+		SET Environment.Variables.ibanHolderPersonalReference = ibanHolderPersonalReference."value-code";
+		DECLARE numberOfDocuments ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'number-of-documents');
+		SET Environment.Variables.numberOfDocuments = numberOfDocuments."value-code";
+		DECLARE documentListGUUID ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'document-list-guuid');
+		SET Environment.Variables.documentListGUUID = documentListGUUID."value-code";
+		SET Environment.Variables.documentList[] = SELECT * FROM documentListGUUID."sub-attributes".Item[];
+		DECLARE keyValuesOfOnlineForm ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'key-values-of-online-form');
+		SET Environment.Variables.keyValuesOfOnlineForm = keyValuesOfOnlineForm."value-code";
+
+		SET Environment.Variables.policy.apicHost = COALESCE(gestionPolicy('{common-integration-policies-endpoints}:AceEndpointsPolicy','ace-host-insurance'), '');
+		SET Environment.Variables.policy.claimPost = COALESCE(gestionPolicy('{insurance-integration-policies-endpoints}:AceEndPointsPolicy','path-insurance-claims-integration-technical-idit-loss-event-tcs'), '');
+
+		--Set variables in Env to trace in SUP Log
+		SET Environment.Variables.TCSLog.context = InputLocalEnvironment.Variables.TCSLog.context;
+		SET Environment.Variables.TCSLog.context.transaction = InputLocalEnvironment.Variables.TCSLog."business-identifiers";
+		SET Environment.Variables.TCSLog.context."route-used" = COALESCE(Environment.Variables.routeUsed, Environment.Variables.TCSLog.context."route-used");
+		SET Environment.Variables.TCSLog.context."claim-use-case" = COALESCE(Environment.Variables.claimUseCase, Environment.Variables.TCSLog.context."claim-use-case");
+
+		SET Environment.Variables.trackID = Environment.Monitoring.EventCorrelation.parentTransactionId;
+		SET Environment.Variables.XCorrelationID = Environment.Monitoring.EventCorrelation.globalTransactionId;
+		SET Environment.Variables.In.XCallerCode = Environment.Variables.TCSLog.context."caller-code";
+
+		SET Environment.Variables.TCSLog.context.severity = 'INFO';
+		SET Environment.Variables.TCSLog.context."source-system" = 'CMP05625';
+		SET Environment.Variables.TCSLog.context."target-system" = 'CMP05541';
+
+	    SET Environment.Variables.Info.RETRY_COUNT = Environment.Variables.retryCount;
+
+
+		RETURN TRUE;
+	END;
+END MODULE;

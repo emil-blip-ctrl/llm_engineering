@@ -1,75 +1,37 @@
-Summary:
-- Reworked the SANSYS injection flow into a batch-oriented trigger flow.
-- Added a new Sansys EOM v2 camelCase mapper and Sansys batch control ESQL.
-- Added source-trigger-based validation branching so SANSYS no longer requires `fip_number` and now requires `TRANSPORT_NUMBER`.
-- Repointed SANSYS outbound URL resolution to the v2 receivable-documents endpoint property.
-- Added the new Ace endpoint property and introduced a new BaseIdentityPolicy scaffold.
-- Updated the OpenAPI response schema to the current `meta/data` response style.
+Summary of what I changed and why.
+- Added RSA/PA route handling in `insurance-claims-integration-claims`:
+  - Updated `Routing_ValidatePayloadAndDetermineDestination.esql` to:
+    - validate `claim-use-case` for caller `TCSCH`
+    - reject invalid RSA/PA combinations for vehicle presence/count
+    - accept products `101` and `106`
+    - keep existing validation/routing style and error handling pattern
+  - Added `Routing_DetermineIditOperation.esql` as a separate post-routing component to decide `loss-event` vs `manageClaims`.
+  - Updated `Routing.subflow` to invoke that new component after payload validation and before MQ/HTTP success branching.
+  - Updated `Routing_Routage.esql` to propagate internal routing info through MQ user-defined headers.
+  - Updated `Routing_BuildError.esql` so the new ACE validation messages can be returned exactly in `moreInformation` without changing the overall error response pattern.
 
-What changed and why:
-1. `postSansys_files_injection_trigger.subflow`
-   - Added Sansys batch initialization.
-   - Added file-count tracking and a queue-free loop back to re-read the folder until `noMatch`.
-   - Kept `ProcessFile.noMatch -> emptyOrMissingFileError` for empty-folder / end-of-batch response.
-   - Switched the SANSYS request mapping node to a new v2 mapper.
-   - Updated the downstream monitored call to `finance-accounting-integration-invoices-v2` / `POST /receivable-documents`.
-   - Prevented per-file HTTP replies; only the final batch completion path now replies.
+- Added manageClaims preparation in `insurance-claims-integration-technical-idit`:
+  - Created `PrepareManageClaimsAsync.subflow` as a separate flow, without IBAN processing, as requested.
+  - Created `CreateClaim_mappingClaimToManageClaims.esql` implementing the RSA → manageClaims mapping.
+  - Created `CreateClaim_PostManageClaims_PreparerCallIdit.esql` to call `POST /api/v2/loss-event/manage-claims`.
+  - Created `ProcessClaimAsync_RoutePreparation.esql` and updated `ProcessClaimAsync.msgflow` to route execution to either:
+    - existing `PrepareCreateClaimAsync`
+    - new `PrepareManageClaimsAsync`
 
-2. `PrepareAndProcessFile.esql`
-   - Added trigger-based URL selection for SANSYS vs existing Attrib flows.
-   - Added SANSYS validation rules:
-     - no `fip_number` requirement
-     - `category_id` / `category_name` still required
-     - `TRANSPORT_NUMBER` required from references
-   - Replaced SANSYS logging business identifier from `FIP_NUMBER` to `TRANSPORT_NUMBER`.
-   - Reset per-file transient Environment content so batch iterations do not leak state.
-   - Added a new internal terminal `out5` used only by the SANSYS batch loop.
-   - Adjusted SAP-failure invoice matching logic so SANSYS uses transport-number-based identifiers instead of `fip_number`.
+- Updated runtime context propagation:
+  - Updated `SetEnvironment.esql` to preserve route/use-case info from MQ headers across retries and downstream logging.
+  - Updated `CreateClaim_MappingResponseClaimToTCS.esql` to enrich monitoring context with the returned claim number.
 
-3. `sansys/PrepareReceivableDocumentRequest.esql`
-   - New mapper producing camelCase EOM v2 payloads.
-   - Hardcoded `processControl.specificationIdentifier = AMBULANCE_TRANSPORT_BILLING`.
-   - Emits:
-     - `invoiceNumber[INVOICE_ID]`
-     - `invoiceNumber[TRANSPORT_NUMBER]`
-     - `seller.sellerIdentifier[COMPANY_CODE]`
-     - `buyer.buyerIdentifier[SANSYS]`
-     - updated invoiceNote codes including `INVOICE_REFERENCE`, `INTERVENTION_CASE_NUMBER`, `PATIENT_ID`
-   - Keeps local timestamp strings unchanged.
-   - Uses policy-driven `bukrs` lookup from `base_id`.
-   - On missing mapping sets `Environment.Variables.ErrorRefApp = ACEFONC0023` and stops the request branch loudly.
-
-4. `sansys/BatchControl.esql`
-   - New helper modules for:
-     - initializing batch context
-     - counting processed files
-     - stopping the loop after a configurable iteration cap
-
-5. `emptyOrMissingFileError.esql`
-   - Added a SANSYS batch completion branch:
-     - zero files -> existing `NO_FILE`
-     - one or more files -> final batch response with `meta/data`
-
-6. Policy project changes
-   - `AceEndPointsPolicy.policyxml`: added `path-finance-accounting-integration-invoices-v2-receivable-documents`
-   - `BaseIdentityPolicy.policyxml`: added a new user-defined policy file for `producer_app + base_id -> bukrs`
-
-7. OpenAPI file
-   - Updated `IngestionResponse` from the old `status/summary/results` structure to the current `meta/data` structure.
-
-Assumptions / limitations / uncertainties:
-- I did not change the ASV / SARGE / SARVD injection flows or their mappers.
-- I kept the existing SANSYS SFTP identity `SANSYSAceSftpIdentity` because it is already a dedicated non-ASV identity in the current flow.
-- The full base-identity lookup table was not provided in the repository snapshot. I only added the policy mechanism and one explicit example mapping from the request:
-  - `sansysmit_c7b01f98-70b1-457c-bd1a-95bf1ffeb548_bukrs = 1070`
-  The remaining mappings must be completed from the external identity map before rollout.
-- The exact final batch HTTP status semantics were not specified for non-empty folders. I returned a generic `200` batch completion response in `meta/data` form.
-- The final batch response `receivedCount` is implemented as processed file count, not invoice count, because the request focused on folder-drain behavior and did not define a batch response aggregation contract.
-- The exact input reference structure was not fully shown; I implemented reference lookup tolerant to:
-  - `scheme-identifier`
-  - `scheme_identifier`
-  - `schemeIdentifier`
-- For unknown `base_id`, I implemented a loud failure path with `ACEFONC0023`, but because the existing flow is file-oriented, that currently fails the request branch for the file rather than surgically removing only the single bad invoice inside the mapper branch.
-- I updated the OpenAPI schema file, but the wider service still contains legacy response-building modules in other branches; the documentation now reflects the current `meta/data` style requested, not every historical edge response in the repository.
-
-If you want, the next safe step would be to provide the full 12 resolved Sansys `base_id -> bukrs` mappings so the new `BaseIdentityPolicy` can be completed for QA/importable deployment.
+Assumptions, uncertainties, incomplete parts, or limitations.
+- I followed the developer override that November fallback is hard-coded in ACE logic and not property-driven.
+- I intentionally did not modify `PrepareCreateClaimAsync.subflow`.
+- I kept the existing `202 + {"isAccepted": true}` behavior untouched.
+- I added TODO comments in the manageClaims translator exactly where latitude/longitude must later be mapped. No latitude/longitude mapping was implemented.
+- I did not map `damagedObjectStatus`, per the explicit instruction.
+- I did not update any APIC/OpenAPI descriptor/yaml, per the explicit instruction.
+- I did not add an external “error referential” file because none was provided in the supplied source set, and no new official error code values were given. The new functional ACE rejection messages are implemented and returned, but referential code registration remains outside the provided artifacts.
+- There is an ambiguity in the original business description versus the developer fallback rule for missing `claim-use-case`. I implemented the developer-priority behavior:
+  - exact `RSA` / `PA` drives route first
+  - if missing, November fallback is used
+  - vehicle without `RSA` is still rejected as requested
+- I assumed the manageClaims success response can continue to use the existing `CreateClaim_MappingResponseClaimToTCS` behavior with `externalID`, because no different IDIT success payload source file was provided.

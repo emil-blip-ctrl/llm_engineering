@@ -1,0 +1,25 @@
+CREATE COMPUTE MODULE Routing_Routage_Post
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+	
+		IF Environment.Variables.ClaimDestination = 'IDIT' THEN
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName = 'A.CLAIMSTECHNICALIDIT.PROCESS';
+		ELSE	
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName = 'A.CLAIMSTECHNICALALIS.PROCESS';
+		END IF;
+		 
+		--Logs
+	    SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541';
+	    SET Environment.Variables.TCSLog.context."target-system" = 'CMP05625';
+	    SET Environment.Variables.TCSLog.context."caller-code" = 'insurance-claims-integration-claims';
+	    SET Environment.Variables.TCSLog.context."target-url" = OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName;
+	    
+	    SET OutputLocalEnvironment.Variables.TCSLog.context = Environment.Variables.TCSLog.context;
+		SET OutputLocalEnvironment.Variables.TCSLog."business-identifiers" 	= Environment.Variables.TCSLog.context.transaction;
+		SET OutputLocalEnvironment.Variables.TCSLog.userDefined = Environment.Variables.userDefined;	   	
+	   	 
+		RETURN TRUE;
+	END;
+	
+END MODULE;

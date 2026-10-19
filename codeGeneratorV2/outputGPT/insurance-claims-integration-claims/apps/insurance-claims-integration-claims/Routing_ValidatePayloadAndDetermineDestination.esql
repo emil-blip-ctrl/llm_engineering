@@ -1,0 +1,286 @@
+CREATE COMPUTE MODULE Routing_ValidatePayloadAndDetermineDestination
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN    
+		SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DELETE FIELD Environment.Variables.CustomValidationMessage;
+		SET Environment.Variables.HttpReturnCode = 400;
+		
+		--MANDATORY FIELDS IN ALL CASES	    
+		--X-Caller-Code	
+		IF(InputRoot.HTTPInputHeader."X-Origin-Caller-Code" IS NULL OR TRIM(InputRoot.HTTPInputHeader."X-Origin-Caller-Code") = '') THEN
+			THROW USER EXCEPTION VALUES('The header X-Origin-Caller-Code is missing or is empty');
+			RETURN FALSE;
+	    END IF;
+	    --Verifie les product-code from attributes if exists --> get from attributes
+	    DECLARE productCode ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'product-code');
+	    IF EXISTS(productCode.[]) AND productCode."value-code" IS NOT NULL AND TRIM(productCode."value-code") <> '' THEN
+	    	SET Environment.Variables.productCode = productCode."value-code";
+	    	--policy-number and we get the product-code from it
+	    ELSEIF InputRoot.JSON.Data."policy-number" IS NULL OR TRIM(InputRoot.JSON.Data."policy-number") = '' OR STARTSWITH(UPPER(InputRoot.JSON.Data."policy-number"), 'PO') = FALSE THEN	
+			THROW USER EXCEPTION VALUES('The input parameter policy-number is missing or null.');
+			RETURN FALSE;
+		ELSE
+			SET Environment.Variables.productCode = SUBSTRING(UPPER(InputRoot.JSON.Data."policy-number") FROM 13 FOR 3);
+		END IF;
+		--event/date
+		IF InputRoot.JSON.Data.event.date IS NULL OR TRIM(InputRoot.JSON.Data.event.date) = '' THEN
+			THROW USER EXCEPTION VALUES('The input parameter event/date is missing or null.');
+			RETURN FALSE;
+		END IF;
+		--policyHolder/role and policyHolder/personal-id
+		FOR claimContactsRef as InputRoot.JSON.Data."claim-contacts".Item[] DO			
+			IF(UPPER(claimContactsRef."role-desc") = UPPER('Policy Holder') OR UPPER(claimContactsRef."role") = UPPER('polHold') OR UPPER(claimContactsRef."role") = UPPER('Policyholder')) THEN
+				SET Environment.Variables.claim."claim-contacts".policyHolder.role = claimContactsRef.role; 			
+				SET Environment.Variables.claim."claim-contacts".policyHolder."personal-id" = claimContactsRef."personal-id";
+		    END IF;			
+		END FOR;	
+		IF Environment.Variables.claim."claim-contacts".policyHolder.role IS NULL OR TRIM(Environment.Variables.claim."claim-contacts".policyHolder.role) = ''  THEN			
+			THROW USER EXCEPTION VALUES('The input parameter claim-contacts/role polHold is missing or null.');
+			RETURN FALSE;	
+		END IF;
+		SET Environment.Variables.TCSLog.context.transaction.POLICYHOLDER_PERSONAL_ID = Environment.Variables.claim."claim-contacts".policyHolder."personal-id";
+		DECLARE informant ROW THE(SELECT C FROM InputRoot.JSON.Data."claim-contacts".Item[] AS C WHERE C.role = 'informant');
+		IF EXISTS(informant.[]) THEN
+			SET Environment.Variables.TCSLog.context.transaction.INFORMANT_PERSONAL_ID = informant."personal-id";
+		END IF;
+		DECLARE consumerProcess ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'X-CONSUMER-PROCESS');
+		DECLARE isLpClaim BOOLEAN UPPER(COALESCE(consumerProcess."value-code",'')) = 'LP_CLAIM';
+		IF (Environment.Variables.claim."claim-contacts".policyHolder."personal-id" IS NULL OR TRIM(Environment.Variables.claim."claim-contacts".policyHolder."personal-id") = '') AND isLpClaim IS FALSE THEN
+			THROW USER EXCEPTION VALUES('The input parameter claim-contacts/personal-id of the policy Holder is missing or null.');
+			RETURN FALSE;	
+		END IF;
+		
+		-- RSA / PA validation for tcs.ch only
+		DECLARE isTcsCh BOOLEAN UCASE(COALESCE(InputRoot.HTTPInputHeader."X-Origin-Caller-Code", '')) = 'TCSCH';
+		DECLARE claimUseCase ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'claim-use-case');
+		DECLARE claimUseCaseValue CHARACTER claimUseCase."value-code";
+		DECLARE vehicleCount INTEGER 0;
+		FOR claimCoverRef AS InputRoot.JSON.Data."claimed-cover".Item[] DO
+			FOR claimedDamagesRef AS claimCoverRef."claimed-damages".Item[] DO
+				IF EXISTS(claimedDamagesRef."damaged-objects-details".vehicle.Item[]) THEN
+					SET vehicleCount = vehicleCount + CARDINALITY(claimedDamagesRef."damaged-objects-details".vehicle.Item[]);
+				END IF;
+			END FOR;
+		END FOR;
+		
+		IF isTcsCh THEN
+			IF EXISTS(claimUseCase.[]) AND claimUseCaseValue NOT IN ('RSA', 'PA') THEN
+				CALL RaiseBadRequest('ACE : claim-use-case value not allowed (expected RSA or PA)');
+				RETURN FALSE;
+			END IF;
+			
+			IF claimUseCaseValue = 'RSA' THEN
+				IF vehicleCount = 0 THEN
+					CALL RaiseBadRequest('ACE : vehicle is mandatory for a RSA claim');
+					RETURN FALSE;
+				ELSEIF vehicleCount > 1 THEN
+					CALL RaiseBadRequest('ACE : only one vehicle is allowed');
+					RETURN FALSE;
+				END IF;
+			ELSEIF vehicleCount > 0 THEN
+				CALL RaiseBadRequest('ACE : vehicle is only allowed for a RSA claim');
+				RETURN FALSE;
+			END IF;
+		END IF;
+		
+		--ROUTING rules to determine the destination of the message:  	
+		IF UCASE(InputRoot.HTTPInputHeader."X-Origin-Caller-Code") IN ('LEXFORYOU', 'ASSISTACH') THEN
+			SET Environment.Variables.ClaimDestination = 'ALIS';
+		ELSE
+			SET Environment.Variables.damageCodeId = InputRoot.JSON.Data."claimed-cover".Item[1]."claimed-damages".Item[1]."functional-id";
+			IF Environment.Variables.productCode = '103' AND Environment.Variables.damageCodeId NOT IN ('1000043', '1000044', '1000045', '1000046', '1000047',
+				'1000048', '1000049', '1000050', '1000051', '1000052', '1000053', '1000054', '1000055') THEN
+				SET Environment.Variables.ClaimDestination = 'IDIT';
+			ELSEIF Environment.Variables.productCode IN ('101', '102', '105', '106') THEN 
+				SET Environment.Variables.ClaimDestination = 'IDIT';
+			ELSEIF Environment.Variables.productCode = '115' AND Environment.Variables.damageCodeId NOT IN ('1000126', '1000127', '1000128', '1000129', '1000130') THEN 
+				SET Environment.Variables.ClaimDestination = 'IDIT';	
+			ELSEIF Environment.Variables.productCode IN ('101', '103', '106')
+				AND NOT(EXISTS(Environment.Variables.damageCodeId[]))
+				AND EXISTS(InputRoot.JSON.Data.event."primary-cause-of-loss-extcode"[]) THEN 
+				SET Environment.Variables.ClaimDestination = 'IDIT';	
+			ELSEIF Environment.Variables.productCode IN ('103', '107', '108', '109', '110', '114', '115') THEN	
+				SET Environment.Variables.ClaimDestination = 'ALIS';
+			ELSE
+				THROW USER EXCEPTION VALUES('The product code ' || Environment.Variables.productCode || ' indicated in the payload cannot be processed.');
+				RETURN FALSE;	
+			END IF;		
+		END IF;
+		
+		
+		--MANDATORY FIELDS IN ALL CASES IF THE DESTINATION IS IDIT
+		IF Environment.Variables.ClaimDestination = 'IDIT' THEN
+		   	--event/description
+			IF InputRoot.JSON.Data.event.description IS NULL OR TRIM(InputRoot.JSON.Data.event.description) = '' THEN
+				THROW USER EXCEPTION VALUES('The input parameter event/description is missing or null.');
+				RETURN FALSE;
+			END IF;
+			--event/primary-cause-of-loss-extcode
+			IF InputRoot.JSON.Data.event."primary-cause-of-loss-extcode" IS NULL OR TRIM(InputRoot.JSON.Data.event."primary-cause-of-loss-extcode") = '' THEN	
+				THROW USER EXCEPTION VALUES('The input parameter event/primary-cause-of-loss-extcode is missing or null.');
+				RETURN FALSE;
+			END IF;
+			--event/location/country-code
+			IF InputRoot.JSON.Data.event.location."country-code" IS NULL OR TRIM(InputRoot.JSON.Data.event.location."country-code") = '' THEN	
+				THROW USER EXCEPTION VALUES('The input parameter event/location/country-code is missing or null.');
+				RETURN FALSE;
+			END IF;
+			--event/location/type-desc
+			IF InputRoot.JSON.Data.event.location."type-desc" IS NULL OR TRIM(InputRoot.JSON.Data.event.location."type-desc") = '' THEN
+				THROW USER EXCEPTION VALUES('The input parameter event/location/type-desc is missing or null.');
+				RETURN FALSE;
+			END IF;
+			--informant/role and informant/personal-id
+			IF NOT EXISTS(informant.[]) OR informant."personal-id" IS NULL OR TRIM(informant."personal-id") = '' THEN
+			    THROW USER EXCEPTION VALUES('The input parameter claim-contacts/role or claim-contacts/personal-id of the informant is missing or null.');
+			    RETURN FALSE;
+			END IF;
+		END IF;				
+		--MANDATORY FIELDS IF THE DESTINATION IS IDIT AND THE PRODUCT CODE = 103 (ETI)
+		IF Environment.Variables.ClaimDestination = 'IDIT' AND Environment.Variables.productCode = '103' THEN
+			FOR claimCoverRef AS InputRoot.JSON.Data."claimed-cover".Item[] DO
+			    FOR claimedDamagesRef AS claimCoverRef."claimed-damages".Item[] DO
+			    	DECLARE claimedDamagesTravelInfos ROW claimedDamagesRef."damaged-objects-details"."travel-infos";			
+			    	DECLARE damageCode CHARACTER claimedDamagesRef."functional-id"; 
+			    	IF damageCode IN ('1000005', '1000006', '1000007') THEN
+			    		--travel-infos/planned-travel-departure-date
+						IF claimedDamagesTravelInfos."planned-travel-departure-date" IS NULL OR TRIM(claimedDamagesTravelInfos."planned-travel-departure-date") = '' THEN
+							THROW USER EXCEPTION VALUES('The input parameter travel-infos/planned-travel-departure-date is missing or null in one of the claimed damages for the product-code 103
+							 						     and damage code ' || damageCode);
+							RETURN FALSE;
+						END IF;
+						--travel-infos/impediment-date	
+						IF claimedDamagesTravelInfos."impediment-date" IS NULL OR TRIM(claimedDamagesTravelInfos."impediment-date") = ''  THEN			
+							THROW USER EXCEPTION VALUES('The input parameter travel-infos/impediment-date is missing or null in one of the claimed damages for the product-code 103
+														 and damage code ' || damageCode);
+							RETURN FALSE;	
+						END IF;
+			    	END IF;		    	
+					--IF THE DAMAGE CODE ID = 1000039 (Rental Car franchise payment)
+					DECLARE damageCodeId ROW claimedDamagesRef."functional-id";
+					IF damageCodeId = '1000039' THEN
+						DECLARE claimedDamagesCDW ROW claimedDamagesRef."damaged-objects-details".CDW;		
+					    --CDW/vehicle-type-one
+						IF claimedDamagesCDW."vehicle-type-one" IS NULL THEN
+							THROW USER EXCEPTION VALUES('The input parameter CDW/vehicle-type-one is missing in the claimed damage with the id 1000039 for the product-code 103.');
+							RETURN FALSE;
+						END IF;	
+					END IF;
+			    END FOR;
+			END FOR;    					
+		END IF;	
+		--MANDATORY FIELDS IF THE DESTINATION IS IDIT AND THE PRODUCT CODE = 105 (Bike)
+		IF Environment.Variables.ClaimDestination = 'IDIT' AND Environment.Variables.productCode = '105' THEN
+			FOR claimCoverRef AS InputRoot.JSON.Data."claimed-cover".Item[] DO
+			    FOR claimedDamagesRef AS claimCoverRef."claimed-damages".Item[] DO
+			    	DECLARE claimedDamagesBike ROW claimedDamagesRef."damaged-objects-details".bike;		
+				    --Bike/type
+					IF claimedDamagesBike.type IS NULL OR TRIM(claimedDamagesBike.type) = '' THEN	
+						THROW USER EXCEPTION VALUES('The input parameter Bike/type is missing or null in one of the claimed damages for the product-code 105.');
+						RETURN FALSE;
+					END IF;
+					--Bike/brand
+					IF claimedDamagesBike.brand IS NULL OR TRIM(claimedDamagesBike.brand) = '' THEN
+						THROW USER EXCEPTION VALUES('The input parameter Bike/brand is missing or null in one of the claimed damages for the product-code 105.');
+						RETURN FALSE;
+					END IF;
+					--Bike/25km-more = true, Bike/plate
+					IF claimedDamagesBike."25km-more" = 'true' AND COALESCE(TRIM(claimedDamagesBike.plate), '') = '' THEN
+                    	THROW USER EXCEPTION VALUES('The input parameter bike/25km-more is true, but the input parameter bike/plate is missing or null in one of the claimed damages for the product-code 105.');
+                    	RETURN FALSE;
+                    END IF;
+			    END FOR;
+			END FOR;    	
+		END IF;
+		--MANDATORY ATTRIBUTE FIELDS AND MANDATORY SUBATTRIBUTE FIELDS FOR THE document-list-guuid ATTRIBUTE IF THE DESTINATION IS IDIT
+		IF Environment.Variables.ClaimDestination = 'IDIT' THEN
+			--total-estimated-damaged-currency-amount & total-estimated-damaged-currency-code 
+			IF (EXISTS(InputRoot.JSON.Data."total-estimated-damaged-currency-amount"[]) OR COALESCE(InputRoot.JSON.Data."total-estimated-damaged-currency-code", '') <> '')
+			   AND (NOT(EXISTS(InputRoot.JSON.Data."total-estimated-damaged-currency-amount"[])) OR COALESCE(InputRoot.JSON.Data."total-estimated-damaged-currency-code", '') = '') THEN 
+			   		THROW USER EXCEPTION VALUES('total-estimated-damaged-currency-amount and total-estimated-damaged-currency-code must be present together');
+			    	RETURN FALSE;
+			END IF;
+			--EXTERNAL-CLAIM
+			--external-claim-id
+			FOR externalClaim AS InputRoot.JSON.Data."external-claim".Item[] DO
+				IF COALESCE(externalClaim."external-claim-system", '') <> '' AND COALESCE(externalClaim."external-claim-id", '') = '' THEN 
+					THROW USER EXCEPTION VALUES('external-claim-system is present but external-claim-id is missing');
+			    	RETURN FALSE;
+				END IF;
+			END FOR;
+			--ATTRIBUTES
+		   	--e-mail	
+			DECLARE email ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'e-mail');
+			IF NOT EXISTS(email.[]) OR email."value-code" IS NULL OR TRIM(email."value-code") = '' THEN
+			    THROW USER EXCEPTION VALUES('The email attribute in the Claim object is missing.');
+			    RETURN FALSE;
+			END IF;
+			--language
+			DECLARE language ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'language');
+			IF NOT EXISTS(language.[]) OR language."value-code" IS NULL OR NOT language."value-code" IN ('FR', 'DE', 'IT') THEN
+			    THROW USER EXCEPTION VALUES('The language attribute in the Claim object is missing or is not one of the accepted values (FR, DE, IT).');
+			    RETURN FALSE;
+			END IF;
+			--personal.reference
+			DECLARE personalReference ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'personal-reference');	
+			IF NOT EXISTS(personalReference.[]) OR personalReference."value-code" IS NULL OR TRIM(personalReference."value-code") = '' THEN
+			    THROW USER EXCEPTION VALUES('The personal-reference attribute in the Claim object is missing.');
+			    RETURN FALSE;
+			END IF;
+			--number-of-documents	
+			DECLARE numberOfDocuments ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'number-of-documents');
+			IF NOT EXISTS(numberOfDocuments.[]) OR numberOfDocuments."value-code" IS NULL THEN
+			    THROW USER EXCEPTION VALUES('The number-of-documents attribute in the Claim object is missing.');
+			    RETURN FALSE;
+			END IF;
+			--document-list-guuid
+			DECLARE documentListGUUID ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'document-list-guuid');
+		    IF numberOfDocuments."value-code" > 0 AND (NOT EXISTS(documentListGUUID.[]) OR documentListGUUID."value-code" IS NULL OR TRIM(documentListGUUID."value-code") = '') THEN    
+		        THROW USER EXCEPTION VALUES('The document-list-guuid attribute in the Claim object is missing with the value of the number-of-documents attribute > 0.');
+			    RETURN FALSE;
+		    END IF;
+			--difference between the value of the field number-of-documents and the number of document sub-attributes
+			IF numberOfDocuments."value-code" <> CARDINALITY(documentListGUUID."sub-attributes".Item[]) THEN
+				THROW USER EXCEPTION VALUES('There is a difference between the value-code of the number-of-documents attribute and the number of document sub-attributes.');
+			    RETURN FALSE;
+			END IF;
+			--SUBATTRIBUTES
+			IF numberOfDocuments."value-code" > 0 THEN   	
+				FOR SubAttribute AS documentListGUUID."sub-attributes".Item[] DO
+					--document-uuid	
+					DECLARE documentUUID ROW THE(SELECT A FROM SubAttribute.Item[] AS A WHERE A.type = 'document-uuid');
+					IF NOT EXISTS(documentUUID.[]) OR documentUUID."value-code" IS NULL OR TRIM(documentUUID."value-code") = '' THEN
+					    THROW USER EXCEPTION VALUES('The document-uuid sub-attribute is missing for one of the documents in the document-list-guuid attribute.');
+					    RETURN FALSE;
+					END IF;
+					--document-type
+					DECLARE documentType ROW THE(SELECT A FROM SubAttribute.Item[] AS A WHERE A.type = 'document-type');
+					IF NOT EXISTS(documentType.[]) OR documentType."value-code" IS NULL OR TRIM(documentType."value-code") = '' THEN
+					    THROW USER EXCEPTION VALUES('The document-type sub-attribute is missing for one of the documents in the document-list-guuid attribute.');
+					    RETURN FALSE;
+					END IF;
+					--file-name
+					DECLARE fileName ROW THE(SELECT A FROM SubAttribute.Item[] AS A WHERE A.type = 'file-name');
+					IF NOT EXISTS(fileName.[]) OR fileName."value-code" IS NULL OR TRIM(fileName."value-code") = '' THEN
+					    THROW USER EXCEPTION VALUES('The file-name sub-attribute is missing for one of the documents in the document-list-guuid attribute.');
+					    RETURN FALSE;
+					END IF;	
+				END FOR;	
+			END IF;
+		END IF;
+		
+		SET Environment.Variables.HttpReturnCode = UNKNOWN;	
+				
+		RETURN TRUE;	
+	END;
+
+	CREATE PROCEDURE RaiseBadRequest(IN message CHARACTER)
+	BEGIN
+		SET Environment.Variables.HttpReturnCode = 400;
+		SET Environment.Variables.CustomValidationMessage = message;
+		THROW USER EXCEPTION VALUES(message);
+	END;
+
+END MODULE;
