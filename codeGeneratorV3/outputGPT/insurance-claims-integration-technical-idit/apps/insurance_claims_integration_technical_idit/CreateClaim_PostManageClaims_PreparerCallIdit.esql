@@ -1,0 +1,34 @@
+PATH Shlib_PoliciesReader;
+
+CREATE COMPUTE MODULE CreateClaim_PostManageClaims_PreparerCallIdit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+		BEGIN
+
+			SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/json';
+			SET OutputRoot.HTTPRequestHeader.Accept = 'application/json, application/xml, text/html';
+			SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+			
+			DECLARE URLAPI CHARACTER '';
+			DECLARE PATHAPI CHARACTER '';
+			
+			SET URLAPI = Environment.Variables.policy.apicHost;
+			SET PATHAPI = COALESCE(gestionPolicy('{insurance-integration-policies-endpoints}:AceEndPointsPolicy','path-insurance-claims-integration-technical-idit-manage-claims'), '');
+			
+			SET OutputRoot.HTTPRequestHeader."X-Global-Transaction-Id" = Environment.Variables.logging.envelope.GTID;
+			SET OutputRoot.HTTPRequestHeader."X-Request-ID" = UUIDASCHAR;
+			SET OutputRoot.HTTPRequestHeader."X-Correlation-ID" =  Environment.Variables.logging.envelope.TID;
+			
+       
+	        SET OutputLocalEnvironment.Destination.HTTP.RequestURL = URLAPI || PATHAPI;
+	       	SET OutputLocalEnvironment.Destination.HTTP.RequestLine.Method = 'POST';
+	       	
+	       	--Logs
+			SET Environment.Variables.TCSLog.context."source-system" = 'CMP05541';
+			SET Environment.Variables.TCSLog.context."target-system" = 'CMP05614';
+			SET Environment.Variables.TCSLog.context."caller-code" = 'insurance-claims-integration-technical-idit';
+			SET Environment.Variables.TCSLog.context."target-url" = URLAPI || PATHAPI;
+		
+			RETURN TRUE;
+		END;
+
+END MODULE;

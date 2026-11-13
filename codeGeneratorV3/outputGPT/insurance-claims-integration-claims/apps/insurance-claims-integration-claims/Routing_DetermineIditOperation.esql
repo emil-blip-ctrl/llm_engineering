@@ -1,0 +1,46 @@
+CREATE COMPUTE MODULE Routing_DetermineIditOperation
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE claimUseCase ROW THE(SELECT A FROM InputRoot.JSON.Data.attributes.Item[] AS A WHERE A.type = 'claim-use-case');
+		DECLARE claimUseCaseValue CHARACTER COALESCE(claimUseCase."value-code", '');
+		DECLARE routeUsed CHARACTER '';
+		
+		IF Environment.Variables.ClaimDestination = 'IDIT' THEN
+			IF claimUseCaseValue = 'RSA' THEN
+				SET routeUsed = 'manageClaims';
+			ELSEIF claimUseCaseValue = 'PA' THEN
+				SET routeUsed = 'loss-event';
+			ELSE
+				-- November 2026 fallback.
+				-- Remove this block once claim-use-case becomes the single routing driver.
+				IF UCASE(COALESCE(Environment.Variables.XOriginCallerCode, '')) = 'TCSCH'
+					AND Environment.Variables.productCode IN ('101', '102', '103', '106') THEN
+					SET routeUsed = 'manageClaims';
+				ELSE
+					SET routeUsed = 'loss-event';
+				END IF;
+			END IF;
+		ELSE
+			SET routeUsed = 'not-applicable';
+		END IF;
+		
+		IF claimUseCaseValue = '' THEN
+			SET Environment.Variables.claimUseCase = 'missing';
+		ELSE
+			SET Environment.Variables.claimUseCase = claimUseCaseValue;
+		END IF;
+		
+		SET Environment.Variables.routeUsed = routeUsed;
+		
+		SET Environment.Variables.TCSLog.context."claim-use-case" = Environment.Variables.claimUseCase;
+		SET Environment.Variables.TCSLog.context."route-used" = routeUsed;
+		
+		SET Environment.Variables.userDefined.claimUseCase = Environment.Variables.claimUseCase;
+		SET Environment.Variables.userDefined.routeUsed = routeUsed;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

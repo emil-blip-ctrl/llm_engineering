@@ -1,0 +1,1190 @@
+================================================================================
+Chunk 1 of 15
+================================================================================
+integration servers on all platforms; see “Managing
+resources by using the IBM Integration API” on page 444.
+Creating an integration server work directory by using the
+mqsicreateworkdir command
+To create a work directory to be used by an independent integration server, use the
+mqsicreateworkdir command.
+Procedure
+1. Open a command window for your current installation.
+2. Create a work directory for your independent integration server, by running the mqsicreateworkdir
+command, specifying the full path to the directory that you want to create.
+For example:
+mqsicreateworkdir c:\myaceworkdir\myserver
+This command creates the speciﬁed work directory, which contains a default conﬁguration ﬁle called
+server.conf.yaml. This YAML ﬁle contains the default settings for your new integration server. The
+command also creates subdirectories, which will be used by the integration server when it is running.
+These include a log directory and a run directory. The log directory contains ﬁles of log messages,
+which can be used to review the status of your integration server. The run directory is where you can
+place your BAR ﬁles prior to starting your integration server, or while it is running. The resources from
+the BAR ﬁle are extracted and started by the integration server.
+If you have a BAR ﬁle with resources that contain graphical data maps, XML schemas, or DFDL
+schemas, these resources can be compiled using the command, prior to starting the integration server.
+This precompilation reduces the time that it takes for the deployed application to start processing
+messages.
+See the mqsicreateworkdir command for more information.
+3. Conﬁgure your integration server by setting properties in the server.conf.yaml ﬁle, as described in
+“Conﬁguring an integration server by modifying the server.conf.yaml ﬁle” on page 172.
+Results
+The integration server is created and the updated server.conf.yaml conﬁguration ﬁle is stored in
+integration server's subdirectory in the ﬁle system.
+What to do next
+You can now start the integration server by running the command, as described in “Starting an integration
+server” on page 250.
+Chapter 4. Conﬁguring IBM App Connect Enterprise  169
+You can deploy resources to your integration server, as described in Chapter 7, “Deploying integration
+solutions,” on page 2463.
+Creating and starting a local, independent integration server by using the
+Toolkit
+You can use the IBM App Connect Enterprise Toolkit to create and start a local, independent integration
+server.
+About this task
+You can create and start a local, independent integration server by using a wizard in the IBM App Connect
+Enterprise Toolkit. The wizard starts a process on the operating system for the independent integration
+server. The Toolkit does not manage the process for an independent integration server in the same
+way that an integration node manages the integration servers that are associated with it. When you
+stop the Toolkit, any independent integration server processes that were started from the Toolkit are
+stopped. However, if the Toolkit stops unexpectedly, or if its Eclipse process is stopped, the independent
+integration server processes continue to run on your operating system, and you will need to use an
+operating system process management tool to stop them.
+Procedure
+Create and start a local, independent integration server by completing the following steps:
+1. In the Integration Explorer view, right-click Integration servers and then click Create a local
+integration server.
+2. In the Connection details wizard, enter the following information:
+• Name
+Enter the name of the local independent integration server that you want to create and start. When
+you run the wizard for the ﬁrst time, the default name for the integration server is TEST_SERVER.
+If you run the wizard again, the TEST_SERVER will already exist so you must specify an alternative
+name for the new integration server.
+• REST Administration Port
+Specify the port to be used for REST administration. By default, you can allow the wizard to ﬁnd a
+port that is available to use. If you want to specify a different port, ﬁrst ensure that it is not being
+used by another process, then deselect the checkbox and enter the required port number. The port
+that you specify cannot be used by the integration server if it is already in use by another process.
+• HTTP Port
+Specify the port that is used by the HTTPConnector resource manager when an HTTP-based
+message flow is deployed as part of an application. By default, you can allow the wizard to ﬁnd a
+port that is available to use. If you want to
+
+================================================================================
+Chunk 2 of 15
+================================================================================
+following methods.
+•
+Drag the BAR ﬁle onto your target integration server in the Integration Explorer view.
+•
+Right-click the BAR ﬁle, then click Deploy and select the target integration server.
+•
+Right-click the target integration server, click Deploy, select BAR from workspace or BAR from ﬁle
+system, select the BAR ﬁle that you want to deploy, and click OK.
+3. If the BAR ﬁle has changed since you last edited it, you are asked whether you want to save the ﬁle
+before deployment. If you click Cancel, the BAR ﬁle is not saved and deployment does not take place.
+Results
+The contents of the BAR ﬁle (for example, message flows and message sets) are deployed to the
+integration server. In the Integration Explorer view, the deployed resources are added to the appropriate
+integration server.
+Precompiling and deploying a BAR ﬁle by using the mqsibar command
+About this task
+You can use the mqsibar command to deploy a BAR ﬁle to an integration server, by unpacking the
+contents directly into the integration server's run directory. You can also choose to precompile the
+Chapter 7. Deploying integration solutions  2481
+resources that the BAR ﬁle contains (such as XML schema, DFDL schema, and graphical data maps), so
+that they are ready to run when the integration server starts.
+You can use the mqsibar command in a script, as part of an automated process that might include
+commands to test, tune, deploy, and run the application, as an alternative to deploying through the
+toolkit or web user interface. This method can be particularly useful if you are running IBM App Connect
+Enterprise in a cloud container.
+Deploy a BAR ﬁle by using the mqsibar command, by completing the following steps.
+Procedure
+1. Open a command window that is conﬁgured for your environment.
+For information about conﬁguring your command environment in preparation for running commands,
+see “Setting up a command environment” on page 64.
+2. Run the mqsibar command, as shown in the following example:
+On Windows and Linux:
+Unpack the BAR ﬁle and compile resources into the integration server work directory, ready to be
+run when the integration server starts:
+mqsibar -a myAppAndShLibs.bar -c -w /sis01Wrk
+where:
+• -a speciﬁes the name of the input BAR ﬁle to be processed.
+The BAR ﬁle must contain all referenced resources. If an application in the BAR ﬁle references a
+library that is contained by a different BAR ﬁle, an error occurs.
+• -c speciﬁes that the contents of the BAR ﬁle will be compiled.
+Resources that are included in the BAR ﬁle, such as DFDL schema, XML schema, and graphical
+data maps, are compiled as a result of specifying this parameter.
+• -w speciﬁes the integration server work directory.
+The integration server work directory is created by the mqsicreateworkdir command, which
+you run when you are conﬁguring the integration server. When the work directory is created,
+a run subdirectory is also created, and it is this directory that the contents of the BAR ﬁle are
+unpacked into when the mqsibar command is run. For more information about conﬁguring
+and starting an integration server, see “Conﬁguring an integration server by modifying the
+server.conf.yaml ﬁle” on page 172 and “Starting an integration server” on page 250.
+For more information about using the mqsibar command, see command.
+3. Start (or restart) the integration server, for the changes to take effect.
+Results
+The command reports when responses are received from the integration server. If the command
+completes successfully, it returns 0 (zero).
+Deploying a BAR ﬁle by using the mqsideploy command
+About this task
+To deploy a BAR ﬁle by using the mqsideploy command, complete the following steps.
+Procedure
+1. Open a command window that is conﬁgured for your environment.
+2482  IBM App Connect Enterprise 12.0: User Guide
+2. Enter the appropriate command for your operating system and conﬁguration, by using the following
+examples as a guide.
+mqsideploy -i ipAddress -p port -a barfile
+mqsideploy --admin-host ipAddress --admin-port port --bar-file barfile
+The command completes an incremental deployment. To do a complete BAR ﬁle deployment, add
+the -m parameter.
+The -i (IP address) and -p (port) parameters represent the connection details for the independent
+integration server or the integration node.
+If deploying to an integration node, you must also specify the -e (integration server name)
+parameter. If you want to run this command against an integration node on the same computer,
+you can specify the integration node name instead of -i and -p, as in the following example:
+mqsideploy integrationNodeName -e
+
+================================================================================
+Chunk 3 of 15
+================================================================================
+to get a view of the level of activity and health of TCP/IP nodes in an integration
+server. You can see how many connection managers are active and reporting statistics, and the following
+details from each:
+Measurements
+Description
+OpenConnections
+The current number of open connections
+ClosedConnections
+The total number of connections that were closed since the last
+integration server restart
+MessagesReceived
+The total number of messages received (by TCPIPServerInput or
+TCPIPServerReceive nodes)
+MessagesSent
+The total number of messages sent (by TCPIPServerOutput nodes)
+BytesSent
+The total amount of data sent (by TCPIPServerOutput nodes), excluding
+SSL wrappers.
+BytesReceived
+The total amount of data received (by TCPIPServerInput or
+TCPIPServerReceive nodes),  excluding SSL wrappers.
+Chapter 9. Performance, monitoring, and workload management  2761
+Measurements
+Description
+FailedSSLConnections
+The total number of attempted inbound SSL connections from external
+clients that failed or were refused since the last integration server
+restart.
+Tuning the integration node
+You can complete several tasks that enable you to tune different aspects of the integration node
+performance.
+Before you begin
+Ensure that the following requirements are met:
+• Your user ID has the correct authorizations to perform the task. Refer to Security requirements for
+administrative tasks.
+About this task
+Select the tasks that are relevant to your enterprise:
+Procedure
+•
+“Setting the JVM heap size” on page 2762
+•
+“Increasing the stack size on Windows, Linux, and UNIX systems” on page 2762
+Setting the JVM heap size
+When you start an integration server, it creates a Java virtual machine (JVM) for executing a Java user-
+deﬁned node.
+Before you begin
+• Check the resource statistics data to monitor resource usage and identify potential problems with
+performance; for more information, see “Resource statistics” on page 2739.
+About this task
+You can pass parameters to the JVM to set the minimum and maximum heap sizes; the default maximum
+heap size is 256 MB. To give more capacity to a message flow that is going to process large messages,
+reduce the minimum JVM heap size to allow the main memory heap to occupy more address space.
+Increase the maximum heap size only if you use Java intensively with, for example, user-deﬁned nodes.
+Use caution when you set the maximum heap size, because the Java Runtime Environment takes the
+values for its initial, maximum, and current heap sizes to calculate how frequently it drives garbage
+collection. A large maximum heap size drives garbage collection less frequently. If garbage collection is
+driven less frequently, the heap size associated with the integration server continues to grow.
+Use the information on JVM parameter values on the mqsichangeproperties command to set the
+heap size that you require.
+Increasing the stack size on Windows, Linux, and UNIX systems
+Increase the stack size on Windows, Linux, and UNIX systems by setting the MQSI_THREAD_STACK_SIZE
+environment variable to an appropriate value.
+About this task
+When you restart integration nodes that are running on the system, they use the new value.
+2762  IBM App Connect Enterprise 12.0: User Guide
+The value, in bytes, of MQSI_THREAD_STACK_SIZE that you set is used for every thread that is created
+in a DataFlowEngine process. If the integration server has many message flows assigned to it, and you
+set a large value for MQSI_THREAD_STACK_SIZE, the DataFlowEngine process needs a large amount of
+storage for the stacks.
+Set this environment variable to at least 48 KB. The default values are:
+Linux and UNIX
+1 MB
+AIX
+2 MB
+z/OS
+50 KB
+Windows
+Determined by the operating system.
+Optimizing message flow throughput
+Each message flow that you design must provide a complete set of processing for messages received
+from a particular source. This design might result in very complex message flows that include large
+numbers of nodes that can cause a performance overhead, and might create potential bottlenecks. You
+can increase the number of message flows that process your messages to provide the opportunity for
+parallel processing and therefore improved throughput.
+About this task
+The operation mode of your integration servers can affect the number of message flows that you can use;
+see features and “Restrictions that apply in each operation mode” on page 5 for more information.
+You can also consider the way in which the actions taken by the message flow are committed, and the
+order in which messages are processed.
+The web user interface enables you to view message flow
+
+================================================================================
+Chunk 4 of 15
+================================================================================
+Enabling IBM Integration API trace
+About this task
+To enable tracing for the IBM Integration API for your application, set the environment variable
+MQSI_IAPI_TRACE, where <ﬁlename> is the name of the ﬁle to which the trace is sent:
+export MQSI_IAPI_TRACE=<filename>
+Or you can enable tracing by using the following API call in your code:
+// Enable Administration service trace
+     IntegrationAPI.enableAdministrationAPITracing("outputfile.txt");
+This request logs all calls to the IBM Integration API to the outputfile.txt ﬁle in the current directory.
+All IBM Integration API activity in the entire Java virtual machine is logged.
+You can also enable IBM Integration API service trace from the File menu of the IBM Integration API
+Exerciser. Alternatively, you can enable IBM Integration API tracing in the IBM App Connect Enterprise
+Toolkit by clicking Window > Preferences > Unit Test Settings > Integraton API.
+Disabling IBM Integration API trace
+About this task
+To disable tracing for the IBM Integration API for your application, use the following API call in your code:
+// Disable Administration service trace
+   IntegrationAPI.disableIntegrationAPITracing()
+You can also disable IBM Integration API service trace from the File menu of the IBM Integration API
+Exerciser.
+Switching Trace nodes on and off
+You can enable and disable Trace nodes by setting properties in the server.conf.yaml conﬁguration
+ﬁle.
+About this task
+When an integration server is created, or a message flow is deployed, its Trace node switch is set to on
+by default. The message flow level Trace node switch setting is not changed on redeployment. You can
+signiﬁcantly improve the performance of a flow that includes Trace nodes by switching Trace nodes off.
+3038  IBM App Connect Enterprise 12.0: User Guide
+If the Trace node setting for an integration server is off, all Trace nodes in its flows are disabled. You can
+change the settings for Trace nodes in individual message flows; the settings are applied when you turn
+on Trace nodes for the integration server. If the Trace node setting for an integration server is on, the
+Trace node switch setting of each message flow determines the effective settings.
+Example: switching off Trace nodes for an integration server, by using the
+server.conf.yaml ﬁle
+Procedure
+1. Open the server.conf.yaml conﬁguration ﬁle for your integration server, by using a YAML editor.
+If you do not have access to a YAML editor, you can edit the ﬁle by using a plain text editor; however,
+you must ensure that you do not include any tab characters, which are invalid in YAML and would
+cause your integration server conﬁguration to fail. If you are using a plain text editor, ensure that you
+use a YAML validation tool to validate the content of your ﬁle.
+2. Set the traceNodeLevel property to false.
+For more information about conﬁguring an integration server by using the server.conf.yaml ﬁle,
+see “Conﬁguring an integration server by modifying the server.conf.yaml ﬁle” on page 172.
+3. Restart the integration server for the changes to take effect.
+For information about how to start an integration server, see “Starting an integration server” on page
+250.
+Using dumps and abend ﬁles
+A dump or an abend ﬁle might be produced when a problem occurs. Dumps and abend ﬁles can be used
+by IBM to resolve the problem.
+About this task
+Refer to the topics in the Procedure section:
+Procedure
+•
+“Checking for dumps” on page 3039
+•
+“Checking for abend ﬁles” on page 3040
+What to do next
+You can also use the command command to help with data collection.
+Checking for dumps
+If a dump occurs on your system, an error message is produced.
+Procedure
+•
+On Windows
+BIP2111 error message ( IBM App Connect Enterprise internal error). The error message contains the
+path to the MiniDump ﬁle in your errors directory.
+•
+On UNIX
+BIP2060 error message (integration server terminated unexpectedly). Look in the directory where the
+integration node was started, or in the service user ID's home directory, to ﬁnd the core dump ﬁle.
+Chapter 10. Troubleshooting and support  3039
+Checking for abend ﬁles
+Abend ﬁles are produced when a process ends abnormally. The information contained in an abend ﬁle
+helps the IBM Support Center to diagnose and ﬁx the problem.
+About this task
+The following list contains examples of what might cause the integration node to produce an abend ﬁle:
+Procedure
+•
+The integration node runs out of memory.
+•
+A user-deﬁned extension causes an instruction in the integration node process that is not valid.
+•
+An unrecoverable error occurs in the integration node.
+Results
+Abend
+
+================================================================================
+Chunk 5 of 15
+================================================================================
+Connect Enterprise.
+•
+Ensure that you have followed any instructions in the service update that affect your system. For
+example, you might need to redeﬁne a resource, or stop and restart a component.
+2886  IBM App Connect Enterprise 12.0: User Guide
+•
+If you are not sure whether a service update has been applied to your system, search for and view the
+release notes stored in the product installation directory.
+These notes include the service level and details of the maintenance that you have applied.
+Do you have a component that is running slowly?
+If a particular component, or the system in general, is running slowly, you can take some actions to
+improve the performance.
+About this task
+Consider the following actions:
+Procedure
+•
+Check whether tracing is on.
+You might have started IBM App Connect Enterprise user tracing or service tracing, ODBC tracing, IBM
+MQ tracing, or native database tracing. If one or more of these traces are active, turn them off.
+•
+Clear out all old abend ﬁles from your errors directory.
+If you do not clear the directory of unwanted ﬁles, you might ﬁnd that your system performance
+degrades because signiﬁcant space is used up.
+•
+Increase your system memory.
+Dealing with problems
+Learn how to resolve some of the typical problems that can occur.
+Before you begin
+Make initial checks, see “Making initial checks” on page 2880, and check the following locations to see if
+you can rectify the problem:
+• Logs, see “Using logs” on page 3023
+• Trace, see “Using trace” on page 3026
+• Dumps, see “Using dumps and abend ﬁles” on page 3039
+About this task
+This section contains the following topics:
+Procedure
+•
+“Resolving problems when you install IBM App Connect Enterprise” on page 2888
+•
+“Resolving problems when you uninstall IBM App Connect Enterprise” on page 2890
+•
+“Resolving problems when running commands” on page 2890
+•
+“Resolving problems when creating resources” on page 2893
+•
+“Resolving problems when renaming resources” on page 2895
+•
+“Resolving problems when starting an integration node” on page 2895
+•
+“Resolving problems when starting resources” on page 2899
+•
+“Resolving problems that occur when migrating or importing resources” on page 2905
+•
+“Resolving problems when stopping resources” on page 2909
+•
+“Resolving problems when deleting resources” on page 2911
+•
+“Resolving problems when developing message flows” on page 2911
+Chapter 10. Troubleshooting and support  2887
+•
+“Resolving problems when deploying message flows or message sets” on page 2953
+•
+“Resolving problems that occur when debugging message flows” on page 2962
+•
+“Resolving diagnostic data collection errors” on page 2967
+•
+“Resolving problems when developing message models” on page 2967
+•
+“Resolving problems when using messages” on page 2974
+•
+“Resolving problems when you are writing business rules” on page 2987
+•
+“Resolving problems when you use the IBM App Connect Enterprise Toolkit” on page 2987
+•
+“Resolving problems when using Data Analysis” on page 2998
+•
+“Resolving problems when using databases” on page 2998
+•
+“Resolving problems when using publish/subscribe” on page 3007
+•
+“Resolving problems with performance” on page 3010
+•
+“Resolving problems when you monitor message flows” on page 3013
+•
+“Resolving problems when developing custom integration applications” on page 3015
+•
+“Resolving problems when using an MQ Service” on page 3016
+•
+“Resolving problems with user-deﬁned extensions” on page 3017
+Resolving problems when you install IBM App Connect Enterprise
+Work through the advice that is provided to help you to deal with problems that can arise when the
+product is installed on a distributed platform, such as on a Windows, or Linux system.
+About this task
+The following list describes problems that you might experience when you install IBM App Connect
+Enterprise on a distributed platform, with a corresponding solution or workaround.
+• On Windows: “You are prompted for the location of ﬁles during installation” on page 2888
+• On Windows: “The installation fails” on page 2888
+• On Windows: “The installation process is interrupted” on page 2889
+• On Windows: “Firewall software reports attempted internet access from an unexpected program” on
+
+================================================================================
+Chunk 6 of 15
+================================================================================
+name>/server.conf.yaml.
+If you use commands to modify this integration server, the changes are saved in: $MQSI_WORKPATH/
+components/<Node name>/servers/<Server name>/overrides/server.conf.yaml. The
+values of properties in this overrides/server.conf.yaml ﬁle override any values that you have set in
+the <Node name>/servers/<Server name>/server.conf.yaml ﬁle.
+Procedure
+1. If the integration server does not exist already, you can create it by following the instructions in
+“Creating an integration server” on page 168.
+Chapter 4. Conﬁguring IBM App Connect Enterprise  173
+2. Use a YAML editor to open the server.conf.yaml ﬁle.
+If you do not have access to a YAML editor, you can edit the ﬁle by using a plain text editor. However,
+you must ensure that you do not include any tab characters, which are not accepted in YAML and
+would cause your integration server conﬁguration to fail. If you choose to use a plain text editor,
+ensure that you use a YAML validation tool to validate the content of your ﬁle.
+For more information about working with YAML, see http://www.yaml.org/start.html.
+3. Modify the properties that you want to change in the ﬁle.
+For example:
+• In the RestAdminListener section, set a value for the Port property to be used by the REST
+administration port, which is the primary method of communicating with the integration server.
+(Default value of 7600.)
+• In the ResourceManagers / HTTPConnector section, set a value for the ListenerPort so that you
+can send messages to a flow that is using a HTTPInput node. (Default value of 7800.)
+• In the ResourceManagers / JVM section, set a value for the jvmDebugPort so that you can use the
+Flow Debugger. For example, set this property to 6511.
+You can also conﬁgure the integration server to record all messages that pass through a message flow,
+by setting properties in the RecordedMessageManager section of the  server.conf.yaml ﬁle. You
+can then use these recorded messages to generate unit tests for the flow, as described in “Generating
+tests from recorded messages in a message flow” on page 1908.
+4. Save your changes to the server.conf.yaml ﬁle.
+If you run any commands that modify the integration server at any time after you set properties
+in the server.conf.yaml ﬁle, an overrides directory is created under the working directory
+for the integration server. This overrides directory contains another server.conf.yaml
+conﬁguration ﬁle, which contains property values that are set by commands; for example, <work
+directory>/overrides/server.conf.yaml. The values of properties in this overrides/
+server.conf.yaml ﬁle override any values that you have set in the integration server's
+server.conf.yaml ﬁle (<work directory>/server.conf.yaml). If you want to manually
+override the settings that have resulted from a command, you can either edit the property in the
+server.conf.yaml ﬁle in the overrides directory, or you can remove the entry from the overrides
+directory and modify the base server.conf.yaml ﬁle instead.
+5. Specify the security credentials to be used by the integration server when you connect to a secured
+resource (such as a database) by using the mqsisetdbparms command. Use the -w parameter to
+specify the integration server's work directory that you created in step 1:
+For example:
+mqsisetdbparms -w c:\myaceworkdir -n jdbc::secID -u iibuser -p password
+When you run this command, the user ID and password are stored securely in the IBM App Connect
+Enterprise credentials store. For more information about using the mqsisetdbparms command, see
+command.
+Alternatively, you can conﬁgure an independent integration server to connect to secured resources
+by using credentials that are stored in encrypted form in an App Connect Enterprise vault. You can
+conﬁgure security credentials by using the command or the administrative REST API. These encrypted
+credentials are stored in the integration server's vault, which you conﬁgure by using the command. For
+more information, see “Conﬁguring encrypted security credentials” on page 177.
+6. Optional: You can conﬁgure applications to run when the integration server starts, by pre-loading the
+BAR ﬁle into the run folder of the integration server's work directory. For information, see command.
+7. Restart the integration server. The properties that you set in the server.conf.yaml ﬁle take effect
+when the integration server is started. If you modify these properties again, you must start the
+integration server again for the subsequent changes to take effect. For more information, see “Starting
+an integration server” on page 250.
+If the integration server
+
+================================================================================
+Chunk 7 of 15
+================================================================================
+integration server must be restarted for changes to the properties of the Resource Manager to take effect.	false
+clr	resourceStatsReportingOn	Specifies whether resource statistics reporting is on.	true
+statistics	Reports the value of all entries that are recorded by statistics reporting,	0
+content-based-filtering	cbfEnabled	Specifies whether to enable Content Based Filtering	false
+evaluationThreads	Configures the number of evaluation threads available for content-based filtering.	1
+serverRestartRequired	Specifies whether the integration server must be restarted for changes to the properties of the Resource Manager to take effect.	false
+validationThreads	Configures the number of validation threads available for content-based filtering	1
+database-connection-manager	activityLogUri	The URL for the activity log.	/apiv2/resource-managers/activity-log-manager?log_type=RM&resource_manager=ODBC
+enableODBCTraceBridge	Specifies whether to enable ODBC tracing.	true
+expireXAConnections	Specifies whether to release database connections that are used as part of globally coordinated (XA) transactions.	false
+maxConnectionAge	Specifies the maximum time (in seconds) that a connection remains active.	60
+maxConnectionUseCount	Specifies the maximum number of transactions on a thread before an ODBC connection to the database is released. To activate this function, set maxConnectionUseCount to a value that is greater than zero.	0
+maxStatementAge	Specifies the length of time in seconds that previously executed database queries are cached before removal.	600
+neverExpireDBType	Specifies whether to expire database types.	true
+serverRestartRequired	Specifies whether the integration server must be restarted for changes to the properties of the Resource Manager to take effect.	false
+statementCacheSize	Specifies the maximum number of previously executed database queries that can be cached.	40
+statistics	Reports the value of all entries that are recorded by statistics reporting,	0
+useDefaultSchemaForStoredProcedures	Specify whether to use the default schema for stored procedures.	true
+endpoint-manager	endPoints	The URL of the endpoint	n/a
+excludeReportedTransports	Specify transports to be excluded	true
+esql-manager	allowPropagateWithSharedLockHeld	 	false
+alwaysCastToLocal	 	true
+castWithAccurateZoneOffsets	 	false
+historyLogging	 	0
+performanceStatsOutputPath	 	 
+performanceStatsReportingOn	 	false
+readWriteLockSnapshotCount	 	0
+serverRestartRequired	 	 
+useICUStringManipulation	 	false
+exception-log	elkReportingEnabled	 	false
+enabled	 	false
+exceptionLog	 	[iib.system-common-log-dir]/[iib.system-node-label].[iib.system-server-label].exceptionLog.txt
+exceptionLogFileCount	 	4
+exceptionLogFileSize	 	25
+includeFlowThreadReporter	 	false
+serverRestartRequired	 	false
+showNestedExceptionDetails	 	false
+flow-thread-reporter	enabled	 	true
+flowTimerCountAgeFromInputNode	 	true
+flowTimerEnabled	 	false
+flowTimerIncludeFlowHistory	 	false
+flowTimerInformationalAbend	 	false
+flowTimerMinAgeToDumpThreads	 	180000
+flowTimerPollingInterval	 	60000
+historySize	 	1024
+initialStackSize	 	50
+maxStackSize	 	16384
+serverRestartRequired	 	false
+timerMode	 	0
+fte-agent	agentConfigurationDirectory	 	 
+agentName	 	 
+coordinationQMgr	 	 
+serverRestartRequired	 	false
+global-cache	activityLogUri	 	/apiv2/servers/kserver/resource-managers/activity-log-manager?log_type=RM&resource_manager=GlobalCache
+cacheOn	 	false
+cacheServerName	 	 
+catalogClusterEndPoints	 	 
+catalogDomainName	 	 
+catalogServiceEndPoints	 	 
+clientsDefaultToSSL	 	false
+defaultCacheType	 	global
+deploymentPolicyCustomFile	 	 
+enableCatalogService	 	false
+enableContainerService	 	false
+enableJMX	 	false
+haManagerPort	 	0
+jmxConnectorPort	 	0
+jmxServicePort	 	0
+listenerHost	 	 
+listenerPort	 	0
+objectGridCustomFile	 	 
+overrideTraceSpec	 	 
+serverRestartRequired	 	false
+shutdownMode	 	safe
+sslAlias	 	 
+sslProtocol	 	 
+statistics	 	 
+status	 	configured not to run any embedded Global Cache server components
+group-director	activityLogUri	 	/apiv2/servers/kserver/resource-managers/activity-log-manager?log_type=RM&resource_manager=Group
+adaptiveMinimumSleep	 	0
+managerType	 	manager
+maximumNumberOfGroups	 	1
+replyFormat	 	mixed-content
+serverRestartRequired	 	false
+timeoutInterval	 	100
+timeoutThreads	 	1
+unknownInterval	 	100
+unknownThreads	 	1
+http-connector	AutoRespondToHTTPHEADRequests	 	false
+ConnBacklog	 	100
+ConnTimeout	 	900
+ContentSecurityPolicy	 	 
+CORSAllowCredentials	 	false
+CORSAllowHeaders	 	Accept,Accept-Language,Content-Language,Content-Type
+
+================================================================================
+Chunk 8 of 15
+================================================================================
+a trace
+of the mqsilist command to the speciﬁed ﬁle:
+mqsilist myIntegrationNode --trace c:\tmp\listtrace.txt
+If you want to trace the command executable ﬁles themselves, set the environment variables
+MQSI_UTILITY_TRACE and MQSI_UTILITY_TRACESIZE before you run the command.
+MQSI_UTILITY_TRACE
+Set this variable to normal for a basic level of trace, or debug for a fuller trace.
+MQSI_UTILITY_TRACESIZE
+The size, in kilobytes, of the binary trace ﬁle. See the -c parameter of the mqsichangetrace
+command.
+Ensure that you reset these variables when the command that you are tracing has completed. If you do
+not do so, all subsequent commands are also traced, and their performance will be degraded.
+Chapter 10. Troubleshooting and support  3033
+Starting service trace for an integration node
+About this task
+To start a debug-level service trace for the integration node INODE, enter the following command:
+mqsichangetrace INODE -t -b -l debug
+where:
+-t speciﬁes service trace
+-b speciﬁes that trace for the agent subcomponent of the speciﬁed component 
+is to be started
+-l speciﬁes the level of trace (in this case, debug)
+Starting service trace for an integration server that is managed by an integration node
+About this task
+To start a debug-level service trace for an integration server IS1 on INODE, enter the following command:
+mqsichangetrace INODE  -t -e IS1 -l debug -m fast -c 200000 -r
+where:
+-t speciﬁes service trace
+-l speciﬁes the level of trace (in this case, debug)
+-m speciﬁes the way trace information is to be buffered (in this case, fast)
+-c speciﬁes the size of the trace ﬁle in KB (in this case, 200000)
+-r speciﬁes that the trace ﬁle is reset
+Starting service trace for an independent integration server
+About this task
+You can start service trace for an independent integration server, either by setting the trace property in
+the integration server's server.conf.yaml ﬁle, or by running the IntegrationServer command with
+the --service-trace parameter:
+• Start service trace for an independent integration server by setting the trace property in the
+integration server's server.conf.yaml ﬁle, as shown in the following example:
+trace: 'service'
+The settings in the server.conf.yaml ﬁle take effect when the integration server is restarted. For
+more information about conﬁguring an integration server, see “Conﬁguring an integration server by
+modifying the server.conf.yaml ﬁle” on page 172.
+• Start an independent integration server with service trace enabled, by running the following command:
+IntegrationServer --name myIntegrationServer1 --work-dir c:\mywrk\myaceworkdir --service-trace
+For more information about starting an integration server, see command.
+3034  IBM App Connect Enterprise 12.0: User Guide
+Changing service trace options
+Use the mqsichangetrace command to change the service trace options that you have set.
+Example: changing service trace from debug to normal
+About this task
+To change from a debug level of trace to a normal level on the integration node, on distributed systems,
+enter the following command:
+mqsichangetrace BrokerA -t -b -l normal 
+where:
+-t speciﬁes service trace
+-b speciﬁes that tracing for the agent subcomponent of the speciﬁed component 
+is to be changed
+-l speciﬁes the level of trace (in this case, changing it to normal)
+On z/OS, enter the following command:
+F MQP1BRK,ct t=yes, b=yes, l=normal
+Stopping service trace
+Use the mqsichangetrace command to stop an active service trace.
+Procedure
+•
+Use the mqsichangetrace command with a trace level of none to stop an active trace.
+This action stops the trace activity for the component that you specify on the command. It does not
+affect active traces on other components. For example, if you stop tracing on the integration server
+test, an active trace on another integration server continues.
+Results
+If you redeploy a component from the IBM App Connect Enterprise Toolkit, trace for that component is
+returned to its default setting of none.
+Example: stopping service trace on an integration server, using the mqsichangetrace
+command
+About this task
+To stop debug level service tracing for an integration server IS1 on integration node A on distributed
+systems, enter the command
+mqsichangetrace BrokerA -t -e IS1 -l none
+where:
+-t speciﬁes service trace
+-l speciﬁes the level of trace (in this case, none)
+On z/OS, enter the command
+F MQPIBRK,ct t=yes, b=yes, l=none
+Chapter 10. Troubleshooting and support  3035
+Example: stopping service trace on the integration node
+About this task
+To stop the trace started by the command shown in “Starting service trace” on page 3033,
+
+================================================================================
+Chunk 9 of 15
+================================================================================
+node). You can
+also report statistics and accounting data for independent integration servers and managed integration
+servers to the user trace log, IBM MQ, and MQTT.
+Before you begin
+• Read the topic “Message flow statistics and accounting data” on page 2699.
+• Start message flow statistics collection, as described in “Conﬁguring the collection of message flow
+statistics by using a .yaml conﬁguration ﬁle” on page 2729 and “Conﬁguring the collection of message
+flow statistics by using the mqsichangeflowstats command” on page 2732.
+• For information about how to subscribe to message flow statistics and accounting data, read
+“Subscribing to event message topics” on page 2813.
+About this task
+You can conﬁgure the statistics data to be published in a number of formats. For example, JSON, XML,
+CSV (for use in spreadsheets), and the user trace log.
+Use the snapshot statistics and accounting data to monitor the performance of your integration servers at
+the message flow or message flow node level. You can view the statistics data for independent integration
+servers and managed integration servers in the App Connect Enterprise web user interface. The snapshot
+data that is displayed in the web user interface is updated automatically every 20 seconds. You can also
+report the data for independent integration servers or managed integration servers to the user trace log,
+IBM MQ, and MQTT.
+For more information about how to start the web user interface for an integration server, see “Accessing
+the web user interface” on page 89.
+You can display high-level statistical data that provides an overview of all the message flows in an
+integration server, or you can display statistical information that relates to a speciﬁc message flow. The
+level of information that is displayed depends on the type of resource that you select.
+2738  IBM App Connect Enterprise 12.0: User Guide
+You can use the statistics data in these views to compare the performance of message flows in your
+applications. You can also use it to help you identify the possible reasons for reduced performance in a
+message flow.
+Analyzing resource performance
+You can collect statistics to assess the performance of resources used by integration servers.
+Before you begin
+Read the concept topic about resource statistics.
+About this task
+• “Managing resource statistics collection” on page 2741
+• “Viewing resource statistics data” on page 2745
+Resource statistics
+Resource statistics are collected to record performance and operating details of resources that are used
+by integration servers.
+As a system administrator, you can use the resource statistics to ensure that your systems are using the
+available resources in the most efﬁcient manner. By monitoring systems and analyzing statistical trends,
+you can keep system resource usage within boundaries that you consider acceptable. You can also help to
+preempt situations where system resources are overstretched and might become unavailable. Analysis of
+the data that is returned potentially requires specialist skills and knowledge of each resource type.
+If you detect that system resources are under pressure, you can examine the statistics to assess whether
+the cause of the concern is the use of those resources by processes in IBM App Connect Enterprise.
+You can collect data on one or more selected integration servers, or for all integration servers. When
+statistics collection is enabled, you might experience a minor degradation in operating performance of the
+integration servers for which you are collecting data.
+When an integration node or server is created, the publication of resource statistics is enabled by default.
+The reportingOn property in the node.conf.yaml or server.conf.yaml ﬁle is explicitly set to
+true, which enables the publication of snapshot statistics to the web user interface. For integration
+nodes and servers that were created prior to IBM App Connect Enterprise Version 11.0.0.8, the
+publication of resource statistics was turned off by default. To enable the publication of statistics for
+your integration nodes or servers that were created prior to V11.0.0.8, edit the relevant .conf.yaml ﬁle
+and set the reportingOn property to true. For more information, see “Managing resource statistics
+collection” on page 2741.
+Before resource statistics can be collected, you must ensure that the publication of events is enabled.
+If you are subscribing to resource statistics data, you must also ensure that a pub/sub broker is
+conﬁgured. For more information, see “Conﬁguring the publication of event messages” on page 2807 and
+
+================================================================================
+Chunk 10 of 15
+================================================================================
+your integration servers, you can administer them and their
+resources by using the web user interface, the command line, or programmatically by using the App
+Connect Enterprise REST API. For more information, see “Managing integration servers” on page 249,
+“Managing resources by using the administration REST API” on page 334, and “Accessing the web user
+interface” on page 89.
+Procedure
+1. Create an integration server by following in the instructions in “Creating an integration server” on page
+168.
+2. Modify the integration server properties by following the instructions in “Conﬁguring an integration
+server by modifying the server.conf.yaml ﬁle” on page 172.
+If you use any App Connect Enterprise commands that modify the integration server, an overrides
+directory is created under the working directory for the integration server. This overrides directory
+contains an additional server.conf.yaml conﬁguration ﬁle, which includes property values that
+have been set by commands; for example, <work_directory>/overrides/server.conf.yaml.
+The values of properties in this overrides/server.conf.yaml ﬁle override any values
+that you have set in the integration server's server.conf.yaml ﬁle (<work directory>/
+server.conf.yaml).
+3. Optional: Conﬁgure a default application for an integration server, by following the instructions in
+“Conﬁguring a default application for an integration server” on page 181.
+4. Optional: If you want to delete an integration server, follow the instructions in “Deleting an integration
+server” on page 175.
+Creating an integration server
+You can create integration servers by using the IBM App Connect Enterprise Toolkit, the web user
+interface, or commands.
+About this task
+You must create an integration server before you can deploy integration solutions and related resources.
+You can create one or more independent integration servers, each with their own identity, and deploy
+them either to containers in the cloud or in an on-premises environment. If you are planning to run App
+Connect Enterprise directly on a physical machine or virtual machine image, you are advised to deﬁne
+integration servers under an integration node, which will manage its associated integration servers.
+For information about why you might want to create multiple integration servers, see Integration servers
+and integration nodes.
+The mode in which IBM App Connect Enterprise is running can affect the number of integration servers
+that you can use; see “Restrictions that apply in each operation mode” on page 5.
+For an independent integration server, you create the server's work directory and then conﬁgure
+the server's properties, as described in “Creating an integration server work directory by using the
+mqsicreateworkdir command ” on page 169.
+168  IBM App Connect Enterprise 12.0: User Guide
+You can also create and start a local independent integration server by using the IBM App Connect
+Enterprise Toolkit, as described in “Creating and starting a local, independent integration server by using
+the Toolkit” on page 170.
+To create an integration server under an integration node, ﬁrst start the integration node, and then use
+one of the following methods:
+• “Creating an integration server that is managed by an integration node, by using the Toolkit” on page
+171
+• “Creating an integration server that is managed by an integration node, by using the web user interface”
+on page 171
+• “Creating an integration server that is managed by an integration node, by using the
+mqsicreateexecutiongroup command” on page 172
+You can also use the IBM Integration API to create integration servers on all platforms; see “Managing
+resources by using the IBM Integration API” on page 444.
+Creating an integration server work directory by using the
+mqsicreateworkdir command
+To create a work directory to be used by an independent integration server, use the
+mqsicreateworkdir command.
+Procedure
+1. Open a command window for your current installation.
+2. Create a work directory for your independent integration server, by running the mqsicreateworkdir
+command, specifying the full path to the directory that you want to create.
+For example:
+mqsicreateworkdir c:\myaceworkdir\myserver
+This command creates the speciﬁed work directory, which contains a default conﬁguration ﬁle called
+server.conf.yaml. This YAML ﬁle contains the default settings for your new integration server. The
+command also creates subdirectories, which will be used by the integration server when it is running.
+These include a log directory and a run directory. The log directory contains ﬁles of log
+
+================================================================================
+Chunk 11 of 15
+================================================================================
+• “The debugger seems to stop” on page 2963
+• “The session ends abnormally while debugging” on page 2963
+• “An error message is displayed indicating that the debug session cannot be launched” on page 2963
+• “Errors are generated when you copy a message map into an application, library, or integration
+project” on page 2964
+“Resolving problems when debugging message flows” on page 2964
+• “The debugger does not pause at the next breakpoint ” on page 2964
+• “The message does not stop executing at any breakpoint ” on page 2964
+• “Editing problems occur in the Message Flow editor” on page 2964
+• “Editing the MQ message descriptor (MQMD) causes unexpected behavior in the debugger” on page
+2965
+• “You cannot see the message content when debugging your message flow” on page 2965
+• “An exclamation mark appears above a node during debugging” on page 2965
+• “The message does not stop processing at breakpoints” on page 2965
+“Resolving problems that occur after debugging:” on page 2966
+• “You cannot change a message flow after debugging” on page 2966
+• “You redeployed a debugged message flow but deployment hangs” on page 2966
+Resolving problems that occur when starting and stopping the debugger
+Use the advice given here to help you to resolve common problems that can arise when you debug
+message flows.
+An endless "waiting for communication" progress bar is displayed when you start the
+debugger
+Procedure
+•
+Scenario: After you click Start Debugging, you get an endlessly cycling progress bar entitled "waiting
+for communication". The "debug session started" message is not displayed in the information pane.
+•
+Explanation: If the message flow has nodes with ESQL statements, the flow might not deploy even if
+the statements are correct syntactically.
+This situation can occur, for example, because of multiple declarations or uninitialized variables (that
+is, semantic problems that the syntax parser does not pick up).
+Always check the IBM App Connect Enterprise Toolkit Administration log to conﬁrm that the debugged
+version of your message flow has deployed successfully; it has the same name as the original message
+flow, with the sufﬁx _debug_.
+If the message flow does not deploy properly, the debugger cannot establish communication with the
+flow, and you see the endless progress bar.
+•
+Solution: Click Cancel to clean up and return to a good state, then ﬁx your errors and try again.
+As a check, see if your flow can deploy without the debugger.
+2962  IBM App Connect Enterprise 12.0: User Guide
+The debugger seems to stop
+Procedure
+•
+Scenario: You are debugging a message flow and continue after encountering a breakpoint. However,
+nothing seems to happen and after about a minute, a progress bar appears, indicating that the
+debugger is waiting for communication.
+•
+Explanation: This situation can occur for the following reasons:
+– The message flow might have encountered a time-intensive operation, such as a huge database
+query, and you must wait for the flow to complete the action.
+– The integration node ended, or some other extraordinary condition occurred, and communication
+was lost. In this case, click Cancel to stop the debug session.
+The session ends abnormally while debugging
+Procedure
+•
+Scenario: After debugging a message flow, the session ends abnormally and you still have the debug
+instance of the message flow (mf_debug_) deployed to the integration node's integration server. You
+are concerned that this is going to affect the operation of the flow, and want to put the integration
+server back to its original state.
+•
+Explanation: The orphaned message flow should behave as the flow would have done normally, and
+the Debug nodes have no effect on message processing.
+If you have a small number of nodes in the message flow, corrective action makes no noticeable
+difference to the flow, apart from its name. However, if you have a large message flow (that is, more
+than 15 nodes or several subflows), take the corrective action described later in this section, because
+the performance of message processing might be affected.
+•
+Solution: Redeploy the integration node.
+A full redeploy of the integration node should replace the orphaned flow with the original message
+flow. If this action has no effect, remove the orphaned flow from the integration server, deploy, then
+add the flow and deploy to restore the original state of the integration node as it was before the
+debugging session.
+An error message is displayed indicating that the debug session cannot be launched
+Procedure
+•
+Scenario: You try to relaunch or invoke a new debug session but when you
+
+================================================================================
+Chunk 12 of 15
+================================================================================
+variables.
+664  IBM App Connect Enterprise 12.0: User Guide
+For further information about the Java debugger, refer to the Java Development User Guide - Debugger.
+(This link works only if you are accessing this documentation from the IBM App Connect Enterprise
+Toolkit.)
+Starting the Flow debugger
+To start the Flow debugger, you must attach it to an integration server. When the Flow debugger is started,
+you can introduce test messages to your message flow.
+About this task
+Note:  It is not possible to use the Flow debugger with the Flow Exerciser. If your integration server is in
+recording mode, you must stop recording mode before you can launch the Flow debugger.
+Complete the following tasks to start the debugger:
+Procedure
+1. “Attaching the flow debugger to an integration server for debugging” on page 665
+2. Optional: “Debug: putting a test message on an input queue” on page 666
+3. Optional: “Debug: getting a test message from an output queue” on page 668
+Attaching the flow debugger to an integration server for debugging
+Before you can debug your message flow, you must attach the flow debugger to the integration server
+where your flow is deployed, then start a debugging session.
+Before you begin
+• If authorization permissions are required, see: “Authorizing users for administration” on page 2516
+• Create a message flow. See: Chapter 6, “Developing integration solutions,” on page 481
+• Deploy your message flow to an integration server. See: “Deployment rules and guidelines” on page
+2465
+• Start the integration node. See: “Starting and stopping an integration node” on page 247
+About this task
+From the IBM App Connect Enterprise Toolkit, you can attach the flow debugger to multiple integration
+servers that are running on the same or on different host computers, and debug their flows (and therefore
+multiple messages) simultaneously.
+An integration server can be debugged by only one user at a time. If you attach your debugger to an
+integration server, another user cannot attach a debugger to that same integration server until you have
+ended your debugging session.
+Procedure
+To attach the debugger to an integration server:
+1. Set the JVM debug port by modifying the server.conf.yaml conﬁguration ﬁle for your integration
+server.
+a) Open the server.conf.yaml conﬁguration ﬁle by using a YAML editor.
+If you do not have access to a YAML editor, you can edit the ﬁle by using a plain text editor;
+however, you must ensure that you do not include any tab characters, because they are not valid
+characters in YAML ﬁles and would cause your integration server conﬁguration to fail. If you are
+using a plain text editor, ensure that you use a YAML validation tool to validate the content of your
+ﬁle.
+b) In the Resource Managers section of the .yaml ﬁle, specify a value for the jvmDebugPort
+property, which sets the JVM debug port to be used for debugging flows in the Toolkit.
+Chapter 6. Developing integration solutions  665
+2. Restart the integration server for the changes to take effect.
+3. In the IBM App Connect Enterprise Toolkit, click the down-arrow to the right of the Debug button in
+the action bar, and then click the Debug conﬁgurations menu item.
+4. In the Debug conﬁgurations dialog, right-click IBM App Connect Enterprise debug, and then click
+New.
+5. Enter a name for the new debug conﬁguration in the Name ﬁeld; if you do not specify a name, it will
+be called New_configuration [IBM App Connect Enterprise Debug] by default. In the
+Connect tab, set the host name and the Java debug port to match the details of your integration
+server, as speciﬁed in the jvmDebugPort property in the server.conf.yaml ﬁle. Click Debug.
+6. Open the message flow that you want to debug in the Message Flow editor by double-clicking its
+name in the Application Development view.
+7. Add a breakpoint to a connection that leads out of the input node to ensure that the message flow
+does not run to completion before you can begin to debug it.
+The breakpoint appears as 
+. For information about adding a breakpoint, see “Working with
+breakpoints in the flow debugger” on page 669.
+8. Switch to the Debug perspective.
+9. Optional: If the message flow that you are going to debug references additional resources in other
+projects, such as ESQL in libraries or independent projects, or Java in Java projects, add those
+resources by completing the following steps:
+a) In the Debug view, right-click the debug conﬁguration that you created in step 5 and then click
+Edit Source Lookup from the pop-up menu. If you did not specify a name when you created the
+debug conﬁguration, it
+
+================================================================================
+Chunk 13 of 15
+================================================================================
+2463.
+Conﬁguring an integration server by modifying the server.conf.yaml ﬁle
+You can conﬁgure your IBM App Connect Enterprise integration server by modifying properties in a
+server.conf.yaml conﬁguration ﬁle. The location of the server.conf.yaml ﬁle that you need to
+172  IBM App Connect Enterprise 12.0: User Guide
+modify depends on whether you are conﬁguring an independent integration server or an integration server
+that is managed by an integration node.
+Before you begin
+Ensure that you set up your command environment, as described in “Setting up a command environment”
+on page 64.
+About this task
+When you have created an integration server, you set properties in the server.conf.yaml ﬁle to
+conﬁgure the operation of the integration server and associated resources. For example, you can set
+a REST administration port and an HTTPS port, and you can conﬁgure the trace level, activity logging,
+JVM, and the reporting of statistics data for your integration server. You can also conﬁgure the integration
+server to record all messages that pass through a message flow, and then use these recorded messages
+to generate unit tests.
+For an independent integration server, the server.conf.yaml conﬁguration ﬁle is created for you
+automatically when you use the mqsicreateworkdir command to create an integration server work
+directory. The server.conf.yaml ﬁle is created in the root of the speciﬁed work directory: <work
+directory>/server.conf.yaml.
+If you use any commands that modify the integration server, an overrides directory is created under
+the working directory for the integration server. This overrides directory contains an additional
+server.conf.yaml conﬁguration ﬁle, which contains property values that are set by commands; for
+example, <work directory>/overrides/server.conf.yaml. The values of properties in this
+overrides/server.conf.yaml ﬁle override any values that you have set in the integration server's
+server.conf.yaml ﬁle (<work directory>/server.conf.yaml).
+If a property has been set in the integration server's server.conf.yaml ﬁle, and also in the overrides
+directory (/overrides/server.conf.yaml), the property value that has been set in the overrides
+directory is used. Therefore, if an integration server does not appear to be using the settings that you
+would expect, check the server.conf.yaml ﬁle in the overrides directory to see if your expected
+property value has been overridden by a command. If you want to manually override the settings that
+have resulted from a command, you can either edit the property in the server.conf.yaml ﬁle in
+the overrides directory, or you can remove the entry from the overrides directory and modify the base
+server.conf.yaml ﬁle instead.
+For integration servers that are managed by an integration node, each server has its own
+server.conf.yaml conﬁguration ﬁle that overrides common settings from the integration node's
+node.conf.yaml conﬁguration ﬁle. When you create an integration node, the node.conf.yaml ﬁle is
+located at: $MQSI_WORKPATH/components/<Node name>/node.conf.yaml.
+If you use commands to modify the integration node, the changes are saved in the integration node's
+override node.conf.yaml ﬁle. This ﬁle is located at: $MQSI_WORKPATH/components/<Node name>/
+overrides/node.conf.yaml, as described in “Creating an integration node by using the command
+line” on page 115. When you create a managed integration server for an integration node, server-
+speciﬁc settings are created for it in its own server.conf.yaml ﬁle. The server-speciﬁc ﬁle is located
+at: $MQSI_WORKPATH/components/<Node name>/servers/<Server name>/server.conf.yaml.
+If you use commands to modify this integration server, the changes are saved in: $MQSI_WORKPATH/
+components/<Node name>/servers/<Server name>/overrides/server.conf.yaml. The
+values of properties in this overrides/server.conf.yaml ﬁle override any values that you have set in
+the <Node name>/servers/<Server name>/server.conf.yaml ﬁle.
+Procedure
+1. If the integration server does not exist already, you can create it by following the instructions in
+“Creating an integration server” on page 168.
+Chapter 4. Conﬁguring IBM App Connect Enterprise  173
+2. Use a YAML editor to open the server.conf.yaml ﬁle.
+If you do not have access to a YAML editor, you can edit the ﬁle by using a plain text editor. However,
+you must ensure that you do not include any tab characters, which are not accepted in YAML and
+would cause your integration server conﬁguration to fail. If you choose to use a plain text editor,
+ensure that you use a YAML validation tool to validate the content of
+
+================================================================================
+Chunk 14 of 15
+================================================================================
+to track messages through your
+message flows.
+Use the Debug perspective in the IBM App Connect Enterprise Toolkit to use the Flow debugger. For an
+introduction to the Debug perspective and the views it presents, see #unique_971.
+You can set breakpoints in a message flow, then step through the flow. While you are stepping through,
+you can examine and change the message variables and the variables used by ESQL code and Java code.
+You can debug a wide variety of error conditions in flows, for example:
+• Nodes that are wired incorrectly (for example, outputs that are connected to the wrong inputs)
+• Incorrect conditional branching in transition conditions
+• Unintended inﬁnite loops in flow
+From a single IBM App Connect Enterprise Toolkit, you can attach the Flow debugger to one or more
+integration servers, and debug multiple flows in different integration servers (and therefore multiple
+messages) at the same time. However, an integration server can be debugged by only one user at a time.
+Therefore, if you attach your Flow debugger to an integration server, another user cannot attach a Flow
+debugger to that same integration server until you have ended your debugging session.
+When you debug message flows, use an integration node that is not being used in a production
+environment. Debugging might degrade the performance of all message flows in the same integration
+server and message flows in other integration servers that share the same integration node because they
+might be affected by resource contention.
+660  IBM App Connect Enterprise 12.0: User Guide
+Debugging code in message flow nodes
+You can use the Flow debugger to examine the behavior of code in message flow nodes.
+After you have deployed a message flow, you can set a breakpoint just before one of the nodes listed in
+this section so that, when the flow pauses at the breakpoint, you can step through the code line by line.
+This allows you to examine the logic, and check the actions taken and their results. You can set additional
+breakpoints and you can also examine and change variables.
+The following nodes can contain ESQL code modules:
+• Compute node
+• Filter node
+• Database node
+The following nodes can contain Java code modules:
+• User-deﬁned nodes
+• JavaCompute node
+Restrictions
+The following restrictions apply when you debug a message flow:
+• You cannot use the Flow debugger with the Flow Exerciser. When you use the Flow debugger, you must
+use a third-party tool or the Test Client to send a message to the flow; see #unique_955.
+• You must use the same version of the integration node and the IBM App Connect Enterprise Toolkit; for
+example, you cannot use the IBM App Connect Enterprise Toolkit Version 12.0 to debug a message flow
+that you have deployed to an integration node at an earlier version.
+• You should not debug message flows over the Internet, because there might be security issues.
+• You can debug a message flow that contains a Mapping node, but you cannot step into the graphical
+data mapping to view or set breakpoints on the transforms.
+The following topics provide reference information to help you use the Flow debugger effectively:
+• “Flow debugger shortcuts” on page 661
+• “Flow debugger icons and symbols” on page 662
+You can also use the “Java Debugger” on page 664 provided by the Java Development tools to debug
+Java code within the IBM App Connect Enterprise Toolkit.
+Flow debugger shortcuts
+You can use function keys and shortcut keys to complete actions in the flow debugger views and windows.
+Shortcut keys are shown as a pair that you press together, followed by a subsequent key, for example
+Shift-F10, C means hold the Shift key down and press F10, then release both and press key C.
+The following tables describe the main shortcuts that are available in the debug session:
+• “Debug view” on page 662
+• “Breakpoints view” on page 662
+• “Flow Breakpoint Properties dialog” on page 662
+• “Variables view” on page 662
+To see a complete list of all the shortcuts that are available, press Shift-F10 and release; the contextual
+menu is displayed.
+Chapter 6. Developing integration solutions  661
+Debug view
+Key combination
+Function
+Shift-F10, C
+Run to completion
+Shift-F10, E
+Disconnect
+F5 or Shift-F10, I
+Step into
+F8 or Shift-F10, M
+Resume
+Shift-F10, N
+Terminate All
+F6 or Shift-F10, O
+Step over
+Shift-F10, T
+Terminate
+F7 or Shift-F10, U
+Step return
+Shift-F10, V
+Terminate and Remove
+Breakpoints view
+Key combination
+Function
+Shift-F10, A
+Select All
+Shift-F10, B
+Add breakpoint
+Shift-F10, D
+Disable the selected breakpoints
+Shift-F10, E
+Enable the selected
+
+================================================================================
+Chunk 15 of 15
+================================================================================
+the name of the local independent integration server that you want to create and start. When
+you run the wizard for the ﬁrst time, the default name for the integration server is TEST_SERVER.
+If you run the wizard again, the TEST_SERVER will already exist so you must specify an alternative
+name for the new integration server.
+• REST Administration Port
+Specify the port to be used for REST administration. By default, you can allow the wizard to ﬁnd a
+port that is available to use. If you want to specify a different port, ﬁrst ensure that it is not being
+used by another process, then deselect the checkbox and enter the required port number. The port
+that you specify cannot be used by the integration server if it is already in use by another process.
+• HTTP Port
+Specify the port that is used by the HTTPConnector resource manager when an HTTP-based
+message flow is deployed as part of an application. By default, you can allow the wizard to ﬁnd a
+port that is available to use. If you want to specify a different port, ﬁrst ensure that it is not being
+used by another process, then deselect the checkbox and enter the required port number. The
+port is then used when the message flow is deployed. The wizard ﬁnds an available port when the
+integration server is started. If the message flow is deployed at a much later date, the port might no
+longer be available, in which case an error message is shown at deployment time to indicate that the
+HTTP listener could not be started for that port. If this happens, specify the correct port used by the
+HTTPConnector in the server.conf.yaml ﬁle in the overrides directory, and then stop and start
+the integration server.
+• JVM Debug Port
+Specify the port to be used for debugging a message flow. By default, you can allow the wizard ﬁnd
+a port that is available to use. If you want to specify a different port, ﬁrst ensure that it is not being
+used by another process, then deselect the checkbox and enter the required port number. This sets
+the jvmDebugPort property in the server.conf.yaml ﬁle for the JVM resource manager to use.
+170  IBM App Connect Enterprise 12.0: User Guide
+If you do not want to debug a message flow, you can disable the JVM debug port by deselecting the
+checkbox and entering the value 0 in the ﬁeld.
+• Click Finish.
+A conﬁrmation message shows that a conﬁguration directory has been created in the workspace
+and that the integration server has been started using the details in the conﬁguration directory.
+The conﬁguration directory that is created in your workspace has the same name as the integration
+server that has been created and started. This is the same conﬁguration directory that is created by
+the mqsicreateworkdir command. The conﬁguration directory is shown under Independent
+Resources in your workspace. The wizard creates an override ﬁle for the server.conf.yaml that
+is used by the integration server. This override ﬁle contains the values of the ports that will be used
+by the integration server.
+3. Optional: When you have created and started the integration server, you can deploy an application or
+library to it.
+4. Optional: You can view the console.log ﬁle for the integration server. The location of the
+console.log ﬁle is under the main conﬁguration directory.
+5. Optional: You can stop the integration server by right-clicking it and then clicking Stop, which stops the
+integration server process. You can restart the integration server by right-clicking it and then clicking
+Start to start the integration server process.
+6. Optional: You can remove the connection for the integration server when it has been stopped, but the
+conﬁguration directory is not deleted from your workspace automatically; however, you can delete the
+directory manually.
+If you have previously stopped the integration server and removed the connection for it, you can create
+it again and it will use the conﬁguration directory in your workspace, if it exists. In this case, a message
+informs you that the existing conﬁguration directory in your workspace will be used.
+Creating an integration server that is managed by an integration node, by
+using the Toolkit
+Procedure
+To create an integration server under an integration node, you can use the IBM App Connect Enterprise
+Toolkit:
+1. Optional: If you are working with a remote integration node, connect to the integration node; see
+Connect to a remote integration node.
+2. Make sure that the integration node is running.
+3. In the Integration Explorer view, right-click the integration node, and then select New Integration
+Server.
+4. In the New Integration Server

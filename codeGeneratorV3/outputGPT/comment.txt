@@ -1,0 +1,37 @@
+Summary of what I changed and why.
+- Added RSA/PA route handling in `insurance-claims-integration-claims`:
+  - Updated `Routing_ValidatePayloadAndDetermineDestination.esql` to:
+    - validate `claim-use-case` for caller `TCSCH`
+    - reject invalid RSA/PA combinations for vehicle presence/count
+    - accept products `101` and `106`
+    - keep existing validation/routing style and error handling pattern
+  - Added `Routing_DetermineIditOperation.esql` as a separate post-routing component to decide `loss-event` vs `manageClaims`.
+  - Updated `Routing.subflow` to invoke that new component after payload validation and before MQ/HTTP success branching.
+  - Updated `Routing_Routage.esql` to propagate internal routing info through MQ user-defined headers.
+  - Updated `Routing_BuildError.esql` so the new ACE validation messages can be returned exactly in `moreInformation` without changing the overall error response pattern.
+
+- Added manageClaims preparation in `insurance-claims-integration-technical-idit`:
+  - Created `PrepareManageClaimsAsync.subflow` as a separate flow, without IBAN processing, as requested.
+  - Created `CreateClaim_mappingClaimToManageClaims.esql` implementing the RSA → manageClaims mapping.
+  - Created `CreateClaim_PostManageClaims_PreparerCallIdit.esql` to call `POST /api/v2/loss-event/manage-claims`.
+  - Created `ProcessClaimAsync_RoutePreparation.esql` and updated `ProcessClaimAsync.msgflow` to route execution to either:
+    - existing `PrepareCreateClaimAsync`
+    - new `PrepareManageClaimsAsync`
+
+- Updated runtime context propagation:
+  - Updated `SetEnvironment.esql` to preserve route/use-case info from MQ headers across retries and downstream logging.
+  - Updated `CreateClaim_MappingResponseClaimToTCS.esql` to enrich monitoring context with the returned claim number.
+
+Assumptions, uncertainties, incomplete parts, or limitations.
+- I followed the developer override that November fallback is hard-coded in ACE logic and not property-driven.
+- I intentionally did not modify `PrepareCreateClaimAsync.subflow`.
+- I kept the existing `202 + {"isAccepted": true}` behavior untouched.
+- I added TODO comments in the manageClaims translator exactly where latitude/longitude must later be mapped. No latitude/longitude mapping was implemented.
+- I did not map `damagedObjectStatus`, per the explicit instruction.
+- I did not update any APIC/OpenAPI descriptor/yaml, per the explicit instruction.
+- I did not add an external “error referential” file because none was provided in the supplied source set, and no new official error code values were given. The new functional ACE rejection messages are implemented and returned, but referential code registration remains outside the provided artifacts.
+- There is an ambiguity in the original business description versus the developer fallback rule for missing `claim-use-case`. I implemented the developer-priority behavior:
+  - exact `RSA` / `PA` drives route first
+  - if missing, November fallback is used
+  - vehicle without `RSA` is still rejected as requested
+- I assumed the manageClaims success response can continue to use the existing `CreateClaim_MappingResponseClaimToTCS` behavior with `externalID`, because no different IDIT success payload source file was provided.

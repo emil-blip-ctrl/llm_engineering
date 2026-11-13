@@ -1,0 +1,18 @@
+Implemented rules 3a and 3b in the invoice accounting update logic:
+
+Changes:
+1. `updateSAPPayment_updateRequestPayments.esql` (services-integration-finance-accounting-assistance-invoices):
+   - Split the previous single "SAP status not empty" branch into two conditional branches inside the invoice loop.
+   - 3a: when `sapStatusIsEmpty = FALSE AND EXISTS(invoicesPosted.{invoiceNum})` (Salesforce status = 'Posted'), the record is built from the new `PaymentRequest_Error_Posted` template which sets Id, Status='In progress', IntegrationMessage__c (SAP error message), IntegrationCode__c (SAP error code).
+   - 3b: when `sapStatusIsEmpty = FALSE` (Salesforce status <> 'Posted'), the record is built from the existing `PaymentRequest_Error` template (Id, IntegrationMessage__c, IntegrationCode__c) with no Status change.
+   - The selection predicate (SAP status not empty) is preserved; all other logic (Booked handling, not-posted-not-booked handling, unprocessable records, batching/propagation, success response) is unchanged.
+   - Added a declaration for the new template variable `PaymentRequest_Error_Posted_Template`.
+
+2. `Common.policyxml` (services-integration-policies-properties-sfsc-standard-updates):
+   - Added new user-defined property `PaymentRequest_Error_Posted` identical to `PaymentRequest_Error` but including `"Status":"In progress"`.
+
+Assumptions / notes:
+- "Salesforce status = 'Posted'" is determined from `Environment.Variables.PaymentRequestId` (Salesforce Id -> Salesforce status map, populated by getRequestPaymentsInformation/HandleResponse). The existing `invoicesPosted` ROW already collects entries whose status upper-cases to 'POSTED', so I reused it via `EXISTS(invoicesPosted.{invoiceNum})`. This matches the existing case-insensitive handling used elsewhere in the module.
+- "PaymentRequest.Id = Salesforce internal document reference" maps to the CAS_REF_NUMBER value (`Id`), consistent with how the existing code already populated `PaymentRequest_Error` (`@@Id@@` = CAS reference). If the intended Id is a different Salesforce API field, the template/mapping would need adjustment.
+- Error code/message continue to come from the invoiceNote entries with subject codes ERROR_CODE / ERROR_MESSAGE, exactly as before. Null/empty handling was left unchanged (empty strings default), since the request did not specify a skip behavior.
+- The literal 'In progress' (with the space) is placed in the policy template exactly as requested.

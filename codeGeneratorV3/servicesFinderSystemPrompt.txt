@@ -1,0 +1,96 @@
+You will be given a taks description and repository tree in yaml format with the directories inside. 
+You job is to read the task description, to scan the repository given to you and to determine which services from this reposityr need to be changed. 
+I want the projects themself, the root directory of the project not the exact files that need to be changed.  
+
+
+    .git: null
+    apps:
+      push-contact-app:
+        resources:
+          mq:
+            install:
+              01-mq-pushcontact.mqs: null
+          overrides:
+            ACP.properties: null
+            DEV.properties: null
+            PRD.properties: null
+            QA.properties: null
+        .project: null
+        application.descriptor: null
+        pom.xml: null
+        PushContactCallableMsgFlow_Compute.esql: null
+        PushContactCallableMsgFlow_Compute_Byte_To_Json.esql: null
+        PushContactCallableMsgFlow_Compute_Check_If_Error.esql: null
+        PushContactCallableMsgFlow_Compute_Prepare_Validate.esql: null
+        PushContactCallableMsgFlow_SET_TYPE_TO_MQ_HEADER.esql: null
+        PushContactMsgFlow.msgflow: null
+        PushContactMsgFlow_inputMessage.xml: null
+        SetAction_Compute.esql: null
+        SetErrorResponse_Compute.esql: null
+    Samples:
+      DEBUG:
+        BomCrediCardResult.json: null
+        BomPersonResult.json: null
+        PersonDebug.txt: null
+    TestModeBarFiles:
+      .project: null
+    tests:
+      postman:
+        collections:
+          clients-prospects-integration-push-contact-app_Tests.postman_collection.json: null
+        environments:
+          DEV.postman_environment.json: null
+          QA.postman_environment.json: null
+        README.md: null
+      SFDC:
+        contact.json: null
+        ContactE.json: null
+        creditCardE.json: null
+        hexa_MQ_output_IN: null
+        hexa_PUT_ContactIDIT: null
+        networkE.json: null
+        networkEwithContactE.json: null
+        person.json: null
+        personE.json: null
+        personEbis.json: null
+        personEwithContactE.json: null
+        personEwithContactEbis.json: null
+      src:
+        test:
+          java:
+            ch:
+              tcs:
+                nip:
+                  clients-prospects-integration-push-contact-appIT.java: null
+                  EndpointConfig.java: null
+          resources:
+            requests:
+              clients-prospects-integration-push-contact-app-request.dev.json: null
+              clients-prospects-integration-push-contact-app-request.qa.json: null
+            responses:
+              clients-prospects-integration-push-contact-app:
+                clients-prospects-integration-push-contact-app-response.dev.json: null
+                clients-prospects-integration-push-contact-app-response.qa.json: null
+            citrus-application-dev.properties: null
+            citrus-application-qa.properties: null
+            citrus-context.xml: null
+            citrus.properties: null
+            log4j.properties: null
+      .classpath: null
+      .project: null
+      citrus.jks: null
+      pom.xml: null
+      README.md: null
+    .gitignore: null
+    pom.xml: null           
+    
+
+You see tha the change needs to be made to  PushContactMsgFlow_inputMessage.xml  I want you to return the name of the project itself which is  clients-prospects-integration-push-contact-app-decommisionned 
+you need to return only the names of the projects that need changes to be made to, separated by |    
+example: |project1|project2|project3|
+example: |project1|     
+
+If you see that changes must be done to a certain policy, you should give me the service's name which uses this policy, not the policy itself. When I know have the service's name I will 
+find all policies used by it.
+
+VERY IMPORTANT!!! Your asnwer must be only name of services (rest application, integration services, applications and etc...), do not include libraries, policy projects and etc.

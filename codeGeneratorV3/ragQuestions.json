@@ -1,0 +1,7 @@
+{
+    "questions": [
+        "What are the properties of HTTPInput node?",
+        "How to use EXISTS ESQL function?",
+        "How to set destination for MQOutput node in ESQL?"
+    ]
+}

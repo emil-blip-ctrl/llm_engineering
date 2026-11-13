@@ -1,0 +1,231 @@
+CREATE COMPUTE MODULE CreateClaim_mappingClaimToManageClaims
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD OutputRoot.JSON.Data;
+		
+		DECLARE inRef REFERENCE TO InputRoot.JSON.Data;
+		DECLARE outRef REFERENCE TO OutputRoot.JSON.Data;
+		
+		DECLARE policyHolder ROW THE(SELECT C FROM inRef."claim-contacts".Item[] AS C WHERE C.role = 'polHold');
+		DECLARE informant ROW THE(SELECT C FROM inRef."claim-contacts".Item[] AS C WHERE C.role = 'informant');
+		DECLARE driver ROW THE(SELECT C FROM inRef."claim-contacts".Item[] AS C WHERE C.role = 'driver');
+		DECLARE policeIntervention ROW THE(SELECT A FROM inRef.event.attributes.Item[] AS A WHERE A.type = 'police-intervention');
+		
+		DECLARE vehicleFound BOOLEAN FALSE;
+		DECLARE vehicleCategoryExtCode CHARACTER '';
+		DECLARE vehicleTypeExtCode CHARACTER '';
+		DECLARE vehicleBrandExtCode CHARACTER '';
+		DECLARE vehicleModel CHARACTER '';
+		DECLARE vehiclePlateRaw CHARACTER '';
+		DECLARE vehicleMatriculeNumber CHARACTER '';
+		DECLARE vehicleFirstRegistrationDate CHARACTER '';
+		DECLARE vehicleMaximumWeight CHARACTER '';
+		DECLARE vehicleMaximumHeight CHARACTER '';
+		DECLARE vehiclePurchaseDate CHARACTER '';
+		DECLARE vehiclePurchaseValue CHARACTER '';
+		
+		vehicleSearch: BEGIN
+			FOR claimCoverRef AS inRef."claimed-cover".Item[] DO
+				FOR claimedDamagesRef AS claimCoverRef."claimed-damages".Item[] DO
+					FOR vehicleRef AS claimedDamagesRef."damaged-objects-details".vehicle.Item[] DO
+						SET vehicleCategoryExtCode = COALESCE(vehicleRef."category-ext-code", '');
+						SET vehicleTypeExtCode = COALESCE(vehicleRef."type-ext-code", '');
+						SET vehicleBrandExtCode = COALESCE(vehicleRef."brand-ext-code", '');
+						SET vehicleModel = COALESCE(vehicleRef.model, '');
+						SET vehiclePlateRaw = REPLACE(COALESCE(vehicleRef.plate, ''), ' ', '');
+						SET vehicleMatriculeNumber = COALESCE(vehicleRef."matricule-number", '');
+						SET vehicleFirstRegistrationDate = COALESCE(vehicleRef."first-reg-date", '');
+						SET vehicleMaximumWeight = COALESCE(CAST(vehicleRef."maximum-weight" AS CHARACTER), '');
+						SET vehicleMaximumHeight = COALESCE(CAST(vehicleRef."maximum-height" AS CHARACTER), '');
+						SET vehiclePurchaseDate = COALESCE(vehicleRef."purchase-date", '');
+						SET vehiclePurchaseValue = COALESCE(CAST(vehicleRef."purchase-value" AS CHARACTER), '');
+						SET vehicleFound = TRUE;
+						LEAVE vehicleSearch;
+					END FOR;
+				END FOR;
+			END FOR;
+		END;
+		
+		SET outRef.messageId = COALESCE(Environment.Variables.XCorrelationID, UUIDASCHAR);
+		SET outRef.channelType.extCode = 3;
+		
+		DECLARE claimIBORef REFERENCE TO outRef;
+		CREATE LASTCHILD OF outRef AS claimIBORef TYPE Name NAME 'claimIBO';
+		
+		SET claimIBORef.externalPolicyNumber = inRef."policy-number";
+		SET claimIBORef.claimEventDate = inRef.event.date;
+		SET claimIBORef.claimEventDescription = inRef.event.description;
+		SET claimIBORef.claimCauseOfLossVO.extCode = inRef.event."primary-cause-of-loss-extcode";
+		SET claimIBORef.claimReportingChannel.extCode = 'Web';
+		SET claimIBORef.brandCompanyVO.extCode = 'TCS';
+		SET claimIBORef.latestChannelOfUpdate.extCode = 'no_update_made';
+		
+		-- Constants grouped together so they can be removed easily after IRND-16006.
+		SET claimIBORef.claimStatus.extCode = 'open';
+		
+		IF EXISTS(inRef."total-estimated-damaged-currency-amount"[]) THEN
+			SET claimIBORef.totalEstimatedDamage = CAST(inRef."total-estimated-damaged-currency-amount" AS DECIMAL);
+			SET claimIBORef.totalEstimatedDamageCurrency.extCode = 'CHF';
+		END IF;
+		
+		IF EXISTS(inRef."number-of-beneficiaries"[]) THEN
+			SET claimIBORef.numberOfBeneficiaries = CAST(inRef."number-of-beneficiaries" AS INTEGER DEFAULT NULL);
+		END IF;
+		
+		IF EXISTS(policeIntervention.[]) THEN
+			IF policeIntervention."value-code" = 'true' THEN
+				SET claimIBORef.isPoliceIntervention = TRUE;
+			ELSEIF policeIntervention."value-code" = 'false' THEN
+				SET claimIBORef.isPoliceIntervention = FALSE;
+			END IF;
+		END IF;
+		
+		FOR serviceProviderRef AS inRef."claim-service-providers".Item[] DO
+			DECLARE serviceProviderOutRef REFERENCE TO OutputRoot.JSON.Data;
+			CREATE LASTCHILD OF claimIBORef.(JSON.Array)serviceProviders AS serviceProviderOutRef NAME 'Item';
+			SET serviceProviderOutRef.contactExtNumber = serviceProviderRef."personal-id";
+		END FOR;
+		
+		SET claimIBORef.claimEventLocationIBO.countryVO.extCode = inRef.event.location."country-code";
+		SET claimIBORef.claimEventLocationIBO.locationType.extCode = 'country';
+		-- TODO: map claimIBO.claimEventLocationIBO.latitude when the source and transformation rules are provided.
+		-- TODO: map claimIBO.claimEventLocationIBO.longitude when the source and transformation rules are provided.
+		SET claimIBORef.claimEventLocationIBO.addressIBO.cityName = inRef.event.location.city;
+		SET claimIBORef.claimEventLocationIBO.addressIBO.zipCode = inRef.event.location."zip-code";
+		SET claimIBORef.claimEventLocationIBO.addressIBO.streetName = inRef.event.location."street-name";
+		SET claimIBORef.claimEventLocationIBO.addressIBO.houseNr = inRef.event.location."house-number";
+		
+		IF EXISTS(informant.[]) THEN
+			SET claimIBORef.claimInformantIBO.contactExternalNumber = informant."personal-id";
+			IF CAST(informant."informant-type" AS CHARACTER) = '1' THEN
+				SET claimIBORef.claimInformantIBO.informantType.extCode = 'policyholder';
+			ELSEIF COALESCE(CAST(informant."informant-type" AS CHARACTER), '') <> '' THEN
+				SET claimIBORef.claimInformantIBO.informantType.extCode = CAST(informant."informant-type" AS CHARACTER);
+			END IF;
+		END IF;
+		
+		IF vehicleFound THEN
+			DECLARE damagedVehicleRef REFERENCE TO OutputRoot.JSON.Data;
+			CREATE LASTCHILD OF claimIBORef.(JSON.Array)damagedVehicleDetails AS damagedVehicleRef NAME 'Item';
+			SET damagedVehicleRef.vehicleCategory.extCode = vehicleCategoryExtCode;
+			SET damagedVehicleRef.licensePlateNumber = vehiclePlateRaw;
+			SET damagedVehicleRef.vehicleType.extCode = vehicleTypeExtCode;
+			SET damagedVehicleRef.vehicleBrand.extCode = vehicleBrandExtCode;
+			SET damagedVehicleRef.vehicleModel = vehicleModel;
+			SET damagedVehicleRef.vehicleMatriculeNumber = vehicleMatriculeNumber;
+			SET damagedVehicleRef.firstRegistrationDate = vehicleFirstRegistrationDate;
+			SET damagedVehicleRef.maximumWeight = CAST(vehicleMaximumWeight AS INTEGER DEFAULT NULL);
+			SET damagedVehicleRef.maximumHeight = CAST(vehicleMaximumHeight AS INTEGER DEFAULT NULL);
+			IF vehiclePurchaseDate <> '' THEN
+				SET damagedVehicleRef.purchaseDate = vehiclePurchaseDate;
+			END IF;
+			IF vehiclePurchaseValue <> '' THEN
+				SET damagedVehicleRef.purchaseValue = CAST(vehiclePurchaseValue AS DECIMAL DEFAULT NULL);
+			END IF;
+		END IF;
+		
+		IF EXISTS(driver.[]) THEN
+			SET claimIBORef.driverDetails."DriverContactExtNumber" = driver."personal-id";
+			
+			DECLARE highAlcohol ROW THE(SELECT A FROM driver.attributes.Item[] AS A WHERE A.type = 'high-alcohol');
+			DECLARE alcoholTestResult ROW THE(SELECT A FROM driver.attributes.Item[] AS A WHERE A.type = 'alcohol-test-result');
+			DECLARE influenceOfMedicines ROW THE(SELECT A FROM driver.attributes.Item[] AS A WHERE A.type = 'influence-of-medicines');
+			DECLARE influenceOfDrugs ROW THE(SELECT A FROM driver.attributes.Item[] AS A WHERE A.type = 'influence-of-drugs');
+			DECLARE influenceOfTiredness ROW THE(SELECT A FROM driver.attributes.Item[] AS A WHERE A.type = 'influence-of-tiredness');
+			DECLARE driverNotes ROW THE(SELECT A FROM driver.attributes.Item[] AS A WHERE A.type = 'driver-notes');
+			
+			SET claimIBORef.driverDetails.highAlcohol = ToYesNo(highAlcohol."value-code");
+			IF EXISTS(alcoholTestResult.[]) THEN
+				SET claimIBORef.driverDetails.alcoholTestResult = CAST(alcoholTestResult."value-code" AS DECIMAL DEFAULT NULL);
+			END IF;
+			SET claimIBORef.driverDetails.influenceOfMedicines = ToYesNo(influenceOfMedicines."value-code");
+			SET claimIBORef.driverDetails.influenceOfDrugs = ToYesNo(influenceOfDrugs."value-code");
+			SET claimIBORef.driverDetails.influenceOfTiredness = ToYesNo(influenceOfTiredness."value-code");
+			SET claimIBORef.driverDetails.notes = driverNotes."value-code";
+		END IF;
+		
+		DECLARE claimantIBORef REFERENCE TO OutputRoot.JSON.Data;
+		CREATE LASTCHILD OF claimIBORef.(JSON.Array)claimantIBOs AS claimantIBORef NAME 'Item';
+		SET claimantIBORef.contactExternalNumber = policyHolder."personal-id";
+		SET claimantIBORef.claimantSide.extCode = 'policyholder';
+		SET claimantIBORef.claimantLiability.extCode = 'unknown';
+		-- Constants grouped together so they can be removed easily after IRND-16006.
+		SET claimantIBORef.claimantStatus.extCode = 'open';
+		
+		DECLARE damagedObjectRef REFERENCE TO OutputRoot.JSON.Data;
+		CREATE LASTCHILD OF claimantIBORef.(JSON.Array)damagedObjects AS damagedObjectRef NAME 'Item';
+		IF vehicleFound THEN
+			SET damagedObjectRef.description = BuildDamagedObjectDescription(vehicleModel, vehiclePlateRaw);
+		END IF;
+		
+		FOR claimCoverRef AS inRef."claimed-cover".Item[] DO
+			FOR claimedDamagesRef AS claimCoverRef."claimed-damages".Item[] DO
+				IF EXISTS(claimedDamagesRef."damaged-objects-details"."damage-items".Item[]) THEN
+					FOR damageItemRef AS claimedDamagesRef."damaged-objects-details"."damage-items".Item[] DO
+						DECLARE damagedItemOutRef REFERENCE TO OutputRoot.JSON.Data;
+						CREATE LASTCHILD OF damagedObjectRef.(JSON.Array)damagedItems AS damagedItemOutRef NAME 'Item';
+						SET damagedItemOutRef.itemType.extCode = damageItemRef."ext-code";
+						SET damagedItemOutRef.desc = damageItemRef.description;
+						IF EXISTS(damageItemRef."purchase-value"[]) THEN
+							SET damagedItemOutRef.purchaseValue = CAST(damageItemRef."purchase-value" AS DECIMAL);
+						END IF;
+						SET damagedItemOutRef.isActive = TRUE;
+					END FOR;
+				ELSEIF EXISTS(claimedDamagesRef."damaged-objects-details"."damaged-items".Item[]) THEN
+					FOR damageItemRef AS claimedDamagesRef."damaged-objects-details"."damaged-items".Item[] DO
+						DECLARE damagedItemOutRef REFERENCE TO OutputRoot.JSON.Data;
+						CREATE LASTCHILD OF damagedObjectRef.(JSON.Array)damagedItems AS damagedItemOutRef NAME 'Item';
+						SET damagedItemOutRef.itemType.extCode = damageItemRef."ext-code";
+						SET damagedItemOutRef.desc = damageItemRef.description;
+						IF EXISTS(damageItemRef."purchase-value"[]) THEN
+							SET damagedItemOutRef.purchaseValue = CAST(damageItemRef."purchase-value" AS DECIMAL);
+						END IF;
+						SET damagedItemOutRef.isActive = TRUE;
+					END FOR;
+				END IF;
+			END FOR;
+		END FOR;
+		
+		FOR beneficiaryRef AS inRef."claim-contacts".Item[] DO
+			IF beneficiaryRef.role = 'beneficiary' THEN
+				DECLARE claimContactRef REFERENCE TO OutputRoot.JSON.Data;
+				CREATE LASTCHILD OF claimIBORef.(JSON.Array)"ClaimContactRefIBO" AS claimContactRef NAME 'Item';
+				SET claimContactRef.contactExternalNumber = beneficiaryRef."personal-id";
+				SET claimContactRef.claimContactRoleVO.extCode = 'beneficiary';
+			END IF;
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+	
+	CREATE FUNCTION ToYesNo(IN inputValue CHARACTER) RETURNS CHARACTER
+	BEGIN
+		IF inputValue = 'true' THEN
+			RETURN 'Yes';
+		ELSEIF inputValue = 'false' THEN
+			RETURN 'No';
+		END IF;
+		RETURN NULL;
+	END;
+	
+	CREATE FUNCTION BuildDamagedObjectDescription(IN model CHARACTER, IN plate CHARACTER) RETURNS CHARACTER
+	BEGIN
+		DECLARE formattedPlate CHARACTER '';
+		
+		IF plate IS NOT NULL AND plate <> '' THEN
+			IF LENGTH(plate) = 8 THEN
+				SET formattedPlate = SUBSTRING(plate FROM 1 FOR 2) || ' ' || SUBSTRING(plate FROM 3 FOR 3) || ' ' || SUBSTRING(plate FROM 6 FOR 3);
+			ELSE
+				SET formattedPlate = plate;
+			END IF;
+		END IF;
+		
+		IF COALESCE(model, '') <> '' AND formattedPlate <> '' THEN
+			RETURN model || ' - ' || formattedPlate;
+		ELSEIF COALESCE(model, '') <> '' THEN
+			RETURN model;
+		ELSE
+			RETURN formattedPlate;
+		END IF;
+	END;
+END MODULE;

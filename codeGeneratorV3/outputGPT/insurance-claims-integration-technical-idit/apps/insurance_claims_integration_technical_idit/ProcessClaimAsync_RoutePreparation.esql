@@ -1,0 +1,15 @@
+CREATE COMPUTE MODULE ProcessClaimAsync_RoutePreparation
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		IF COALESCE(InputLocalEnvironment.Variables.TCSLog.userDefined.routeUsed, 'loss-event') = 'manageClaims' THEN
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+		END IF;
+		
+		PROPAGATE TO TERMINAL 'out';
+		RETURN FALSE;
+	END;
+END MODULE;

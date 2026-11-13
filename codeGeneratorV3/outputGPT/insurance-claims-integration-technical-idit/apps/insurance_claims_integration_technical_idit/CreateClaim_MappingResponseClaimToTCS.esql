@@ -1,0 +1,10 @@
+CREATE COMPUTE MODULE CreateClaim_MappingResponseClaimToTCS
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET Environment.Variables."claim-number" = InputRoot.JSON.Data.externalID;
+		SET Environment.Variables.TCSLog.context.transaction.CLAIM_NUMBER = Environment.Variables."claim-number";
+		SET Environment.Variables.IDITerror = FALSE;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

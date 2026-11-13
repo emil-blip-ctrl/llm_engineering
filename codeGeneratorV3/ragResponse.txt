@@ -1,0 +1,1730 @@
+=================== Answer to question1 ====================a warning is generated, and the path of the message flow that you have connected to the
+HTTP Timeout terminal is ignored. No further warnings are generated until the next restart.
+To set a static timeout value in an input node:
+1. Create a message flow, or open an existing flow.
+2. In the Message Flow editor, select the input node for this message flow. The node properties are
+displayed in the Properties view (below the editor pane).
+3. Set an appropriate time for the timeout interval in the property Maximum client wait time. The
+default interval is 180 seconds.
+If this time expires, and you have not connected one or more nodes to the HTTP Timeout terminal, the
+listener that received the client request message responds with a SOAP Fault message indicating that
+a timeout has occurred.
+800  IBM App Connect Enterprise 12.0: User Guide
+4. If you want to provide customized timeout processing, connect one or more nodes to the HTTP
+Timeout terminal. You must include in this sequence the reply node that matches the input node.
+Therefore, if your message flow starts with an HTTPInput node, you must include an HTTPReply; if
+your message flow starts with a SOAPInput node, you must include a SOAPReply node.
+To set a dynamic timeout value in an input node:
+• Override the timeout value set on the input node by using the Java plug-in API to update it in a
+JavaCompute node using the MbUtilities.changeIdentifierTimeout() method. The following
+code shows an example of the changeIdentifierTimeout method:
+MbMessage localEnv = assembly.getLocalEnvironment();
+MbElement rootElem = localEnv.getRootElement();
+MbElement repIdElement = rootElem.getFirstElementByPath(
+   "/Destination/SOAP/Reply/ReplyIdentifier");
+Object repId = repIdElement.getValue();
+boolean success = changeIdentifierTimeout((byte[])repId, timeout);
+• Override the timeout value set on the input node by using the CHANGEIDENTIFIERTIMEOUT function.
+You can derive the value that you use to replace the existing value by several means; for example:
+• Read a record from a database.
+• Use a value from a ﬁeld within the message body.
+By propagating from the HTTP Timeout terminal you can then change the contents of the responses that
+your message flow sends to the client. The processing on the sequence of nodes that you connect to
+the HTTP Timeout terminal is also subject to a further timeout, so that the client always gets a response
+within a known timeout interval.
+When a message is propagated from the HTTP Timeout terminal the message tree contains the input
+headers of the original input message and a message body that is the fault timeout message. The
+original message body along with other information relating to the timeout can be accessed in the
+LocalEnvironment message tree. For example, the following record can be found in the LocalEnvironment:
+  (0x01000000:Name):HTTP = (
+    (0x01000000:Name):Input = (
+      (0x01000000:Name):Timeout = (
+        (0x03000000:NameValue):OriginalClientLastWaitTime = 10 (INTEGER)
+        (0x03000000:NameValue):OriginalClientWaitTime     = 15 (INTEGER)
+        (0x03000000:NameValue):OriginalMessageMadeTheFlow = TRUE (BOOLEAN)
+        (0x03000000:NameValue):OriginalRequestIdentifier  = 
+           X'48545450000000000000000000000000c00c000000000000' (BLOB)
+        (0x03000000:NameValue):OriginalInboundMessage     = X'3c3e' (BLOB)
+      )
+    )
+  )
+For SOAPInput nodes the SOAPReply node connected on the HTTP Timeout terminal path must send a
+SOAP fault response message and the reply status code of 500 cannot be altered. For HTTPInput nodes
+any response message can be sent from the HTTP Timeout terminal and the reply status code can be
+changed by updating the LocalEnvironment.Destination.HTTP.ReplyStatusCode message tree
+ﬁeld.
+Using compression with HTTP and SOAP nodes
+You can conﬁgure HTTP and SOAP nodes to use HTTP compression and decompression when sending
+and receiving messages.
+The nodes can be conﬁgured to compress request messages, accept and decompress responses, and
+decompress input messages.
+Background information
+The HTTP transport supports the sending of compressed data. Speciﬁc HTTP header ﬁelds are used to
+indicate that the data is compressed, and which compression technique was used for the compression.
+When an HTTP client makes an HTTP request, it can specify that it accepts a compressed response, and
+Chapter 6. Developing integration solutions  801
+also which types of compressed data it accepts. The three compression techniques supported by the
+HTTP transport are GZIP, deflate, and compress.
+The Accept-Encoding ﬁeld is used in anIf you do not complete this step, the ﬁrst available port in the default range (7843 - 7884) is used.
+2. Optional: Enable Client Authentication (mutual authentication):
+mqsichangeproperties integrationNodeName
+  -e integration_server_name -o HTTPSConnector
+  -n ReqClientAuth -v true 
+3. Optional: Change the SSL protocol.
+The default protocol for the HTTPInput node is TLS. Run the following command to change it to
+SSL. The only supported versions of TLSProtocols are TLSv1.2 and TLSv1.3. The values are not
+case-sensitive. If TLSProtocols is set to all, both versions are enabled. For more information, see
+Integration server HTTP listener parameters (SOAP and HTTP nodes). :
+mqsichangeproperties integrationNodeName
+  -e integration_server_name -o HTTPSConnector
+  -n TLSProtocols -v TLSv1.2
+4. Restart the integration node after you change one or more of the listener properties.
+5. Optional: Use the following command to display HTTPS properties:
+mqsireportproperties integrationNodeName 
+  -e integration_server_name -o HTTPSConnector  -r 
+2618  IBM App Connect Enterprise 12.0: User Guide
+Conﬁguring SOAPRequest and SOAPAsyncRequest nodes to use SSL (HTTPS)
+Conﬁgure the SOAPRequest and SOAPAsyncRequest nodes to communicate with other applications that
+use HTTP over SSL.
+Conﬁguring the nodes
+Procedure
+On the HTTP Transport page of the properties for the node, set the following properties:
+1. In the Web Service URL property, type the URL of the web service you want to call.
+2. Optional: Select the Enable certificate revocation list checking property.
+3. Set other SSL properties as appropriate.
+What to do next
+Test your conﬁguration.
+Conﬁguring HTTPInput and HTTPReply nodes to use SSL (HTTPS)
+Enable a message flow that uses HTTPInput and HTTPReply nodes to communicate with other
+applications that use HTTPS.
+Before you begin
+• Create the integration server to which you want to deploy the message flow. Follow the instructions in
+“Creating an integration server” on page 168.
+• Decide which HTTP Listener you want to use for HTTPS messages. For more information about which
+listener to use for HTTPS messages, see “HTTP listeners” on page 795.
+• Set up a public key infrastructure (PKI) to conﬁgure the keystores, truststores, passwords, and
+certiﬁcates to enable SSL communication. Follow the instructions in “Setting up a public key
+infrastructure” on page 2635. Following these instructions results in the integration server or
+integration node being conﬁgured for the PKI.
+About this task
+Complete these steps to enable a message flow that uses HTTPInput and HTTPReply nodes to
+communicate with other applications by using HTTP over SSL (HTTPS).
+Procedure
+1. Conﬁgure the integration server or integration node to use SSL.
+Complete one of the following substeps, depending on which HTTP listener you chose to use for
+HTTPS messages:
+• If you are using the integration node listener: Conﬁgure the integration node to use SSL
+• If you are using the integration server listener: Conﬁgure the integration server to use SSL
+Note:  If you conﬁgure your integration node and integration servers such that the integration node
+listener is used for some integration servers, and the integration server listener for other integration
+servers, you must complete the ﬁrst substep for the ﬁrst set of integration servers and second substep
+for each integration server in the second set.
+2. Create a message flow to use HTTPS
+3. Test your conﬁguration
+Chapter 8. Security  2619
+Conﬁguring an integration node to use SSL
+If you want to use the integration node listener for HTTPS, conﬁgure values for the node's HTTP listener
+properties.
+About this task
+Complete the following steps:
+Procedure
+1. Optional: If you do not want to use the default port 7083 for HTTPS messages, specify the port on
+which the integration node listens:
+mqsichangeproperties integrationNodeName
+  -b httplistener -o HTTPSConnector
+  -n port -v Port_to_listen_on_for_https
+On UNIX systems, only processes that run under a privileged user account (in most cases, root) can
+bind to ports lower than 1024.
+For the integration node to listen on these ports, the user ID under which the integration node is
+started must be root.
+2. Optional: Enable Client Authentication (mutual authentication):
+mqsichangeproperties integrationNodeName -b httplistener -o HTTPSConnector
+  -n ReqClientAuth -v true 
+3. Restart the integration node after you change one or more of the HTTP listener properties.
+4. Optional: Use the following commands to display HTTP listener properties:
+mqsireportproperties integrationNodeName -b“Policy sets” on page 2662.
+For HTTP and MQ input nodes, the Security properties page is used to conﬁgure the extraction of the
+identity. This defaults to Transport Default. For example, an HTTPInput node extracts a username
+and password from the HTTP BasicAuth header. The Security properties page allows the Identity
+token type and its location to be explicitly conﬁgured to control the extraction. This source identity
+information can be in a message header, the message body, or both.
+For information about the tokens that are supported by each node, see “Identity” on page 2554.
+3. If authentication is speciﬁed in the security proﬁle, the security manager either calls the conﬁgured
+security provider to authenticate the identity, or, if Local authentication has been conﬁgured, it
+authenticates the identity against the credentials that are held in the integration server's vault. A
+failure results in a security exception being returned to the node. The security providers that are
+supported by IBM Integration for authentication are LDAP, a WS-Trust v1.3 compliant Security Token
+Service (such as TFIM V6.2) and TFIM V6.1.
+A security cache is provided for the authentication result, which enables subsequent messages (with
+the same credentials) arriving at the message flow to be completed with the cached result, provided
+that it has not expired.
+For information about conﬁguring an independent integration server to enforce authentication on all
+HTTP and SOAP input nodes, see “Conﬁguring authentication for all HTTP and SOAP input nodes in
+an independent integration server” on page 2598.
+4. If identity mapping is speciﬁed in the security proﬁle, the security manager calls the conﬁgured
+security provider to map the identity to an alternative identity. A failure results in a security exception
+being returned to the node. Otherwise, the mapped identity information is set in the Mapped Identity
+elements in the Properties folder.
+The security providers that are supported by IBM Integration for identity mapping are a WS-Trust
+V1.3 compliant Security Token Service (such as TFIM V6.2) and TFIM V6.1.
+A security cache is provided for the result of the identity mapping.
+Alternatively, you can use a SecurityPEP node at any point in the message flow to map the identity
+that was authenticated at the security enabled input node. For more information, see “Invoking
+message flow security using a SecurityPEP node” on page 2569.
+Chapter 8. Security  2567
+5. If authorization is speciﬁed in the security proﬁle, the security manager calls the conﬁgured security
+provider to authorize that the identity (either mapped or source) has access to this message flow. A
+failure results in a security exception being returned to the node.
+The security providers that are supported by IBM Integration for authorization are LDAP, a WS-Trust
+V1.3 compliant Security Token Service (such as TFIM V6.2) and TFIM V6.1.
+A security cache is provided for the authorization result.
+Alternatively, you can use a SecurityPEP node at any point in the message flow to authorize the
+identity that was authenticated at the security enabled input node. For more information, see
+“Invoking message flow security using a SecurityPEP node” on page 2569.
+6. When all security processing is complete, or when a security exception is raised by the message flow
+security manager, control returns to the input node.
+When a security exception is returned to the security enabled input node, it performs the appropriate
+transport handling and ends the message flow transaction. For example, an HTTPInput node returns
+an HTTP header with a 401 HTTP response code, without propagating to an output terminal. A
+SOAPInput node returns a SOAP Fault, reporting the security exception. Alternatively, if the Treat
+security exceptions as normal property is set on the security enabled input node, a security
+exception is propagated to the node's Failure terminal. The security enabled input node propagates
+to its Out terminal only if all the conﬁgured operations in the associated security proﬁle complete
+successfully.
+7. The message, including the Properties folder and its source and mapped identity information, is
+propagated down the message flow.
+8. At subsequent nodes in the message flow an identity might be required to access a resource such as
+a database. The identity used to access such a resource is a proxy identity, an identity conﬁgured for
+the speciﬁc resource by using the mqsisetdbparms command.
+9. When you are developing a message flow you can use the identity ﬁelds in the Properties folder for
+applicationget the message, and
+processing might fail or produce unexpected results. This situation occurs if you specify identical values
+for the Path sufﬁx for URL properties of the HTTPInput node and the SOAPInput node. It can also occur if
+you use wildcards in either or both speciﬁcations, and an incoming message matches both properties.
+For more information about using the WebSphere Broker HTTP Transport, see the following topics:
+• “Working with HTTP flows” on page 792
+• “HTTP listeners” on page 795
+• “HTTP message format” on page 790
+• “HTTP headers” on page 791
+• “Web services example messages” on page 804
+For information about using HTTPS, see “Implementing SSL authentication” on page 2635.
+You can also use the HTTP proxy servlet in an external Web servlet container to provide listener support
+for a larger number of concurrent HTTP sessions. For more information about the servlet and its uses, see
+“HTTP proxy servlet overview” on page 141.
+Web services: when to use SOAP or HTTP nodes
+HTTP and SOAP nodes can both be used to interact with web services. Typically you use SOAP nodes
+when working with SOAP-based web services.
+For SOAP-based web services, several advantages exist if you use the SOAP nodes and the SOAP
+message domain instead of the HTTP transport nodes and XMLNSC message domain.
+• Support for WS-Addressing, WS-Security and SOAP headers.
+• A common SOAP logical tree format, independent of the bitstream format.
+• Runtime checking against WSDL.
+• Automatic processing of SOAP with Attachments (SwA).
+• Automatic processing of Message Transmission Optimization Mechanism (MTOM).
+Although the HTTP nodes can process SwA messages, you must use the MIME message domain and
+design your flow to handle the attachments explicitly, and use custom logic to extract and parse the SOAP.
+Cases where it might be better to use HTTP nodes include:
+• Message flows that interact with web services that use different standards, such as REST or XML-RPC.
+• Message flows that never use WS-Addressing, WS-Security, SwA, or MTOM.
+HTTP message format
+An HTTP message contains components that are appropriate to its type.
+The bit stream containing headers and body is parsed and represented within the message tree when an
+input request is received by an HTTPInput node, or when a response from a web service is received by
+the HTTPRequest node. A bit stream is created by parsers from the appropriate parts of the message tree
+when a reply is sent to the client by the HTTPReply node, or when a message is sent by the HTTPRequest
+node. For further details about these actions, see the individual node descriptions.
+790  IBM App Connect Enterprise 12.0: User Guide
+HTTP headers
+When an HTTPInput or HTTPRequest node receives a message, it parses the HTTP headers to create
+elements in the message tree. When an HTTPReply or HTTPRequest node sends a message, it parses the
+HTTP headers from the message tree into a bit stream.
+The HTTP headers in a message depend on the type of message that is processed. There are four
+message types recognized in a message flow, and a parser is associated with each of these.
+1. Input. An input message is received by the HTTPInput node from a client. The HTTP headers in the
+input message (data up to and including the CRLFCRLF) are parsed by the HTTPInput parser and
+are included in the message tree under the correlation name HTTPInput. The headers shown in the
+following table are expected in an input message; others might also be present.
+Header
+Content
+Example
+Host
+The host name to which the client issued the
+message.
+localhost
+Content-Length
+The length of the body of the input message
+in decimal (that follows the CRLFCRLF after
+the last header).
+520
+Content-Type
+The type of the body data.
+text/xml; charset=utf-8
+SOAPAction
+"" (empty string)
+The headers in the following table might also be automatically generated by the HTTPInput node
+depending on the request.
+Header
+Content
+Example
+X-Original-
+HTTP-Command
+An expanded version of the original inbound
+request
+POST
+http://localhost:7800/Wss001/
+services/Wss001 HTTP/1.1
+X-Remote-Addr
+The IP address of the client (or proxy if the
+client is connecting through a proxy)
+127.0.0.1
+X-Remote-Host
+The host name or address of the client (or
+proxy if the client is connecting through a
+proxy)
+localhost
+X-Server-Name
+The integration node's machine name
+localhost
+X-Server-Port
+The integration node's port
+7800
+X-Query-String
+The query string if present in the inbound
+URL (optional)
+a=b&x=y
+X-Scheme
+The scheme through which the client is
+connected, either http or https
+http
+2. Reply. A replylength of the body of the input message
+in decimal (that follows the CRLFCRLF after
+the last header).
+520
+Content-Type
+The type of the body data.
+text/xml; charset=utf-8
+SOAPAction
+"" (empty string)
+The headers in the following table might also be automatically generated by the HTTPInput node
+depending on the request.
+Header
+Content
+Example
+X-Original-
+HTTP-Command
+An expanded version of the original inbound
+request
+POST
+http://localhost:7800/Wss001/
+services/Wss001 HTTP/1.1
+X-Remote-Addr
+The IP address of the client (or proxy if the
+client is connecting through a proxy)
+127.0.0.1
+X-Remote-Host
+The host name or address of the client (or
+proxy if the client is connecting through a
+proxy)
+localhost
+X-Server-Name
+The integration node's machine name
+localhost
+X-Server-Port
+The integration node's port
+7800
+X-Query-String
+The query string if present in the inbound
+URL (optional)
+a=b&x=y
+X-Scheme
+The scheme through which the client is
+connected, either http or https
+http
+2. Reply. A reply message is sent by the HTTPReply node to the client that sent the corresponding input
+message. The headers in the reply message are created in the message tree under the correlation
+name HTTPReply, which is also the name of the parser used to parse that part of the message tree
+to a bit stream. You can create your own HTTPReply header in a Compute node, or you can conﬁgure
+Chapter 6. Developing integration solutions  791
+the HTTPReply node to create it by using default values, or values taken from the HTTPReply or
+HTTPResponse trees in the input message, or both.
+You can set the HTTPReply Status Code in the local environment; for more information, see the
+instructions for setting the HTTP Status Code for a reply in “Working with HTTP flows” on page 792.
+If the HTTPReply node creates a default HTTPReply header, it contains the headers and values shown
+in the following table.
+Header
+Value
+Content-Length (if
+present in the input
+message)
+The calculated length of the reply message body in decimal.
+Content-Type
+text/xml; charset=ccsid of the message body
+3. Request. A request message is sent by the HTTPRequest node. The HTTP headers in this message
+must be created in the message tree under the correlation name HTTPRequest, and are parsed by
+the HTTPRequest parser when the message tree is parsed to a bit stream. You can create your own
+HTTPRequest header in a Compute node, or you can conﬁgure the HTTPRequest node to create it
+using default values, or values taken from the HTTPInput or HTTPRequest trees in the input message,
+or both. If the HTTPRequest node creates a default HTTPRequest header, it contains the headers and
+values shown in the following table.
+Header
+Value
+Host
+Value set in the Default Web Service URL property.
+Content-Length
+The calculated length of the request message body in decimal.
+Content-Type
+text/xml; charset=ccsid of the message body
+SOAPAction
+"" (empty string)
+Content-Encoding
+"gzip" or "deflate" if the Use compression property is set to gzip, zlib
+(deflate), or deflate.
+Accept-Encoding
+"gzip, deflate" if the Accept compressed responses by default
+property is selected.
+4. Response. A response message is received by the HTTPRequest node from the application to which
+the corresponding request message was sent. The HTTP headers in the response message (data up to
+and including the CRLFCRLF) are parsed by the HTTPResponse parser and are included in the message
+tree under the correlation name HTTPResponse. The header shown in the following table is expected
+in a response message (though not required); others might also be present.
+Header
+Content
+Example
+Content-Length
+The length of the response message body in
+decimal.
+1585
+“Web services example messages” on page 804 provides example messages that include these
+headers.
+Working with HTTP flows
+Read this information if you are using HTTP message flows to interact with HTTP applications, including
+web services and RESTful services.
+About this task
+• Using secure connections with HTTPS
+• Using HTTP asynchronous request-response
+792  IBM App Connect Enterprise 12.0: User Guide
+• Setting the HTTP Status Code for a reply
+• Using LocalEnvironment.Destination.HTTP.RequestIdentiﬁer
+• Setting the HTTPRequest node URL dynamically
+• Setting Generate default HTTP headers from reply or response for the HTTPReply node
+• Setting Generate default HTTP headers from input for the HTTPRequest node
+You must decide which listener you want the HTTP nodes to use:
+• The integration node listener (the httplistener component) has an HTTPConnector for handling HTTP
+messages, and an HTTPSConnector'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS'
+    #CORSAllowHeaders: 'Accept,Accept-Language,Content-Language,Content-Type'
+796  IBM App Connect Enterprise 12.0: User Guide
+    #EnableTLSTrace: false                  # Enables tracing of TLS handshake messages to the
+ console
+For more information about these parameters, see Integration server HTTP listener parameters (SOAP
+and HTTP nodes).
+The following examples assume that an integration server is associated with an integration node.
+Run the following command to display the HTTPConnector properties for an integration server called
+default on integration node integrationNodeName:
+mqsireportproperties integrationNodeName -e default -o HTTPConnector -r 
+Run the following command to display the HTTPSConnector properties for an integration server called
+default on integration node integrationNodeName:
+mqsireportproperties integrationNodeName -e default -o HTTPSConnector -r 
+By default, SOAPInput, SOAPReply, SOAPAsyncResponse, HTTPInput, HTTPReply, and
+HTTPAsyncResponse nodes use the integration server listener. They also use the integration server
+listener if the integration node listener is not available, even if you do not explicitly reconﬁgure them to
+use the integration server listener. If integration server default on integration node integrationNodeName
+is using the embedded listener for SOAP nodes or HTTP nodes, the following commands return a value of
+true:
+mqsireportproperties integrationNodeName -e default -o ExecutionGroup -n
+ soapNodesUseEmbeddedListener
+mqsireportproperties integrationNodeName -e default -o ExecutionGroup -n
+ httpNodesUseEmbeddedListener
+If you conﬁgure any of the SOAP nodes or HTTP nodes to use the integration node listener, the previous
+commands return a value of false.
+Integration node listeners
+You can conﬁgure the integration node listener for HTTP and HTTPS conﬁgurations by setting values in
+the integration node's node.conf.yaml ﬁle:
+HTTPConnector:
+   ListenerPort:  7080
+HTTPSConnector:
+   ListenerPort:  7083 
+Run the following two commands to display the currently active settings for the integration node listener:
+mqsireportproperties integrationNodeName -b NodeHttpListener -o HTTPConnector -r 
+mqsireportproperties integrationNodeName -b NodeHttpListener -o HTTPSConnector -r 
+Each connector has its own assigned port; default values are 7080 for HTTP and 7083 for HTTPS. You
+can change these port numbers by using the mqsichangeproperties command. For example, run
+the following command to change the port on which the integration node listener for integration node
+integrationNodeName listens for HTTP messages:
+mqsichangeproperties integrationNodeName -b NodeHttpListener -o HTTPConnector 
+   -n ListenerPort -v 8085 
+Run the following command to change the port on which the integration node listener for integration node
+integrationNodeName listens for HTTPS messages:
+mqsichangeproperties integrationNodeName -b NodeHttpListener -o HTTPSConnector 
+   -n ListenerPort -v 8086 
+Chapter 6. Developing integration solutions  797
+You can conﬁgure one or more integration servers so that HTTP nodes that you deploy to those
+integration servers use the embedded listener, or so that SOAP nodes that you deploy to those integration
+servers use the integration node listener.
+Using both integration node and embedded listeners
+Because the option to use the embedded listener is at the integration server level, you can change your
+conﬁguration such that some integration servers that are associated with an integration node use the
+integration node listener for HTTP nodes, SOAP nodes, or both, and other integration servers use the
+embedded listener for HTTP nodes, SOAP nodes, or both.
+However, if you disable the integration node listener, the integration server listeners are used for all HTTP
+and SOAP nodes, even if you do not explicitly enable support for them.
+The HTTPRequest node always communicates directly through the HTTP transport, and is therefore
+unaffected by your choice.
+If you change the listener and port that are processing your HTTP or HTTPS messages, you must ensure
+that you also update your applications to use the updated conﬁguration.
+Switching from embedded listeners to an integration node listener
+Conﬁgure your integration node and integration servers that are associated with an integration node to
+use the integration node listener for HTTP or SOAP nodes in one or more integration servers.
+Before you begin
+The integration node listener requires access to system queues on the queue manager speciﬁed on the
+integration node, so you must install
+IBMstatus code in the ﬁeld X-Original-HTTP-Status-Code in the HTTPReplyHeader header.
+• Set your status code in the ﬁeld X-Original-HTTP-Status-Code in the HTTPResponseHeader
+header. This option is useful if you include an HTTPRequest node before the HTTPReply node
+in your flow, because the HTTPResponseHeader header is created for you. In this scenario, an
+HTTPResponseHeader header has been created in the logical tree, representing the HTTP headers
+in the response from another web service. If you have selected the Generate default HTTP
+Chapter 6. Developing integration solutions  793
+headers from reply or response property on the HTTPReply node, values for the response
+header are set as default values when the reply message is created.
+Using LocalEnvironment.Destination.HTTP.RequestIdentiﬁer
+When the HTTPInput node receives an input request message, it sets the local environment ﬁeld
+Destination.HTTP.RequestIdentiﬁer to a unique value that identiﬁes the web service client that sent
+the request. You can refer to this value, and you can save it to another location if appropriate.
+For example, if you design a pair of message flows that interact with an existing IBM MQ application
+you can save the identiﬁer value in the request flow, and restore it in the reply flow, to ensure that
+the correct client receives the reply. If you use this technique, you must not change the data, and you
+must retain the data as a BLOB.
+The HTTPReply node extracts the identiﬁer value from the local environment tree and sets up the
+reply so that it is sent to the speciﬁc client. However, if you are using an HTTPReply node in a flow
+that does not have an HTTPInput node, and this ﬁeld has been deleted or set incorrectly, message
+BIP3143S is issued.
+If you design a message flow that includes both an HTTPInput and an HTTPReply node, the identiﬁer
+value is set into the local environment by the HTTPInput node, but the HTTPReply node does not use
+it. Therefore, if your message flow includes both HTTP nodes and a Compute node in the same flow,
+you do not have to include the local environment tree when you specify which components of the
+message tree are copied from input message to output message by the Compute node (the Compute
+mode property).
+Setting the HTTP request URL dynamically
+You can set the property Default web service URL on the HTTPRequest or HTTPAsyncRequest
+node to determine the destination URL for a web service request. You can conﬁgure a
+Compute node before the HTTPRequest or HTTPAsyncRequest node within the message
+flow to override the value set in the property. Code ESQL that stores a URL string in
+LocalEnvironment.Destination.HTTP.RequestURL; the node retrieves and uses the URL string in place
+of the node property value.
+Although you can also set the request URL in the special header X-Original-HTTP-URL in the
+HTTPRequestHeader header section of the request message (which overrides all other settings) in a
+Compute node, use the local environment tree content for this purpose for greater flexibility.
+Setting Generate default HTTP headers from reply or response for the HTTPReply node
+If you select Generate default HTTP headers from reply or response in the HTTPReply
+node properties, the node includes a minimum set of headers in the response that is sent to the web
+service client.
+To set headers explicitly, create them in an HTTPReplyHeader header. For example, a Compute node
+propagates a message in the XMLNSC domain and modiﬁes the Content-Type as follows:
+CALL CopyMessageHeaders();
+SET OutputRoot.HTTPReplyHeader."Content-Type" = 'text/xml';
+SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
+Do not use the ContentType property to set the Content-Type unless you are working in the MIME
+domain. The ContentType property is intended to set the value of Content-Type used in MIME.
+The full set of HTTP headers used in the reply is built by selecting the headers using the algorithm
+deﬁned in the following steps:
+1. Select one or more headers in an HTTPReplyHeader header.
+2. If no Content-Type header is yet deﬁned, create one by using a non-empty value in the
+ContentType property.
+3. Select one or more headers in an HTTPResponseHeader header (an HTTPResponseHeader header
+is propagated on return from an HTTPRequest node).
+4. If no Content-Type header is yet deﬁned, create one with the default value text/xml;
+charset=ccsid of the message body.
+794  IBM App Connect Enterprise 12.0: User Guide
+5. Create or overwrite the Content-Length header.
+Attention:  The HTTPReply node always rewrites the Content-Length header, even if you have
+cleared Generateflow or
+message flow node.
+6. Restart the integration server for the changes to take effect, ensuring that you specify the vault key; for
+example:
+IntegrationServer --work-dir c:\mywrk\myaceworkdir --vault-key abcd1234
+What to do next
+When the deployed message flows are invoked with security applied, any request to the flow must
+provide the required credentials. Failure to do so will result in an authentication error and the request will
+fail.
+Conﬁguring authentication for all HTTP and SOAP input nodes in an independent
+integration server
+Enforce authentication on all HTTP and SOAP input nodes deployed to an independent integration server.
+About this task
+You can conﬁgure an independent integration server to enforce basic authentication on all HTTP and
+SOAP input nodes by setting forceServer properties in the server.conf.yaml conﬁguration ﬁle:
+#forceServerHTTP:               false  # Set true to override and force unsecured HTTP on all
+ HTTP/SOAP input nodes deployed in this server. Defaults to false.
+2598  IBM App Connect Enterprise 12.0: User Guide
+#forceServerHTTPS:              false  # Set true to override and force secured HTTPS on all
+ HTTP/SOAP input nodes deployed in this server. Defaults to false.
+#forceServerHTTPSecurityProfile: ''    # Set a security profile, {<policy project
+ name>}:<security profile basename>, to override and force all HTTP/SOAP transport
+                                       # input nodes deployed in this server to apply the
+ security set in the profile. Default is unset, so flow or node setting applies
+Procedure
+To conﬁgure the independent integration server to enforce basic authentication on HTTP and SOAP input
+nodes, complete the following steps:
+1. Open the server.conf.yaml conﬁguration ﬁle for the integration server, by using a YAML editor.
+If you do not have access to a YAML editor, you can edit the ﬁle by using a plain text editor; however,
+you must ensure that you do not include any tab characters, which are not valid in YAML and would
+cause your conﬁguration to fail. If you are using a plain text editor, ensure that you use a YAML
+validation tool to validate the content of your ﬁle.
+2. Enforce secured HTTPS on all HTTP and SOAP input nodes deployed to the integration server, by
+uncommenting the forceServerHTTPS property and setting it to true.
+This setting overrides any existing authentication settings speciﬁed on the HTTP and SOAP input nodes
+and on the message flow.
+3. Specify a security proﬁle to apply to all HTTP and SOAP input nodes deployed to the integration server,
+by setting the forceServerHTTPSecurityProfile property to the name of the policy, in the form
+{policy_project_name}:security_profile_name; for example:
+forceServerHTTPSecurityProfile: '{SecPolicy}:BasicAuthLocal'
+The security settings in the security proﬁle will override any security settings speciﬁed on the HTTP
+and SOAP input nodes and on the message flow. If this property is not set, the settings speciﬁed on the
+input nodes or message flow apply.
+4. Restart the integration server for the changes to take effect.
+Providing credentials in HTTP requests
+Use a security proﬁle to conﬁgure HTTPRequest and SOAPRequest nodes to authenticate with a remote
+server.
+About this task
+Basic authentication is a common extension in the HTTP protocol that allows a client to provide identity
+information to a remote web server in the form of a username and password sent in the HTTP header
+data. Security proﬁles in IBM App Connect Enterprise provide a way for message flow designers to
+provide these credentials without building the HTTP headers in a Compute node.
+The identity that is to be propagated in the HTTP request can be provided in any of the following ways:
+• If identity propagation is enabled for the selected security proﬁle, the HTTPRequest and SOAPRequest
+nodes automatically pick up username and password credentials, if present, from the Properties tree.
+This setting is enabled for the predeﬁned Default Propagation security proﬁle. For more information, see
+“Conﬁguring a message flow for identity propagation” on page 2613.
+• You can conﬁgure a static username and password identity to be used, by specifying credentials
+with the command and the command. For information about using these commands to conﬁgure
+credentials, see “Conﬁguring encrypted security credentials” on page 177. Alternatively, you can use
+the mqsisetdbparms command. For more information, see “Conﬁguring a message flow for identity
+propagation” on page 2613.
+Note:  By default, the credentials are placed in the HTTP request only in response to a=================== Answer to question1 ====================(CAST) exception is detected.
+Parser exception trace output
+Use a Trace node to produce details of exceptions that occur when the message parser is started.
+IBM MQ connections
+The number of IBM® MQ connections that an integration node requires to a queue manager depends on the actions of the message flows that access the IBM MQ resource.
+User exception trace output
+Use a Trace node to produce details of exceptions that occur when user exceptions are generated.
+The EXISTS function returns a Boolean value to indicate whether a list contains at least one element (that is, whether the list exists).
+Syntax
+EXISTS
+(
+ListExpression
+)
+If the list specified by ListExpression contains one or more elements, EXISTS returns TRUE. If the list contains no elements, EXISTS returns FALSE.
+ListExpression is any expression that returns a list. All the following expressions, for example, return a list:
+A LIST constructor
+A field reference with the [] array indicator
+Some SELECT expressions (not all return a list)
+If you want to know only whether a list contains at least one elements or none, EXISTS executes more quickly than an expression involving the CARDINALITY function (for example, CARDINALITY(ListExpression ) <> 0).
+A typical use of this function is to determine whether a field exists.
+Examples
+-- Determine whether the F1 array exists in the message. Note that the [ ]
+-- are required
+DECLARE Field1Exists BOOLEAN EXISTS(OutputRoot.XMLNS.Data.Source.F1[]);
+-- Determine whether the F1 array contains an element with the value 'F12'.
+-- Again note that the [ ] are required
+DECLARE Field1F12Exists BOOLEAN 
+  EXISTS(SELECT F.* FROM OutputRoot.XMLNS.Data.Source.F1[] AS F where F = 'F12');
+The EXP numeric function returns the exponential value of a given number.
+Syntax
+EXP
+(
+NumericExpression
+)
+The EXP function returns the exponential of the value specified by NumericExpression. The parameter can be any built-in numeric data type. The result is FLOAT unless the parameter is NULL, in which case the result is NULL.
+The EXTRACT function extracts fields (or calculates values) from datetime values and intervals.
+The result is INTEGER for YEAR, MONTH, DAY, HOUR, MINUTE, DAYS, DAYOFYEAR, DAYOFWEEK, MONTHS, QUARTEROFYEAR, QUARTERS, WEEKS, WEEKOFYEAR, and WEEKOFMONTH extracts, but FLOAT for SECOND extracts, and BOOLEAN for ISLEAPYEAR extracts. If the SourceDate is NULL, the result is NULL regardless of the type of extract.
+Syntax
+EXTRACT
+(
+YEAR
+MONTH
+DAY
+HOUR
+MINUTE
+SECOND
+DAYS
+DAYOFYEAR
+DAYOFWEEK
+MONTHS
+QUARTEROFYEAR
+QUARTERS
+WEEKS
+WEEKOFYEAR
+WEEKOFMONTH
+ISLEAPYEAR
+FROM
+SourceDate
+)
+EXTRACT extracts individual fields from datetime values and intervals. You can extract a field only if it is present in the datetime value specified in the second parameter. Either a parse-time or a runtime error is generated if the requested field does not exist within the data type.
+The following table describes the extracts that are supported:
+Note: All new integer values start from 1.
+Table 1.
+Extract
+Description
+YEAR	Year
+MONTH	Month
+DAY	Day
+HOUR	Hour
+MINUTE	Minute
+SECOND	Second
+DAYS	Days encountered between 1st January 0001 and the SourceDate.
+DAYOFYEAR	Day of year
+DAYOFWEEK	Day of the week: Sunday = 1, Monday = 2, Tuesday = 3, Wednesday = 4, Thursday = 5, Friday = 6, Saturday = 7.
+MONTHS	Months encountered between 1st January 0001 and the SourceDate.
+QUARTEROFYEAR	Quarter of year: January to March = 1, April to June = 2, July to September = 3, October to December = 4.
+QUARTERS	Quarters encountered between 1st January 0001 and the SourceDate.
+WEEKS	Weeks encountered between 1st January 0001 and the SourceDate.
+WEEKOFYEAR	Week of year
+WEEKOFMONTH	Week of month
+ISLEAPYEAR	Whether this is a leap year
+Notes:
+A week is defined as Sunday to Saturday, not any seven consecutive days. You must convert to an alternative representation scheme if required.
+The source date time epoch is 1 January 0001. Dates before the epoch are not valid for this function.
+The Gregorian calendar is assumed for calculation.
+Example
+EXTRACT(YEAR FROM CURRENT_DATE)
+and
+EXTRACT(HOUR FROM LOCAL_TIMEZONE)
+both work without error, but
+EXTRACT(DAY FROM CURRENT_TIME)
+fails.
+EXTRACT (DAYS FROM DATE '2000-02-29')
+calculates the number of days encountered since year 1 to '2000-02-29' and
+EXTRACT (DAYOFYEAR FROM CURRENT_DATE)
+calculates the number of days encountered since the beginning of the current year but
+EXTRACT (DAYOFYEAR FROM CURRENT_TIME)
+fails because CURRENT_TIME does not contain date information.
+The FIELDNAMESPACE field function returns the namespace of a given field.
+SyntaxAS DECIMAL),
+    CAST(Root.XMLNS.TestCase.broker_buy_price AS DECIMAL),
+    CAST(Root.XMLNS.TestCase.broker_sell_price AS DECIMAL),
+    Root.XMLNS.TestCase.stock_high_price,
+    CURRENT_DATE,
+    CURRENT_TIME); 
+ 
+ELSEIF Root.XMLNS.TestCase.Action = 'DELETE' THEN
+        DELETE FROM Database.STOCK WHERE STOCK.STOCK_ID = 
+                    CAST(Root.XMLNS.TestCase.stock_id AS INTEGER);
+   
+   ELSEIF Root.XMLNS.TestCase.Action = 'UPDATE' THEN
+           UPDATE Database.STOCK as A SET STOCK_DESC = Root.XMLNS.TestCase.stock_desc
+                  WHERE  A.STOCK_ID = CAST(Root.XMLNS.TestCase.stock_id AS INTEGER);
+END IF;
+Checking returns to SELECT
+If a SELECT function returns no data, or no further data, this result is handled as a normal situation and no
+error code is set in SQLCODE, regardless of the setting of the Throw Exception On Database Error
+and Treat Warnings As Errors properties on the current node.
+About this task
+To recognize that a SELECT function has returned no data, include ESQL that checks what has been
+returned. You can use various methods:
+1. EXISTS
+This ESQL returns a Boolean value that indicates if a SELECT function returned one or more values
+(TRUE), or none (FALSE).
+IF EXISTS(SELECT T.MYCOL FROM Database.MYTABLE) THEN 
+...
+2. CARDINALITY
+If you expect an array in response to a SELECT, you can use CARDINALITY to calculate how many
+entries have been received.
+SET OutputRoot.XMLNS.Testcase.Results[] = ( 
+    SELECT T.MYCOL FROM Database.MYTABLE)
+......
+IF CARDINALITY (OutputRoot.XMLNS.Testcase.Results[])> 0 THEN
+........
+3. IS NULL
+If you have used either THE or ITEM keywords in your SELECT function, a scalar value is returned.
+If no rows have been returned, the value set is NULL. However, it is possible that the value NULL is
+contained within the column, and you might want to distinguish between these two cases.
+Distinguish between cases by including COALESCE in the SELECT function, for example:
+SET OutputRoot.XMLNS.Testcase.Results VALUE = THE (
+   SELECT ITEM COALESCE(T.MYCOL, 'WAS NULL')
+   FROM Database.MYTABLE);
+If this example returns the character string WAS NULL, it indicates that the column contained NULL,
+and not that no rows were returned.
+Chapter 6. Developing integration solutions  1673
+In previous releases, an SQLCODE of 100 was set in most cases if no data, or no further data, was
+returned. An exception was raised by the integration node if you chose to handle database errors in the
+message flow.
+Committing database updates
+When you create a message flow that interacts with databases, you can choose whether the updates
+that you make are committed when the current node has completed processing, or when the current
+invocation of the message flow has terminated.
+About this task
+The information in this topic does not apply to the DatabaseInput node. For more information about the
+DatabaseInput node, see “Event-based database integration” on page 1136.
+You must use separate ODBC connections if you want to include nodes with Automatic transaction
+status and nodes with Commit transaction status in the same message flow, where the nodes operate
+on the same external database. Set up one connection for the nodes that are not to commit until the
+completion of the message flow, and a second connection for the nodes that are to commit immediately.
+For each node, select the appropriate option for the Transaction property to specify when its database
+updates are to be committed:
+• Choose Automatic (the default) if you want updates made in this node to be committed or rolled back
+as part of the whole message flow. The actions that you deﬁne in the ESQL module are performed on
+the message and it continues through the message flow. If the message flow completes successfully,
+the updates are committed. If the message flow fails, the message and the database updates are rolled
+back.
+• Choose Commit if you want to commit the action of the node on the database, irrespective of the
+success or failure of the message flow as a whole. The database update is committed when the node
+processing is successfully completed, that is, after all ESQL has been processed, even if the message
+flow itself detects an error in a subsequent node that causes the message to be rolled back.
+The value that you choose is implemented for the database tables that you have updated. You cannot
+select a different value for each table.
+If you have set Transaction to Commit, the behavior of the message flow and the commitment of
+database updates can be affected by the use of the PROPAGATE statement in the node's ESQL.
+If you chooseare shown here by selecting or clearing the Enabled check box.
+Calling ESQL functions
+Most ESQL functions belong to a schema called SQL and this is particularly useful if you have functions with the same name.
+For example, if you have created a function called SQRT, you can code:
+            /* call my SQRT function  */
+            SET Variable1=SQRT (4); 
+            /* call the SQL supplied function */
+            SET Variable2=SQL.SQRT (144);
+Most of the functions described in this section impose restrictions on the data types of the arguments that can be passed to the function. If the values passed to the functions do not match the required data types, errors are generated at node configuration time whenever possible. Otherwise runtime errors are generated when the function is evaluated.
+The CARDINALITY function returns the number of elements in a list.
+Syntax
+CARDINALITY
+(
+ListExpression
+)
+CARDINALITY returns an integer value giving the number of elements in the list specified by ListExpression.
+ListExpression is any expression that returns a list. All the following, for example, return a list:
+A LIST constructor
+A field reference with the [] array indicator
+Some SELECT expressions (not all return a list)
+A common use of this function is to determine the number of fields in a list before iterating over them.
+Examples
+-- Determine the number of F1 fields in the message.
+-- Note that the [ ] are required   
+DECLARE CountF1 INT CARDINALITY(OutputRoot.XMLNS.Data.Source.F1[]);
+-- Determine the number of fields called F1 with the value 'F12' in the message.
+-- Again note that the [ ] are required
+DECLARE CountF1F12 INT     
+  CARDINALITY(SELECT F.* FROM OutputRoot.XMLNS.Data.Source.F1[] AS F 
+              where F = 'F12');
+-- Use the value returned by CARDINALITY to refer to a specific element 
+-- in a list or array:
+-- Array indices start at 1, so this example refers to the third-from-last
+-- instance of the Item field
+Body.Invoice.Item[CARDINALITY(Body.Invoice.Item[]) - 2].Quantity
+CASE is a complex function that has two forms; the simple-when form and the searched-when form. In either form CASE returns a result, the value of which controls the path of subsequent processing.
+Syntax
+CASE
+simple-when-clause
+searched-when-clause
+ELSE NULL
+ELSE 
+result_expression
+END
+simple-when-clause
+source_value
+WHEN 
+test_value
+THEN
+result_value
+NULL
+searched-when-clause
+WHEN 
+search_condition
+THEN
+result_value
+NULL
+In the simple-when form, source_value is compared with each test_value until a match is found. The result of the CASE function is the value of the corresponding result_value. The data type of source_value must therefore be comparable to the data type of each test_value.
+The CASE function must have at least one WHEN clause. The ELSE expression is optional. The default ELSE expression is NULL. A CASE expression is delimited by END. The test values do not have to be literal values.
+The searched-when form is similar, but has the additional flexibility of allowing a number of different values to be tested.
+The following example shows a CASE function with a simple WHEN clause. In this example, the CASE can be determined only by one variable that is specified next to the CASE keyword.
+ DECLARE CurrentMonth CHAR;
+  DECLARE MonthText CHAR;
+  SET CurrentMonth = SUBSTRING(InputBody.Invoice.InvoiceDate FROM 6 FOR 2);
+  SET MonthText = 
+   CASE CurrentMonth
+      WHEN '01' THEN 'January' 
+      WHEN '02' THEN 'February'
+      WHEN '03' THEN 'March' 
+      WHEN '04' THEN 'April' 
+      WHEN '05' THEN 'May' 
+      WHEN '06' THEN 'June' 
+      ELSE 'Second half of year' 
+   END;
+The following example shows a CASE function with a searched-when-clause. This example is still determined by one variable CurrentMonth:
+ DECLARE CurrentMonth CHAR;
+  DECLARE MonthText CHAR;
+  SET CurrentMonth = SUBSTRING(InputBody.Invoice.InvoiceDate FROM 6 FOR 2);
+  SET MonthText = 
+   CASE  
+      WHEN Month = '01' THEN 'January' 
+      WHEN Month = '02' THEN 'February'
+      WHEN Month = '03' THEN 'March' 
+      WHEN Month = '04' THEN 'April' 
+      WHEN Month = '05' THEN 'May' 
+      WHEN Month = '06' THEN 'June' 
+      ELSE 'Second half of year' 
+   END;
+In a searched-when-clause, different variables can be used in the WHEN clauses to determine the result. This is demonstrated in the following example of the searched-when-clause:
+ DECLARE CurrentMonth CHAR;
+  DECLARE CurrentYear CHAR;
+  DECLARE MonthText CHAR;
+  SET CurrentMonth = SUBSTRING(InputBody.Invoice.InvoiceDate FROM 6 FOR 2);
+  SET CurrentYear = SUBSTRING(InputBody.Invoice.InvoiceDate FROM 1where each value is associated with an instance of
+repeating elements as shown here:
+   <MRM>
+     <str1>abcde</str1>
+     <str1>fghij</str1>
+     <str1>12345</str1>
+   </MRM> 
+you might expect that the following ESQL syntax works:
+   DECLARE D INTEGER;
+   SET D = CARDINALITY(InputBody.str1.*[]);
+   DECLARE M INTEGER 1;
+   WHILE M <= D DO
+      SET OutputRoot.MRM.str1[M] = InputBody.inner.*[M];
+      SET M = M + 1;
+   END WHILE;
+However, the statement:
+ SET OutputRoot.MRM.str1[M] = InputBody.inner.*[M];
+requests a tree copy from input to output. Because the output element does not yet exist, the statement
+creates it, and its value and type are set from the input.
+Therefore, to create the output message with the required format, given an input element which is of type
+xsd:list, use the FIELDVALUE function to explicitly retrieve only the value of the input element:
+ SET OutputRoot.MRM.str1[M] = FIELDVALUE(InputBody.inner.*[M]);
+Manipulating repeating ﬁelds in a message tree
+This topic describes the use of the SELECT function, and other column functions, to manipulate repeating
+ﬁelds in a message tree.
+About this task
+Suppose that you want to perform a special action on invoices that have a total order value greater than
+a certain amount. To calculate the total order value of an Invoice ﬁeld, you must multiply the Price
+ﬁelds by the Quantity ﬁelds in all the Items in the message, and total the result. You can do this using a
+SELECT expression as follows:
+1648  IBM App Connect Enterprise 12.0: User Guide
+(
+ SELECT SUM( CAST(I.Price AS DECIMAL) * CAST(I.Quantity AS INTEGER) )
+  FROM Body.Invoice.Purchases."Item"[] AS I
+) 
+The example assumes that you need to use CAST expressions to cast the string values of the ﬁelds Price
+and Quantity into the correct data types. The cast of the Price ﬁeld into a decimal produces a decimal
+value with the natural scale and precision, that is, whatever scale and precision is necessary to represent
+the number. These CASTs would not be necessary if the data were already in an appropriate data type.
+The SELECT expression works in a similar way to the quantiﬁed predicate, and in much the same way that
+a SELECT works in standard database SQL. The FROM clause speciﬁes what is being iterated, in this case,
+all Item ﬁelds in Invoice, and establishes that the current instance of Item can be referred to using I.
+This form of SELECT involves a column function, in this case the SUM function, so the SELECT is evaluated
+by adding together the results of evaluating the expression inside the SUM function for each Item ﬁeld
+in the Invoice. As with standard SQL, NULL values are ignored by column functions, with the exception
+of the COUNT column function explained later in this section, and a NULL value is returned by the column
+function only if there are no non-NULL values to combine.
+The other column functions that are provided are MAX, MIN, and COUNT. The COUNT function has two
+forms that work in different ways with regard to NULLs. In the ﬁrst form you use it much like the SUM
+function above, for example:
+SELECT COUNT(I.Quantity)
+  FROM Body.Invoice.Purchases."Item"[] AS I
+This expression returns the number of Item ﬁelds for which the Quantity ﬁeld is non-NULL. That is, the
+COUNT function counts non-NULL values, in the same way that the SUM function adds non-NULL values.
+The alternative way of using the COUNT function is as follows:
+SELECT COUNT(*)
+  FROM Body.Invoice.Purchases."Item"[] AS I
+Using COUNT(*) counts the total number of Item ﬁelds, regardless of whether any of the ﬁelds is NULL.
+The preceding example is in fact equivalent to using the CARDINALITY function, as in the following
+example:
+CARDINALITY(Body.Invoice.Purchases."Item"[])
+In all the examples of SELECT given here, just as in standard SQL, you could use a WHERE clause to
+provide ﬁltering on the ﬁelds.
+Manipulating other parts of the message tree
+You can access message tree headers, the properties tree, the local environment tree, the environment
+tree and the exception list tree.
+About this task
+The following topics describe how you can access parts of the message tree other than the message body
+data. These parts of the logical tree are independent of the domain in which the message exists, and all
+these topics apply to messages in the BLOB domain in addition to all other supported domains.
+• “Accessing headers” on page 1650
+• “Accessing the Properties tree” on page 1653
+• “Accessing the local environment tree” on page 1654
+• “Accessing the environment tree” on page 1657
+• “Accessing the ExceptionList tree using ESQL” on page 1658that can
+iterate over all instances of a repeating ﬁeld. The quantiﬁed predicate allows you to execute a predicate
+against all instances of a repeating ﬁeld, and collate the results.
+For example, you might want to verify that none of the items that are being ordered has a quantity greater
+than 50. To do this you could write:
+FOR ALL Body.Invoice.Purchases."Item"[] 
+    AS I (I.Quantity <= 50)
+With the quantiﬁed predicate, the ﬁrst thing to note is the brackets [] on the end of the ﬁeld reference
+after FOR ALL. These tell you that you are iterating over all instances of the Item ﬁeld.
+Chapter 6. Developing integration solutions  1637
+In some cases, this syntax appears unnecessary because you can get that information from the context,
+but it is done for consistency with other pieces of syntax.
+The AS clause associates the name I with the current instance of the repeating ﬁeld. This is similar to
+the concept of iterator classes used in some object oriented languages such as C++. The expression in
+parentheses is a predicate that is evaluated for each instance of the Item ﬁeld.
+A description of this example is:
+Procedure
+Iterate over all instances of the ﬁeld Item inside Body.Invoice.
+For each iteration:
+a) Bind the name I to the current instance of Item.
+b) Evaluate the predicate I.Quantity <= 50.
+If the predicate:
+• Evaluates to TRUE for all instances of Item, return TRUE.
+• Is FALSE for any instance of Item, return FALSE.
+• For a mixture of TRUE and UNKNOWN, return UNKNOWN.
+Results
+The above is a description of how the predicate is evaluated if you use the ALL keyword. An alternative
+is to specify SOME, or ANY, which are equivalent. In this case the quantiﬁed predicate returns TRUE if
+the sub-predicate returns TRUE for any instance of the repeating ﬁeld. Only if the sub-predicate returns
+FALSE for all instances of the repeating ﬁeld does the quantiﬁed predicate return FALSE. If a mixture
+of FALSE and UNKNOWN values are returned from the sub-predicate, an overall value of UNKNOWN is
+returned.
+In the following ﬁlter expression:
+FOR ANY Body.Invoice.Purchases."Item"[]  
+    AS I (I.Title = 'The XML Companion')
+the sub-predicate evaluates to TRUE. However this next expression returns FALSE:
+FOR ANY Body.Invoice.Purchases."Item"[] 
+    AS I (I.Title = 'C Primer')
+because the C Primer is not included on this invoice. If some of the items in the invoice do not include
+a book title ﬁeld, the sub-predicate returns UNKNOWN, and the quantiﬁed predicate returns the value
+UNKNOWN.
+To deal with the possibility of null values appearing, write this ﬁlter with an explicit check on the existence
+of the ﬁeld, as follows:
+FOR ANY Body.Invoice.Purchases."Item"[] 
+  AS I (I.Book IS NOT NULL AND I.Book.Title = 'C Primer')
+The predicate IS NOT NULL ensures that, if an Item ﬁeld does not contain a Book, a FALSE value is
+returned from the sub-predicate.
+You can also manipulate arbitrary repeats of ﬁelds within a message by using a SELECT expression, as
+described in “Referencing columns in a database” on page 1666.
+You can refer to the ﬁrst and last instances of a repeating ﬁeld using the [>] and [<] array indexes, and
+to instances relative to the ﬁrst and last, even if you do not know how many instances there are. These
+indexes are described in “Accessing known multiple occurrences of an element” on page 1636.
+Alternatively, you can use the CARDINALITY function to determine how many instances of a repeating
+ﬁeld there are. For example:
+1638  IBM App Connect Enterprise 12.0: User Guide
+DECLARE I INTEGER CARDINALITY(Body.Invoice.Purchases."Item"[])
+Using anonymous ﬁeld references
+You can refer to the array of all children of a particular element by using a path element of *.
+About this task
+For example:
+InputRoot.*[]
+is a path that identiﬁes the array of all children of InputRoot. This is often used in conjunction with an
+array subscript to refer to a particular child of an entity by position, rather than by name. For example:
+InputRoot.*[<]
+Refers to the last child of the root of the input message, that is, the body of the message.
+InputRoot.*[1]
+Refers to the ﬁrst child of the root of the input message, the message properties.
+You might want to ﬁnd out the name of an element that has been identiﬁed with a path of this kind. To do
+this, use the FIELDNAME function, which is described in FIELDNAME function.
+Creating dynamic ﬁeld references
+You can use a variable of type REFERENCE as a dynamic reference to navigate a message tree. This acts in
+a similar way to a message cursor or a variable pointer.
+About this task
+It is generally simpler andon page 2692
+• “ESQL reference variables” on page 2693
+• “ESQL string functions” on page 2693
+• “Message trees with repeating records” on page 2693
+ESQL array processing
+About this task
+Array subscripts [ ] are expensive in terms of performance because of the way in which subscript is
+evaluated dynamically at run time. By avoiding the use of array subscripts wherever possible, you can
+improve the performance of your ESQL code. You can use reference variables instead, which maintain a
+pointer into the array and which can then be reused; for example:
+DECLARE myref REFERENCE TO InputRoot.XML.Invoice.Purchases.Item[1];
+-- Continue processing for each item in the array
+WHILE LASTMOVE(myref)=TRUE DO
+   -- Add 1 to each item in the array
+   SET myref = myref + 1;
+   -- Do some processing
+   -- Move the dynamic reference to the next item in the array
+   MOVE myref NEXTSIBLING;
+END WHILE;
+ESQL array processing example:
+The following example shows ESQL being used to process records read from a database. The repeated
+use of array subscripts such as Environment.Variables.DBData[A] increases the processing time
+signiﬁcantly:
+SET Environment.Variables.DBDATA[] =
+(
+SELECT T.*
+FROM Database.{'ABC'}.{'XYZ'} as T
+);
+DECLARE A INTEGER 1;
+DECLARE B INTEGER CARDINALITY(Environment.Variables.*[]);
+SET JPcntFODS = B;
+WHILE A <= B DO
+            CALL CopyMessageHeaders();
+            CREATE FIELD OutputRoot.XML.FODS;
+            DECLARE outRootRef REFERENCE TO OutputRoot.XML.Data;
+            SET outRootRef.Field1 = Trim(Environment.Variables.DBDATA[A].Field1);
+            SET outRootRef.Field2 = Trim(Environment.Variables.DBDATA[A].Field2);
+            SET outRootRef.Field3 = Trim(Environment.Variables.DBDATA[A].Field3);
+            SET outRootRef.Field4 = Trim(Environment.Variables.DBDATA[A].Field4);
+            SET outRootRef.Field5 = Trim(Environment.Variables.DBDATA[A].Field5);
+            . . .
+            . . .
+            SET outRootRef.Field37 = CAST(Environment.Variables.DBDATA[A].Field37)
+            SET A = A + 1;
+            PROPAGATE;
+END WHILE;
+You can reduce the processing time signiﬁcantly by using reference variables
+ESQL CARDINALITY function
+About this task
+Avoid the use of CARDINALITY in a loop; for example:
+Chapter 9. Performance, monitoring, and workload management  2691
+WHILE ( I < CARDINALITY (InputRoot.MRM.A.B.C[]
+The CARDINALITY function must be evaluated each time the loop is traversed, which is costly in
+performance terms. This is particularly true with large arrays because the loop is repeated more
+frequently. It is more efﬁcient to determine the size of the array before the WHILE loop (unless it changes
+in the loop) so that it is evaluated only once; for example:
+SET ARRAY_SIZE = CARDINALITY (InputRoot.MRM.A.B.C[]
+WHILE ( I < ARRAY_SIZE )
+ESQL DECLARE and EVAL statements
+About this task
+Reduce the number of DECLARE statements (and therefore the performance cost) by declaring a variable
+and setting its initial value within a single statement. Alternatively, you can declare multiple variables of
+the same data type within a single ESQL statement rather than in multiple statements. This technique
+also helps to reduce memory usage.
+The EVAL statement is sometimes used when there is a requirement to dynamically determine correlation
+names. However, it is expensive in terms of CPU use, because it involves the statement being run twice.
+The ﬁrst time it runs, the component parts are determined, in order to construct the statement that will be
+run; then the statement that has been constructed is run.
+ESQL PASSTHRU statement
+About this task
+The following techniques can signiﬁcantly improve performance when you are using PASSTHRU
+statements:
+• Avoid the use of the PASSTHRU statement with a CALL statement to invoke a stored procedure. As an
+alternative, you can use the CREATE PROCEDURE ... EXTERNAL ... and CALL ... commands.
+• When you are working with SQL statements that require literal or data values, use host variables,
+which map a column value to a variable. This enables dynamic SQL statements to be reused within the
+database. An SQL PREPARE on a dynamic statement is an expensive operation in performance terms,
+so it is more efﬁcient to run this only once and then EXECUTE the statement repeatedly, rather than to
+PREPARE and EXECUTE every time.
+For example, the following statement has two data and literal values, 100 and IBM:
+PASSTHRU('UPDATE SHAREPRICES AS SP SET Price = 100 WHERE SP.COMPANY = ‘IBM'');
+This statement is effective when the price is 100 and the company is IBM. When either the Price or
+Company=================== Answer to question1 ====================List
+CREATE PROCEDURE addToMQDestinationList(IN LocalEnvironment REFERENCE, IN newQueue char) BEGIN
+  /*******************************************************************************
+  * A procedure that adds a queue name to the MQ destination list in the local environment.
+  * This list is used by an MQOutput node that has its mode set to Destination list.
+  *
+  * IN LocalEnvironment: the LocalEnvironment to be modified. 
+  * IN queue: the queue to be added to the list
+  *
+  *******************************************************************************/
+DECLARE I INTEGER CARDINALITY(LocalEnvironment.Destination.MQ.DestinationData[]);
+  IF I = 0 THEN
+   SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName = newQueue;
+  ELSE
+   SET OutputLocalEnvironment.Destination.MQ.DestinationData[I+1].queueName = newQueue;
+  END IF;
+ END;
+For full details of these elements, see Data types for elements in the MQ DestinationData subtree.
+1656  IBM App Connect Enterprise 12.0: User Guide
+Changing the default URL for a SOAPRequest node or a SOAPAsyncRequest node request
+CREATE PROCEDURE overrideDefaultSOAPRequestURL(IN LocalEnvironment REFERENCE, IN newUrl char) BEGIN
+  /*******************************************************************************
+  * A procedure that changes the URL to which the SOAPRequest node or 
+  * SOAPAsyncRequest node sends the request.
+  * 
+  * IN LocalEnvironment: the LocalEnvironment to be modified. 
+  * IN queue:  the URL to which to send the request.
+  *
+  *******************************************************************************/
+SET OutputLocalEnvironment.Destination.SOAP.Request.Transport.HTTP.WebServiceURL = newUrl;
+END;
+Changing the default URL for an HTTPRequest node request
+CREATE PROCEDURE overrideDefaultHTTPRequestURL(IN LocalEnvironment REFERENCE, IN newUrl char) BEGIN
+  /*******************************************************************************
+  * A procedure that changes the URL to which the HTTPRequest node sends the request.
+  * 
+  * IN LocalEnvironment: the LocalEnvironment to be modified. 
+  * IN queue: the URL to which to send the request.
+  *
+  *******************************************************************************/
+  SET OutputLocalEnvironment.Destination.HTTP.RequestURL = newUrl;
+END;
+Adding a label for the RouteToLabel node
+CREATE PROCEDURE addToRouteToLabelList(IN LocalEnvironment REFERENCE, IN newLabel char) BEGIN
+  /*******************************************************************************
+  * A procedure that adds a label name to the RouteToLabel list in the local environment.
+  * This list is used by a RoteToLabel node.
+  *
+  * IN LocalEnvironment: the LocalEnvironment to be modified. 
+  * IN label:  the label to be added to the list
+  *
+  *******************************************************************************/
+ IF LocalEnvironment.Destination.RouterList.DestinationData is null THEN
+     SET OutputLocalEnvironment.Destination.RouterList.DestinationData."label" = newLabel;
+  ELSE
+     CREATE LASTCHILD OF LocalEnvironment.Destination.RouterList.DestinationData
+     NAME 'label' VALUE newLabel; 
+  END IF;
+END;
+Setting up JMS destination lists
+You can conﬁgure a JMSOutput node to send to multiple JMS Queues, or to publish to multiple JMS
+Topics by using a destination list that is created in the local environment tree by a transformation
+node. The following example shows how to set up JMS destination lists in the local environment tree:
+CREATE PROCEDURE CreateJMSDestinationList() BEGIN
+  SET OutputLocalEnvironment.Destination.JMSDestinationList.DestinationData[1]  = 'jndi://
+TestDestQueue1';
+  SET OutputLocalEnvironment.Destination.JMSDestinationList.DestinationData[2]  = 'jndi://
+TestDestQueue2';
+  SET OutputLocalEnvironment.Destination.JMSDestinationList.DestinationData[3]  = 'jndi://
+TestDestQueue3';
+END;
+Accessing the environment tree
+The environment tree has its own correlation name, Environment, and you must use this name in all ESQL
+statements that refer to, or set, the content of this tree.
+About this task
+The environment tree is always created when the logical tree is created for an input message. However,
+the message flow neither populates it, nor uses its contents. You can use this tree for your own purposes,
+for example, to pass information from one node to another. You can use the whole tree as a scratchpad or
+working area.
+Chapter 6. Developing integration solutions  1657
+The advantage of creating your own data in environment is that this data is propagated as part of the
+logical tree to subsequent nodes in thenew output message.
+To ensure that the information in the local environment is propagated further down the flow, the Compute
+mode property of the Compute node must be set to include the local environment as part of the output
+tree (for example, specify LocalEnvironment and Message). For further details about the Compute
+mode property, see Setting the mode.
+However, any data updates or additions that you make in one node are not retained if the message moves
+backwards through the message flow (for example, if an exception is thrown). If you create your own data,
+and want that data to be preserved throughout the message flow, you must use the environment tree.
+Chapter 6. Developing integration solutions  1655
+You can set values in the variables subtree in a Compute node and those values can be used later by
+another node (Compute, Database, or Filter) for some purpose that you determine when you conﬁgure the
+message flow.
+The local environment is not in scope in a Compute node, therefore you must use
+InputLocalEnvironment and OutputLocalEnvironment instead. For example, you might use the
+scratchpad in the local environment to propagate the destination of an output message to subsequent
+nodes in a message flow. Your ﬁrst Compute node determines that the output messages from this
+message flow must go to IBM MQ queues. Include the following ESQL to insert this information into the
+local environment by setting the value of OutputLocation in the OutputLocalEnvironment:
+SET OutputLocalEnvironment.Variables.OutputLocation = 'MQ';
+Your second Compute node can access this information from its input message. In the ESQL in this node,
+use the correlation name InputLocalEnvironment to identify the local environment tree in the input
+message that contains this data. The following ESQL sets queueManagerName and queueName based on
+the content of OutputLocation in the local environment, by using InputLocalEnvironment:
+IF InputLocalEnvironment.Variables.OutputLocation = 'MQ' THEN
+   SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = 'myQManagerName';
+   SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'myQueueName';
+END IF;
+In the example, queueManagerName and queueName are set for the Destination subtree in the output
+message. You must set the Compute mode of the second Compute node to include the local environment
+tree in the output message. Conﬁgure the MQOutput node to use the destination list that you have created
+in the local environment tree by setting the Destination Mode property to Destination List.
+For information about the full list of elements in the DestinationData subtree, see Data types for elements
+in the MQ DestinationData subtree.
+Populating Destination in the local environment tree
+Use the Destination subtree to set up the target destinations that are used by output nodes, the
+HTTPRequest node, the SOAPRequest node, the SOAPAsyncRequest node, and the RouteToLabel node.
+The following examples show how you can create and use an ESQL procedure to perform the task of
+setting up values for each of these uses.
+About this task
+Copy and use these procedures as shown, or you can modify or extend them to perform similar tasks.
+If you are creating this ESQL code for a Compute node, you must conﬁgure the node by setting the
+Compute Mode property so that it has access to the local environment tree in the output message. You
+must select one of the three values LocalEnvironment, LocalEnvironment And Message, or All.
+Adding a queue name for the MQOutput node with the Destination Mode property set to
+Destination List
+CREATE PROCEDURE addToMQDestinationList(IN LocalEnvironment REFERENCE, IN newQueue char) BEGIN
+  /*******************************************************************************
+  * A procedure that adds a queue name to the MQ destination list in the local environment.
+  * This list is used by an MQOutput node that has its mode set to Destination list.
+  *
+  * IN LocalEnvironment: the LocalEnvironment to be modified. 
+  * IN queue: the queue to be added to the list
+  *
+  *******************************************************************************/
+DECLARE I INTEGER CARDINALITY(LocalEnvironment.Destination.MQ.DestinationData[]);
+  IF I = 0 THEN
+   SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName = newQueue;
+  ELSE
+   SET OutputLocalEnvironment.Destination.MQ.DestinationData[I+1].queueName = newQueue;
+  END IF;
+ END;
+For full details of these elements, see Data types for elements in the MQ DestinationData subtree.
+1656  IBM App Connect Enterprisetab, set the Compute mode property to MQ.TASK2.STATE1.
+b) An ESQL module, MQ_Task2_Reply_Set_CorrelId_And_RTQ, is automatically
+created. In the Application Development view, open ESQLs, and then the
+MQ_Task2_Reply_Set_CorrelId_And_RTQ module.
+c) Copy the following ESQL into the module:
+CREATE COMPUTE MODULE MQ_Task2_Reply_Set_CorrelId_And_RTQ
+ CREATE FUNCTION Main() RETURNS BOOLEAN
+ BEGIN
+  SET OutputRoot = InputRoot;
+  SET OutputRoot.MQMD.CorrelId = InputLocalEnvironment.Variables.ResultRoot.BLOB.BLOB;
+  SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName =
+ InputLocalEnvironment.Variables.ResultRoot.MQMD.ReplyToQ;
+  SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueManagername =
+ InputLocalEnvironment.Variables.REResultRoot.MQMD.ReplyToQMgr;
+  RETURN TRUE;
+ END;
+END MODULE;
+The Set CorrelId And RTQ Compute node:
+i) Extracts the ReplyToQ and ReplyToQMgr from the MQMD of the state message.
+ii) Sets a CorrelId that is the value of the MessageId in the body of the original state message.
+The CorrelId is used for the Reply message flow.
+26. Set the following properties of the Send Reply MQOutput node:
+a) On the Advanced tab, set the Destination mode property to Destination list
+By setting the MQOutput node in Destination List mode, the output queue can be set dynamically.
+27. Set the following properties of the Handle MQGet Warning Throw node:
+a) On the Basic tab, enter error message text into the Message text ﬁeld.
+For example, "MQGet returned a warning."
+If a warning occurs in the message from the MQGet node, the Handle_MQGet_Warning Throw
+node returns an error message about this warning. The message tree contains the MQMD and any
+message content that was received.
+Chapter 6. Developing integration solutions  759
+28. Set the following properties of the Handle Error Not Stored Message Throw node:
+a) On the Basic tab, enter error message text into the Message text ﬁeld.
+For example, "MQGet error, no store message queue received."
+If an error occurs because the MQGet node failed to get the message from the store queue, the
+Handle_Error_Not_Stored_Message Compute node returns an error message. The message is
+not processed.
+You cannot return the message from the Reply message flow back to the Request message flow.
+Therefore, you must consider error handling at a higher level in your messaging architecture than the
+error handling options that are provided by message flow nodes.
+The message flow can now communicate with a backend application. For this scenario, create a third
+message flow to represent this application.
+A backend application, by default, copies the MessageId of the message to its CorrelId, and this value
+is then sent in the reply message. However, as a real application is not used in this scenario, this action
+was taken by the Save MQMD Headers to LocalEnvironment Compute node in step “10” on page
+756 for the Request message flow.
+To demonstrate that the backend application is successfully processed in the Reply message flow, a
+Compute node modiﬁes the Completion Time value that is in the message.
+29. Create a message flow that is named MQ_Task2_BackendApp with the following nodes, and name
+them on the Description tab Node name property:
+• An MQInput node, named Get Request Message.
+• A Compute node, named Modify Completion Time.
+• An MQReply node, named Put Reply Message.
+30. Connect the Out terminal of the Get Request Message MQInput node to the In terminal of the
+Modify Completion Time Compute node.
+31. Connect the Out terminal of the Modify Completion Time Compute node to the In terminal of the
+Put Reply Message MQReply node.
+32. Set the following properties of the Get Request Message MQInput node:
+a) On the Basic tab, set the Queue name property to MQ.TASK2.BACKEND.REQ1.
+b) On the MQ Connection tab, set the Connection property to Local queue manager, and then
+the Destination queue manager property to TASK2_QUEUE_MANAGER.
+c) On the Input Message Parsing tab, set the Message domain property to XMLNSC.
+33. Set the following properties of the Modify Completion Time Compute node:
+a) An ESQL module, MQ_Task2_BackendApp_Modify_Completion_Time, is
+automatically created. In the Application Development view, open ESQLs, and then the
+MQ_Task2_BackendApp_Modify_Completion_Time module.
+b) Copy the following ESQL into the module:
+CREATE COMPUTE MODULE MQ_Task2_BackendApp_Modify_Completion_Time
+ CREATE FUNCTION Main() RETURNS BOOLEAN
+ BEGIN
+  SET OutputRoot = InputRoot;
+  SET OutputRoot.XMLNSC.SaleEnvelope.TimeStamp = CURRENT_GMTTIMESTAMP;
+  RETURN TRUE;
+ END;
+760  IBM App Connecthas been put to an IBM MQ queue, it includes the queue manager and
+queue names). You can use the following method to obtain information about the details of a message
+after it has been sent by the nodes:
+• Connect a Compute node to the Out terminal.
+1654  IBM App Connect Enterprise 12.0: User Guide
+The topic for each node that supports WrittenDestination information contains details about the data
+that it contains.
+If you want the local environment tree to be included in the output message that is propagated by the
+Compute node, you must set the Compute node property Compute mode to a value that includes the
+local environment (for example, All). If you do not, the local environment tree is not copied to the output
+message.
+The information that you insert into DestinationData or Defaults depends on the characteristic of
+the corresponding node property:
+• If a node property is represented by a check box (for example, New Message ID), set the Defaults or
+DestinationData element to Yes (equivalent to selecting the check box) or No (equivalent to clearing
+the check box).
+• If a node property is represented by a drop-down list (for example, Transaction Mode), set
+the Defaults or DestinationData element to the appropriate character string (for example
+Automatic).
+• If a node property is represented by a text entry ﬁeld (for example, Queue Manager Name), set the
+Defaults or DestinationData element to the character string that you would enter in this ﬁeld.
+If necessary, conﬁgure the sending node to indicate where the destination information is. For example, for
+the output node MQOutput, set Destination Mode:
+• If you set Destination Mode to Queue Name, the output message is sent to the queue identiﬁed in
+the output node properties Queue Name and Queue Manager Name. Destination is not referenced by
+the node.
+• If you set Destination Mode to Destination List, the node extracts the destination information
+from the Destination subtree. If you use this value you can send a single message to multiple
+destinations, if you conﬁgure Destination and a single output node correctly. The node checks the
+node properties only if a value is not available in Destination (as described above).
+• If you set Destination Mode to Reply To Queue, the message is sent to the reply-to queue
+identiﬁed in the MQMD in this message (ﬁeld ReplyToQ). Destination is not referenced by the node.
+To ﬁnd more information about ESQL procedures that perform typical updates to the local environment,
+see “Populating Destination in the local environment tree” on page 1656. Review the ESQL statements in
+these procedures to see how to modify the local environment. You can use these procedures unchanged,
+or modify them for your own requirements.
+To ﬁnd more information about how to extend the contents of this tree for your own purposes, see “Using
+scratchpad areas in the local environment” on page 1655.
+Using scratchpad areas in the local environment
+The local environment tree includes a subtree called variables. This subtree is always created, but
+is never populated by the message flow. Use this area for your own purposes; for example, to pass
+information from one node to another. You can create other subtrees of the local environment tree.
+About this task
+The advantage of creating your own data in a scratchpad in the local environment is that this data can
+be propagated as part of the logical tree to subsequent nodes in the message flow. If you create a new
+output message in a Compute node, you can also include all or part of the local environment tree from the
+input message in the new output message.
+To ensure that the information in the local environment is propagated further down the flow, the Compute
+mode property of the Compute node must be set to include the local environment as part of the output
+tree (for example, specify LocalEnvironment and Message). For further details about the Compute
+mode property, see Setting the mode.
+However, any data updates or additions that you make in one node are not retained if the message moves
+backwards through the message flow (for example, if an exception is thrown). If you create your own data,
+and want that data to be preserved throughout the message flow, you must use the environment tree.
+Chapter 6. Developing integration solutions  1655
+You can set values in the variables subtree in a Compute node and those values can be used later by
+another node (Compute, Database, or Filter) for some purpose that you determine when you conﬁgure the
+message flow.
+The local environment is not in scope in a Compute node, thereforeor SOAPAsyncRequest nodes, you
+can override their use of outbound MTOM messages in this subtree. See “SOAP MTOM and the
+SOAPReply, SOAPRequest, and SOAPAsyncRequest nodes” on page 849.
+LocalEnvironment.Destination.MQ
+If the message flow includes an MQOutput node, each element is a name element, MQ (A
+deprecated alternative exists, called MQDestinationList. Use MQ for all new message flows). If
+more than one element exists, each is processed sequentially by the node. See the example in
+“Populating Destination in the local environment tree” on page 1656.
+You can conﬁgure MQOutput nodes to examine the list of destinations and send the message to
+those destinations, by setting the property Destination Mode to Destination List. If you do
+so, you must create this subtree and its contents to deﬁne those destinations, giving it the name
+Destination. If you do not do so, the MQOutput node cannot deliver the messages.
+If you prefer, you can conﬁgure the MQOutput node to send messages to a single ﬁxed destination,
+by setting the property Destination Mode to Queue Name or Reply To Queue. If you select either
+of these ﬁxed options, the destination list has no effect onintegration server operations and you do
+not have to create this subtree.
+You can construct the MQ element to contain a single optional Defaults element. The Defaults
+element, if created, must be the ﬁrst child and must contain a set of name-value elements that give
+default values for the message destination and its PUT options for that parent.
+You can also create a number of elements called DestinationData within MQ. Each of these can be
+set up with a set of name-value elements that deﬁnes a message destination and its PUT options.
+The set of elements that deﬁne a destination is described in Data types for elements in the MQ
+DestinationData subtree.
+The content of each instance of DestinationData is the same as the content of Defaults for each
+protocol, and can be used to override the default values in Defaults. You can set up Defaults
+to contain values that are common to all destinations, and set only the unique values in each
+DestinationData subtree. If you do not set a value either in DestinationData or Defaults, the value
+that you have set for the corresponding node property is used. Similarly, if you specify a ﬁeld
+Chapter 6. Developing integration solutions  511
+name or value with the wrong spelling or case, it is ignored, and the value that you have set for the
+corresponding node property is used.
+The information that you insert into DestinationData depends on the characteristic of the
+corresponding node property: This information is described in “Accessing the local environment
+tree” on page 1654.
+LocalEnvironment.Destination.JMSDestinationList
+A JMSOutput node can be conﬁgured to send to multiple JMS Queues or to publish to multiple JMS
+Topics using a destination list created in the local environment by a transformation node.
+The JMSOutput node searches the local environment for data elements called DestinationData
+under the folder Destination.JMSDestinationList. The node sends the JMS message to each
+512  IBM App Connect Enterprise 12.0: User Guide
+DestinationData entry found in that folder. See the example in “Populating Destination in the local
+environment tree” on page 1656.
+LocalEnvironment.Destination.TCPIP
+If the message flow includes a TCPIPClientOutput node or a TCPIPServerOutput node, you can
+override its TCPIP connection with elements in this subtree. See node and node.
+LocalEnvironment.Destination.CORBA
+If the message flow includes a CORBARequest node, you can override its Operation name
+property by specifying a value in the following location:
+$LocalEnvironment/Destination/CORBA/Request/OperationName
+For more information about the operation name, see node.
+LocalEnvironment.Destination.CICS
+If the message flow includes a CICSRequest node, you can override the following properties with
+elements in this subtree:
+– Program name
+– Commarea length
+– Mirror transaction ID
+– Set EIBTRNID only
+– Message domain
+– Message set
+– Message type
+– Message format
+– Message coded character set ID
+– Message encoding
+For more information, see “Local environment overrides for the CICSRequest node” on page 1185.
+You can also set LocalEnvironment values for CICS channels and containers. For more information,
+see “COMMAREA or channel data structures” on page 1171.
+LocalEnvironment.Destination.MQTT.Output
+If the message flow includes an MQTTPublish node, you can override the following properties with
+elements in this subtree:
+– Retained
+– Topic name
+– Quality ofThe following ﬁgure shows an example of the local environment tree structure. The children of Destination
+are protocol-dependent.
+Chapter 6. Developing integration solutions  509
+In the tree structure shown, LocalEnvironment has several children:
+LocalEnvironment.Variables
+This subtree is optional. If you create local environment variables, store them in a subtree called
+Variables. It provides a work area that you can use to pass information between nodes. This subtree is
+never inspected or modiﬁed by any supplied node.
+Variables in the local environment can be changed by any subsequent message processing node, and
+the variables persist until the node that created them goes out of scope.
+The variables in this subtree are persistent only within a single instance of a message flow. If you have
+multiple instances of a message passing through the message flow, and need to pass information
+between them, you must use an external database.
+LocalEnvironment.Destination
+This subtree consists of a number of children that indicate the transport types to which the message
+is directed (the Transport identiﬁers), or the target Label nodes that are used by a RouteToLabel node.
+• Transport information
+Transport information is used by some input and output nodes, including FTE, HTTP, File, Email,
+SOAP, MQ, JMS, TCPIP, CORBA, CICS, and MQTT.
+LocalEnvironment.Destination.FTE
+If the message flow includes an FTEOutput node, you can override its properties with elements in
+this subtree. See “Using local environment variables with ﬁle nodes” on page 962.
+LocalEnvironment.Destination.HTTP
+If the message flow starts with an HTTPInput node, a single name element HTTP is added to
+Destination. The element HTTP.RequestIdentiﬁer is created and initialized so that it can be used
+by an HTTPReply node. You can also create other ﬁelds in the HTTP structure for use by the
+HTTPRequest node; for example, the URL of the service to which the request is sent. For more
+510  IBM App Connect Enterprise 12.0: User Guide
+information, see Local environment overrides in the topic node, and examples in “Populating
+Destination in the local environment tree” on page 1656.
+LocalEnvironment.Destination.File
+If the message flow includes a FileOutput node, you can override its directory and name
+properties with elements in this subtree. See “Using local environment variables with ﬁle nodes” on
+page 962.
+LocalEnvironment.Destination.Email
+If the message flow includes an EmailOutput node, then information deﬁned in this subtree will
+specify or override the SMTP server connection information and attachments associated with
+each email sent by the node. Multiple attachments can be speciﬁed for inclusion in the email sent,
+including the speciﬁcation of the attachment name, content, and type. See node.
+LocalEnvironment.Destination.SOAP
+You can place outbound WS-Addressing header information in the local environment to override the
+defaults that are generated by the SOAPReply, SOAPRequest, or SOAPAsyncRequest nodes. See
+“WS-Addressing information in the local environment” on page 834.
+If the message flow includes SOAPRequest or SOAPAsyncRequest nodes, you can override their
+HTTP Transport and JMS transport properties in this subtree. See node, node, or Local environment
+overrides for the node.
+If the message flow includes a SOAPAsyncRequest node, you can use this subtree to pass state
+and correlation information to a SOAPAsyncResponse node in another message flow. See “WS-
+Addressing with the SOAPAsyncRequest and SOAPAsyncResponse nodes” on page 833.
+If the message flow includes SOAPReply, SOAPRequest, or SOAPAsyncRequest nodes, you
+can override their use of outbound MTOM messages in this subtree. See “SOAP MTOM and the
+SOAPReply, SOAPRequest, and SOAPAsyncRequest nodes” on page 849.
+LocalEnvironment.Destination.MQ
+If the message flow includes an MQOutput node, each element is a name element, MQ (A
+deprecated alternative exists, called MQDestinationList. Use MQ for all new message flows). If
+more than one element exists, each is processed sequentially by the node. See the example in
+“Populating Destination in the local environment tree” on page 1656.
+You can conﬁgure MQOutput nodes to examine the list of destinations and send the message to
+those destinations, by setting the property Destination Mode to Destination List. If you do
+so, you must create this subtree and its contents to deﬁne those destinations, giving it the name
+Destination. If you do not do so, the MQOutput node cannot deliver the messages.
+If you prefer, you can conﬁgure the MQOutput node to send messages= '1414';
+channelName	This setting overrides the MQGet node channelName property; for example:
+SET OutputLocalEnvironment.MQ.GET.policy.channelName = 'SYSTEM.BKR.CONFIG';
+In cases where a dynamic policy URL is used but a subset of values must be changed, it is possible to specify both policyUrl and other individual parameters. For example, the following combination of settings would load the specified policy and then change only the destinationQueueManagerName setting. In this case, not all of the attributes need to be specified.
+SET OutputLocalEnvironment.MQ.GET.policyUrl = '{TestPolicies}:ValidMQClientPolicy';
+SET OutputLocalEnvironment.MQ.GET.policy.destinationQueueManagerName = 'Other_QM';
+Specifying a policyUrl of "-" causes the node attributes (either explicit configuration or policy) to be used as the attributes for the merge. This value enables a subset of node settings to be overridden without needing to know the policy for the node. For example, the following combination of settings would change only the channelName setting and use all of the other settings from the node configuration.
+SET OutputLocalEnvironment.Destination.MQ.policyUrl = '-';
+SET OutputLocalEnvironment.Destination.MQ.policy.channelName = 'SYSTEM.BKR.CONFIG';
+Overriding MQOutput node properties during message processing
+When you include and configure an MQOutput node in a message flow, you might want to override its properties under some conditions. For example, you might want to connect to a different queue manager based on data in another part of the message, or that is retrieved from a database record.
+About this task
+To override the values that you set for the MQOutput node properties to achieve a more dynamic way to process messages, include a Compute or JavaCompute node in your message flow before the MQOutput node. Configure this node to create an output message, and add fields to the local environment tree to define new values for the properties that you want to change.
+The MQOutput node can connect to a local or remote queue manager, by either setting the IBM MQ Connection properties or specifying an MQEndpoint policy on the Policy tab. These connection settings can be overridden during message processing by using the local environment tree to define new values for the properties that you want to change. The properties are:
+<parent folder>.policyUrl to override the whole policy for the node.
+<parent folder>.<MQEndpoint policy attribute> to provide (or override) a specific value.
+where the parent folder is OutputLocalEnvironment.Destination.MQ.
+Examples of the MQEndpoint policy attributes include destinationQueueManagerName and channelName. A special value of ‘-‘ can be used in the policyUrl property to mean “use the node attributes”, which is useful if only one value in the policy needs to be overridden.
+Procedure
+Use OutputLocalEnvironment.Destination.MQ. as the correlation name for all fields that relate to the MQOutput node.
+You can set any MQEndpoint policy attribute under the OutputLocalEnvironment.Destination.MQ tree, including the following examples:
+Setting
+Description
+policyUrl	This setting ignores the MQOutput node policy, and uses ValidMQClientPolicy in the TestPolicies project:
+SET OutputLocalEnvironment.Destination.MQ.policyUrl = '{TestPolicies}:ValidMQClientPolicy'
+This setting overrides any previous setting on the node regardless of whether a policy is configured for the node. Using this setting also causes a search for policies in the run directory when a previously deployed policy cannot be found. This allows policies to be used even if they were not visible when the server started, enabling configuration to be changed by copying policy files into place or by using a volume mount in a container to provide dynamic configuration updates.
+connection	This setting overrides the MQOutput node connection property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.connection = 'CLIENT';
+destinationQueueManagerName	This setting overrides the MQOutput node destinationQueueManagerName property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.destinationQueueManagerName = 'REG01';
+queueManagerHostname	This setting overrides the MQOutput node queueManagerHostname property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.queueManagerHostname = 'localhost';
+listenerPortNumber	This setting overrides the MQOutput node listenerPortNumber property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.listenerPortNumber = '1414';
+channelName	This setting overrides the MQOutput nodeor send the message to an additional destination.
+If you use aggregation in your message flows, you must use the output terminals.
+Terminals and properties
+When you add an MQOutput node to a message flow, you can use the Properties view in the Message Flow editor to configure it. To display field help, click within a field, and then click the information icon that is displayed at the beginning of the field. All mandatory properties that do not have a default value defined are marked with an asterisk. For general configuration information see Configuring a message flow node.
+You can create and attach policies to control particular connection properties for this type of node at run time (see MQEndpoint policy).
+The following tables describe the node terminals and the node properties that you can set on a specified tab in the Properties view in the Message Flow editor. The column headed M indicates whether the property is mandatory (marked with an asterisk if you must enter a value when no default is defined).
+Table of node terminals
+Table 1. The terminals of the MQOutput node
+Terminal
+Description
+In
+	The input terminal that accepts a message for processing by the node.
+Failure
+	The output terminal to which the message is routed if a failure is detected when the message is put to the output queue.
+Out
+	The output terminal to which the message is routed if it has been successfully put to the output queue.
+Tables of node properties
+Table 2. The Description properties of the node
+Property
+M
+Default
+Description
+Node name
+	No	The node type, MQOutput	The name of the node.
+Short description
+	No	 	A brief description of the node.
+Long description
+	No	 	Text that describes the purpose of the node in the message flow.
+Table 3. The Basic properties of the node
+Property
+M
+Default
+Description
+Queue name
+	No	 	To send the output message to a single destination queue that is defined by this node, enter the name of the IBM MQ output queue to which the message flow sends messages.
+If you set the Destination Mode property to Queue Name, you must specify a value for the Queue Name property. If you set Destination Mode to another value, this property is ignored.
+Table 4. The MQ Connection properties of the node
+Property
+M
+Default
+Description
+Connection
+	No	Local queue manager	This property specifies how a connection is made to IBM MQ:
+Select Local queue manager to make a local connection to a specified queue manager. If this option is selected, specify a queue manager in the Destination queue manager name property.
+If this property is set without a Destination queue manager name value, and no MQEndpoint policy is specified, the MQ node uses the connection details of the queue manager that is specified for the integration server at run time. If no queue manager was specified for the integration server, then the message flow will not deploy.
+Select MQ client connection properties to make a client connection to a remote queue manager by specifying the client connection details. If this option is selected, the following properties must also be specified:
+Queue manager host name
+Listener port number
+Channel name
+Destination queue manager name
+Select Client channel definition table (CCDT) file to use client connection details that are specified in a client channel definition table (CCDT) file. If this option is selected, you must also specify the queue manager name.
+Specify the location of the CCDT file by running the mqsichangeproperties command, using the registry object property mqCCDT. For example, enter the following command on one line:
+mqsichangeproperties INODE -o BrokerRegistry -n mqCCDT 
+-v "C:\Program Files (x86)\IBM\IBM MQ\Qmgrs\QM1\@ipcc\AMQCLCHL.TAB"
+If you select Connect with CCDT and mqCCDT is not set, then a runtime error occurs when IBM App Connect Enterprise attempts to connect to the specified queue manager. The mqCCDT property applies to a specific integration server, so if you want to connect to different queue managers using CCDT, then you must define separate client connection channels in the CCDT file for each queue manager.
+Valid values for mqsiapplybaroverride are SERVER, CLIENT, and CCDT.
+Destination queue manager name
+	No	 	This property specifies the name of the queue manager on which the destination message queues are defined.
+Queue manager host name
+	No	 	This property specifies the host name of the queue manager.
+To achieve high availability, you can specify more than one host name by separating each host name with a comma. The first host name in the list is used as the primary host name. If the connection toNo	 	A brief description of the node.
+Long Description
+	No	No	 	Text that describes the purpose of the node in the message flow.
+The Monitoring properties of the node are described in the following table.
+Property
+M
+C
+Default
+Description
+Events
+	No	No	None	Events that you define for the node are displayed on this tab. By default, no monitoring events are defined on any node in a message flow. Use Add, Edit, and Delete to create, change, or delete monitoring events for the node; see Configuring monitoring event sources by using monitoring properties for details.
+You can enable and disable events that are shown here by selecting or clearing the Enabled check box.
+MQOptimizedFlow node
+The MQOptimizedFlow node, available in earlier versions, is not supported in IBM® App Connect Enterprise 12.0.
+MQOutput node
+Use the MQOutput node to send messages to client applications using the IBM® MQ Enterprise Transport.
+IBM MQ is available as a separate installation package, and your IBM App Connect Enterprise license entitles you to install and use IBM MQ with IBM App Connect Enterprise. For more information, see Interaction between IBM App Connect Enterprise and IBM MQ and Installing IBM MQ.
+When you include and configure an MQOutput node in a message flow, you might want to override its properties under some conditions. For example, you might want to read from a queue that is identified in another part of the message, or that is retrieved from a database record. For more information, see Overriding MQOutput node properties during message processing.
+Purpose
+The MQOutput node delivers an output message from a message flow to an IBM MQ queue.
+On distributed systems, you can configure the MQOutput node to put a message to an IBM MQ queue on any local or remote queue manager, or to the destinations identified in the local environment associated with the message. You can either specify the queue manager explicitly by setting the MQ Connection properties on the MQOutput node, or specify an MQEndpoint policy on the Policy tab.
+If the integration server has a queue manager associated with it, then the MQ message flow node by default connects to that queue manager with server bindings. If you configure properties on the MQ Connection tab, then these properties will be used to connect to the specified queue manager. If you specify an MQEndpoint policy, then the values in the policy will be used instead of the values that are defined in the MQ Connection tab. If an MQEndpoint policy is specified, the values of properties that are set in the MQEndpoint policy are used at run time instead of any corresponding values that are set on the MQ Connection tab. All MQ nodes that do not have connection properties set and do not have an MQEndpoint policy specified will use the connection details of the queue manager that is associated with the integration server at run time. If no queue manager was specified for the integration server, the message flow cannot deploy. For more information, review the MQ Connection and Policy property tables in this topic.
+You can connect to a secured local or remote queue manager by using the Security identity property on the MQOutput node to pass a user name and password to the queue manager. The identity is defined using the mqsisetdbparms command. You can use the Security identity property to provide the security credentials on local and client connections, but it is not available for client connections that use a client channel definition table (CCDT). You can also choose whether to use the SSL protocol when a client connection is made to a remote queue manager. Select the Use SSL property on the MQOutput node to provide confidentiality on the client connection by using SSL. You can also set this property through an MQEndpoint policy. For more information about using security identities and SSL, see Connecting to a secured IBM MQ queue manager.
+You can define the queue as an IBM MQ clustered queue or shared queue. When you are using an IBM MQ clustered queue, if you leave the Object Queue Manager property empty, the cluster will route the message to an appropriate queue manager in the cluster.
+The MQOutput node checks for the presence of an MQMD (IBM MQ message descriptor) header in the message tree. If no MQMD header is present, the MQOutput node creates one in the message tree, and populates it with MQMD default properties. If an MQMD header is found, the MQOutput node checks that it is an IBM MQ type header; if it is not, the Message Context property is set to Default. For information about the content ofthe
+Properties tree. The output message properties do not have to be the same as the input message
+properties.
+For example, to set the output message properties for an output MRM message, set the following
+properties:
+Property
+Value
+MessageSet
+Message set identiﬁer
+MessageType
+Message name¹
+MessageFormat
+Physical format name²
+Notes:
+Chapter 6. Developing integration solutions  1653
+1. For details of the syntax of Message type, see “Specifying namespaces in the Message property” on
+page 2160.
+2. The name that you specify for the physical format must match the name that you have deﬁned for it.
+The default physical format names are Binary1, XML1, and Text1.
+This ESQL procedure sets message properties to values passed in by the calling statement. You might ﬁnd
+that you have to perform this task frequently, and you can use a procedure such as this in many different
+nodes and message flows. If you prefer, you can code ESQL that sets speciﬁc values.
+CREATE PROCEDURE setMessageProperties(IN OutputRoot REFERENCE, IN setName char,
+                 IN typeName char, IN formatName char) BEGIN
+ /****************************************************************************
+ * A procedure that sets the message properties
+ ****************************************************************************/
+ set OutputRoot.Properties.MessageSet    = setName;
+ set OutputRoot.Properties.MessageType   = typeName;
+ set OutputRoot.Properties.MessageFormat = formatName;
+END;
+To set the output message domain, you can code ESQL statements that refer to the required domain in
+the second qualiﬁer of the SET statement, the parser ﬁeld. For example, the ESQL statement sets the
+domain to MRM:
+SET OutputRoot.MRM.Field1 = 'field1 data';
+This ESQL statement sets the domain to XMLNS:
+SET OutputRoot.XMLNS.Field1 = 'field1 data';
+Do not specify more than one domain in the ESQL for any single message. However, if you use
+PROPAGATE statements to generate several output messages, you can set a different domain for each
+message.
+For information about the full list of elements in the Properties tree, see Data types for elements in the
+Properties subtree.
+Differences exist in the way the Properties folder and the MQMD folder are treated with respect to which
+folder takes precedence for the same ﬁelds. For more information, see “Properties versus MQMD folder
+behavior for various transports” on page 506.
+Accessing the local environment tree
+The local environment tree has its own correlation name, LocalEnvironment, and you must use this
+name in all ESQL statements that refer to or set the content of this tree.
+About this task
+You can refer to and modify the information in the local environment tree. You can also extend the tree
+to contain information that you create yourself. You can create subtrees of this tree that you can use as a
+scratchpad or working area.
+The message flow sets up information in two subtrees, Destination and WrittenDestination,
+below the LocalEnvironment root. You can refer to the content of both of these subtrees, and you can
+write to the Destination tree to influence the way in which the message flow processes your message.
+However, if you write to the Destination tree, follow the deﬁned structure to ensure that the tree
+remains valid.
+The WrittenDestination subtree contains the addresses to which the message has been written.
+Its name is ﬁxed and it is created by the message flow when a message is propagated through the Out
+terminal of a request, output, or reply node. The subtree includes transport-speciﬁc information (for
+example, if the output message has been put to an IBM MQ queue, it includes the queue manager and
+queue names). You can use the following method to obtain information about the details of a message
+after it has been sent by the nodes:
+• Connect a Compute node to the Out terminal.
+1654  IBM App Connect Enterprise 12.0: User Guide
+The topic for each node that supports WrittenDestination information contains details about the data
+that it contains.
+If you want the local environment tree to be included in the output message that is propagated by the
+Compute node, you must set the Compute node property Compute mode to a value that includes the
+local environment (for example, All). If you do not, the local environment tree is not copied to the output
+message.
+The information that you insert into DestinationData or Defaults depends on the characteristic of
+the corresponding node property:
+• If a node property is represented by a check box (for example, New Message ID), set the Defaults or
+DestinationData element to Yesif they were not visible when the server started, enabling configuration to be changed by copying policy files into place or by using a volume mount in a container to provide dynamic configuration updates.
+connection	This setting overrides the MQOutput node connection property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.connection = 'CLIENT';
+destinationQueueManagerName	This setting overrides the MQOutput node destinationQueueManagerName property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.destinationQueueManagerName = 'REG01';
+queueManagerHostname	This setting overrides the MQOutput node queueManagerHostname property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.queueManagerHostname = 'localhost';
+listenerPortNumber	This setting overrides the MQOutput node listenerPortNumber property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.listenerPortNumber = '1414';
+channelName	This setting overrides the MQOutput node channelName property; for example:
+SET OutputLocalEnvironment.Destination.MQ.policy.channelName = 'SYSTEM.BKR.CONFIG';
+In cases where a dynamic policy URL is used but a subset of values must be changed, it is possible to specify both policyUrl and other individual parameters. For example, the following combination of settings would load the specified policy and then change only the destinationQueueManagerName setting. In this case, not all of the attributes need to be specified.
+SET OutputLocalEnvironment.Destination.MQ.policyUrl = '{TestPolicies}:ValidMQClientPolicy';
+SET OutputLocalEnvironment.Destination.MQ.policy.destinationQueueManagerName = 'Other_QM';
+Specifying a policyUrl of "-" causes the node attributes (either explicit configuration or policy) to be used as the attributes for the merge. This value enables a subset of node settings to be overridden without needing to know the policy for the node. For example, the following combination of settings would change only the channelName setting and use all of the other settings from the node configuration.
+SET OutputLocalEnvironment.Destination.MQ.policyUrl = '-';
+SET OutputLocalEnvironment.Destination.MQ.policy.channelName = 'SYSTEM.BKR.CONFIG';
+Overriding MQPublication node properties during message processing
+When you include and configure an MQPublication node in a message flow, you might want to override its properties under some conditions. For example, you might want to connect to a different queue manager based on data in another part of the message, or that is retrieved from a database record.
+About this task
+To override the values that you set for the MQPublication node properties to achieve a more dynamic way to process messages, include a Compute or JavaCompute node in your message flow before the MQPublication node. Configure this node to create an output message, and add fields to the local environment tree to define new values for the properties that you want to change.
+The MQPublication node can connect to a local or remote queue manager, by either setting the IBM MQ Connection properties or specifying an MQEndpoint policy on the Policy tab. These connection settings can be overridden during message processing by using the local environment tree to define new values for the properties that you want to change. The properties are:
+<parent folder>.policyUrl to override the whole policy for the node.
+<parent folder>.<MQEndpoint policy attribute> to provide (or override) a specific value.
+where the parent folder is OutputLocalEnvironment.Destination.MQ.
+Examples of the MQEndpoint policy attributes include destinationQueueManagerName and channelName. A special value of ‘-‘ can be used in the policyUrl property to mean “use the node attributes”, which is useful if only one value in the policy needs to be overridden.
+Procedure
+Use OutputLocalEnvironment.Destination.MQ. as the correlation name for all fields that relate to the MQPublication node.
+You can set any MQEndpoint policy attribute under the OutputLocalEnvironment.Destination.MQ tree, including the following examples:
+Setting
+Description
+policyUrl	This setting ignores the MQPublication node policy, and uses ValidMQClientPolicy in the TestPolicies project:
+SET OutputLocalEnvironment.Destination.MQ.policyUrl = '{TestPolicies}:ValidMQClientPolicy'
+This setting overrides any previous setting on the node regardless of whether a policy is configured for the node. Using this setting also causes a search for policies in the run directory when a previously deployed policy cannot be found. This allows policies to be used even

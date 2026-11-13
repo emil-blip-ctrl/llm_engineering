@@ -1,0 +1,161 @@
+---COMMENT---
+After reviewing the supplied codebase and the request, I understand the target change overall, but I see several important gaps, inconsistencies, and missing artifacts that I would need clarified before I can implement this safely and accurately.
+
+1. Biggest blockers / inconsistencies
+
+- Missing referenced attachments
+  - I do not have the actual contents of:
+    - `insurance-claims-api-claims-2.0.6.yaml`
+    - `translator_manageClaims_RSA_V1.1.xlsx`
+    - `NIPO-9902_insurance-claims_RSA.postman_collection.json`
+    - `Cahier_tests_IDITS-29325_manageClaims.xlsx`
+  - The request says the Excel is authoritative for the 52 mapping rules and the “Non transmis” exclusions. Without that file, I cannot safely build the manageClaims translator.
+
+- Major architecture inconsistency: current POST /claim flow is asynchronous
+  - In the provided source, `insurance-claims-integration-claims` validates/routes the request, puts a message on MQ, and returns HTTP 202 immediately.
+  - Then `insurance-claims-integration-technical-idit` processes the MQ message and calls IDIT asynchronously.
+  - But the request/AC8 says that if IDIT rejects the RSA claim, the consumer should receive the IDIT 4XX response.
+  - With the current architecture, that is not possible without redesigning the POST /claim flow to become synchronous or partially synchronous.
+  - This is the most important mismatch I found.
+
+- Current success response also conflicts with the request
+  - Existing code returns 202 with a JSON body from `Routing_BuildHttpSuccess`:
+    - `{"isAccepted": true}`
+  - The request says success should be `202` with empty body.
+  - This is another functional mismatch that affects the public API behavior.
+
+- “Start from tag v2.0.4” vs provided source
+  - The request explicitly says to start from `v2.0.4` and not from `develop`.
+  - I only have the supplied current source dump, not the actual `v2.0.4` tag contents.
+  - I cannot verify whether the provided source already contains changes beyond `v2.0.4`.
+
+2. Clarifications I need
+
+- Which behavior should win: async existing behavior or AC8 synchronous error propagation?
+  - Please confirm one of these:
+    1. Keep current async architecture, so consumer still gets immediate 202 and IDIT errors are handled asynchronously only.
+    2. Redesign POST /claim so RSA/manageClaims path becomes synchronous and can return IDIT 4XX to the consumer.
+  - Right now the request text and current source contradict each other.
+
+- Which success response should win?
+  - Keep existing `202 + {"isAccepted": true}`?
+  - Or change to `202` with empty body for all POST /claim success responses?
+  - Changing this impacts current consumers.
+
+- Where exactly should the new route switch live?
+  - The request says “placed after routing when destination is IDIT”.
+  - In practice, that could mean:
+    - in `insurance-claims-integration-claims` before MQ publish, or
+    - in `insurance-claims-integration-technical-idit` after MQ input and before translator/call setup.
+  - Functionally, because both paths still go to IDIT, the cleaner place seems to be in the technical-idit async processing path, but I want confirmation.
+
+- Consumer identifier for “tcs.ch”
+  - In the request, route config is expressed as `tcs.ch × product × use-case`.
+  - In current code, routing logic is based on header values like `X-Origin-Caller-Code`, with values such as `TCSCH`.
+  - Please confirm the exact consumer key that must be used in the route-switch configuration:
+    - `TCSCH`
+    - `tcs.ch`
+    - or something else.
+
+- ACE property design for the route switch
+  - The request says the route switch must be property-driven and changeable without redeployment.
+  - I need clarification on the expected mechanism:
+    - UDP on a subflow/node?
+    - `resources/overrides/*.properties` entry?
+    - policy project / UserDefined policy?
+  - I also need the desired format, e.g.:
+    - one CSV property
+    - one JSON-like property
+    - multiple properties per combination
+
+- Exact implementation pattern for the new manageClaims call
+  - Should I:
+    1. follow the current `ProcessClaimAsync -> HTTP local ACE endpoint -> existing technical-idit REST flow -> IDIT` pattern, and add a new internal route/subflow for manageClaims?
+    2. or call IDIT manageClaims directly from the async MQ flow, reusing the same error/logging pattern?
+  - Both are possible, but the repo currently uses the first style for loss-event.
+
+- Exact response payload model for MOEx validation rejections
+  - The request says `ResponseClaimError`.
+  - Current error builders in the provided apps are not fully aligned:
+    - `Routing_BuildError` uses fields like `httpCode`, `httpMessage`, `contexteCode`, `moreInformation`
+    - some technical-idit error builders use `refAppError`
+  - I need confirmation of the exact response body expected for new B1/B2/B2b errors.
+
+- Error codes referential
+  - The request says the new MOEx rejections must be added to the error codes referential.
+  - I do not see a clear error-code referential file/project in the supplied source.
+  - Please specify:
+    - where it lives
+    - which codes to use for B1, B2, B2b
+    - whether that referential is in source, policy, DB, or external config
+
+- Missing end of AC3
+  - AC3 is clipped in the request.
+  - I understand the intent is PA non-regression, but I do not have the full criterion text.
+
+- Missing test data
+  - The request says these are still missing:
+    - product 106 policy number
+    - product 103 PA non-regression policy number
+  - If tests are expected, I need them.
+
+- manageClaims success/error samples
+  - I need at least one actual sample for:
+    - success response (`ExtendedIDWrapperIVO`)
+    - error response (4XX/422)
+  - This is especially important for:
+    - extracting the IDIT claim number for monitoring
+    - mapping IDIT error back to consumer consistently
+
+3. Smaller technical uncertainties
+
+- REST/OpenAPI contract file for the claims application
+  - `insurance-claims-integration-claims/restapi.descriptor` points to `insurance-claims-api-claims.json`
+  - The request talks about publishing `insurance-claims-api-claims-2.0.6.yaml`
+  - I do not have the current contract file in the supplied source.
+  - I need the actual file contents or confirmation whether only APIC publication matters and no ACE REST regeneration is needed.
+
+- Vehicle path / actual payload structure
+  - The request says actual input differs from yaml and must not change ACE parsing.
+  - I need the exact payload structure from the reference artifacts for:
+    - `damaged-objects-details.vehicle[]`
+    - driver
+    - beneficiary
+    - declared amount
+    - `number-of-beneficiaries`
+  - I can infer some of it from the narrative, but the Excel/reference JSON is required for safe implementation.
+
+- Current technical-idit internal REST definition
+  - `restapi.descriptor` references `openapi.yaml`, but that file is not included in the supplied content.
+  - If the chosen implementation requires a new internal REST operation/subflow, I need that file too.
+
+4. Assumptions I would make if I had to proceed without more input
+
+If I were forced to proceed with best-effort assumptions, these would be my working assumptions:
+
+- Keep the existing async architecture unchanged.
+- Therefore, do not return IDIT 4XX to the original POST /claim consumer.
+- Implement the route switch in `insurance-claims-integration-technical-idit` async processing path.
+- Use `X-Origin-Caller-Code = TCSCH` as the tcs.ch consumer identifier.
+- Reuse the existing logging/error-handling pattern from the async IDIT flow.
+- Do not use IBAN logic in the new RSA/manageClaims path.
+- Add new endpoint policy entries where needed in `insurance-integration-policies-endpoints`.
+- Keep existing POST /claim success behavior unless explicitly told to change it.
+
+But I want to be explicit: these assumptions would conflict with parts of the written acceptance criteria, especially AC8 and the “202 empty body” response requirement.
+
+5. Summary of what is clear
+
+What is clear to me already:
+
+- Products 101 and 106 must be added to IDIT routing logic in `Routing_ValidatePayloadAndDetermineDestination`.
+- The existing “no damage code + cause of loss -> IDIT” branch must be extended beyond only product 103.
+- `claim-use-case` validation rules B1/B2/B2b must be implemented exactly and case-sensitively.
+- RSA path must use a new manageClaims translator, not the legacy loss-event translator.
+- PA path must remain unchanged.
+- IBAN-related flow should not be part of the new RSA/manageClaims processing.
+- The new translator must follow the existing technical-idit error/logging style as closely as possible.
+
+So the main missing pieces are not the general direction, but the exact mapping artifacts and the resolution of the async-vs-sync contradiction.
+
+---COMMENT---
